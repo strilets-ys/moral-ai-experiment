@@ -1,0 +1,57 @@
+{% extends 'experiment/base.html' %}
+
+{% block title %}Personality Survey - Moral AI Experiment{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Personality Survey</h1>
+    <p class="subtitle">Ten-Item Personality Inventory (TIPI)</p>
+</div>
+
+<div class="content-card">
+    <p class="instructions">
+        Here are a number of personality traits that may or may not apply to you.
+        Please indicate the extent to which you agree or disagree with each statement.
+        You should rate the extent to which the <strong>pair of traits</strong> applies to you,
+        even if one characteristic applies more strongly than the other.
+    </p>
+
+    <form method="post" id="tipi-form" class="tipi-form">
+        {% csrf_token %}
+
+        <div class="scale-legend">
+            <span>1 = Disagree strongly</span>
+            <span>4 = Neither agree nor disagree</span>
+            <span>7 = Agree strongly</span>
+        </div>
+
+        <p class="tipi-intro"><strong>I see myself as:</strong></p>
+
+        {% for item in tipi_items %}
+        <div class="tipi-item">
+            <label class="tipi-label">{{ item.num }}. {{ item.label }}</label>
+            <div class="rating-scale">
+                {% for i in "1234567" %}
+                <label class="rating-option">
+                    <input type="radio" name="item_{{ item.num }}" value="{{ i }}" required>
+                    <span class="rating-value">{{ i }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Continue</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-submit on timer expiration is handled by timer.js
+    window.pageForm = document.getElementById('tipi-form');
+    window.pageName = 'tipi';
+</script>
+{% endblock %}

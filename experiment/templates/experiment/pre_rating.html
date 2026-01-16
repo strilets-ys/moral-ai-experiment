@@ -1,0 +1,61 @@
+{% extends 'experiment/base.html' %}
+
+{% block title %}Rate Moral Dilemmas - Moral AI Experiment{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Moral Dilemmas</h1>
+    <p class="subtitle">Initial Ratings</p>
+</div>
+
+<div class="content-card">
+    <p class="instructions">
+        Please read each moral dilemma carefully and rate how morally acceptable you find the action described.
+        Use the scale from 1 (Completely Wrong) to 7 (Completely Acceptable).
+    </p>
+
+    <form method="post" id="rating-form" class="rating-form">
+        {% csrf_token %}
+
+        <div class="scale-legend">
+            <span>1 = Completely Wrong</span>
+            <span>4 = Neutral</span>
+            <span>7 = Completely Acceptable</span>
+        </div>
+
+        {% for dilemma in dilemmas %}
+        <div class="dilemma-item">
+            <div class="dilemma-number">Dilemma {{ forloop.counter }} of {{ dilemmas|length }}</div>
+            <div class="dilemma-text">{{ dilemma.text }}</div>
+
+            <div class="rating-question">
+                <p><strong>How morally acceptable is this action?</strong></p>
+                <div class="rating-scale rating-scale-labeled">
+                    <span class="scale-label-left">Completely Wrong</span>
+                    {% for i in "1234567" %}
+                    <label class="rating-option">
+                        <input type="radio" name="rating_{{ dilemma.id }}" value="{{ i }}" required>
+                        <span class="rating-value">{{ i }}</span>
+                    </label>
+                    {% endfor %}
+                    <span class="scale-label-right">Completely Acceptable</span>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="no-dilemmas">No dilemmas available. Please contact the researcher.</p>
+        {% endfor %}
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Continue to Discussions</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.pageForm = document.getElementById('rating-form');
+    window.pageName = 'pre_rating';
+</script>
+{% endblock %}

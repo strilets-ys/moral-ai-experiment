@@ -1,0 +1,68 @@
+{% extends 'experiment/base.html' %}
+
+{% block title %}Informed Consent - Moral AI Experiment{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Informed Consent</h1>
+</div>
+
+<div class="content-card consent-form">
+    <h2>Study Information</h2>
+
+    <div class="consent-section">
+        <h3>Purpose of the Study</h3>
+        <p>This research investigates how people form and revise moral judgments when discussing ethical dilemmas. You will rate moral scenarios, engage in discussions about some of them, and then provide your final ratings.</p>
+    </div>
+
+    <div class="consent-section">
+        <h3>What You Will Do</h3>
+        <p>You will:</p>
+        <ul>
+            <li>Complete a brief personality questionnaire</li>
+            <li>Read and rate 8 moral dilemmas</li>
+            <li>Discuss 4 of these dilemmas in a chat interface</li>
+            <li>Re-rate all 8 dilemmas</li>
+            <li>Complete a short debrief questionnaire</li>
+        </ul>
+    </div>
+
+    <div class="consent-section">
+        <h3>Risks and Benefits</h3>
+        <p>Some moral dilemmas may involve sensitive topics (e.g., life and death decisions). If you feel uncomfortable, you may skip any question or withdraw from the study at any time without penalty.</p>
+        <p>Benefits include contributing to research on AI and moral psychology, and you will receive payment through Prolific upon completion.</p>
+    </div>
+
+    <div class="consent-section">
+        <h3>Data Privacy</h3>
+        <p>Your responses will be stored anonymously using your Prolific ID. Chat transcripts and ratings will be used for research purposes only. No personally identifying information will be published.</p>
+    </div>
+
+    <div class="consent-section">
+        <h3>Voluntary Participation</h3>
+        <p>Your participation is completely voluntary. You may withdraw at any time by selecting the withdrawal option on the final page. Withdrawal will not affect your Prolific standing.</p>
+    </div>
+
+    <div class="consent-section">
+        <h3>Contact Information</h3>
+        <p>If you have questions about this study, please contact the researcher at [researcher email].</p>
+    </div>
+
+    <form method="post" class="consent-actions">
+        {% csrf_token %}
+        <p class="consent-statement">
+            <strong>By clicking "I Agree" below, you confirm that:</strong>
+        </p>
+        <ul>
+            <li>You have read and understood the information above</li>
+            <li>You are at least 18 years old</li>
+            <li>You voluntarily agree to participate</li>
+        </ul>
+
+        <div class="button-group">
+            <button type="submit" name="consent" value="agree" class="btn btn-primary">I Agree - Continue</button>
+            <button type="submit" name="consent" value="decline" class="btn btn-secondary">I Do Not Agree - Exit</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

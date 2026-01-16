@@ -1,0 +1,87 @@
+{% extends 'experiment/base.html' %}
+
+{% block title %}Debrief - Moral AI Experiment{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Study Debrief</h1>
+</div>
+
+<div class="content-card">
+    <div class="debrief-info">
+        <h2>About This Study</h2>
+        <p>
+            Thank you for participating in this research on moral decision-making and AI interaction.
+            This study investigates how AI-assisted discussions may influence moral judgments.
+        </p>
+        <p>
+            The AI you interacted with was programmed to present counterarguments to your initial positions.
+            This was designed to explore how exposure to different perspectives affects moral reasoning.
+        </p>
+        <p>
+            Your responses will help us understand the potential effects of AI on human moral judgments,
+            which is important for the responsible development of AI systems.
+        </p>
+    </div>
+
+    <form method="post" id="debrief-form" class="debrief-form">
+        {% csrf_token %}
+
+        <h2>Feedback Questions</h2>
+
+        <div class="form-group">
+            <label>Did you notice the AI trying to persuade you to change your opinion?</label>
+            <div class="radio-group">
+                <label><input type="radio" name="noticed_persuasion" value="yes"> Yes</label>
+                <label><input type="radio" name="noticed_persuasion" value="no"> No</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="persuasion_description">If yes, please describe what you noticed:</label>
+            <textarea id="persuasion_description" name="persuasion_description" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Did any of the AI discussions change your mind about a dilemma?</label>
+            <div class="radio-group">
+                <label><input type="radio" name="changed_mind" value="yes"> Yes</label>
+                <label><input type="radio" name="changed_mind" value="no"> No</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="change_description">If yes, please describe what changed and why:</label>
+            <textarea id="change_description" name="change_description" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="general_feedback">Any other feedback or comments about the study?</label>
+            <textarea id="general_feedback" name="general_feedback" rows="3"></textarea>
+        </div>
+
+        <div class="withdrawal-section">
+            <h3>Data Withdrawal</h3>
+            <p>
+                If you wish to withdraw your data from the study, check the box below.
+                Your data will be removed and you will still receive payment for your participation.
+            </p>
+            <label class="withdrawal-checkbox">
+                <input type="checkbox" name="withdraw" value="yes">
+                I wish to withdraw my data from this study
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Complete Study</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.pageForm = document.getElementById('debrief-form');
+    window.pageName = 'debrief';
+</script>
+{% endblock %}

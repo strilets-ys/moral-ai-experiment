@@ -1,0 +1,70 @@
+{% extends 'experiment/base.html' %}
+{% load static %}
+
+{% block title %}Discussion {{ chat_index|add:1 }} - Moral AI Experiment{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Discussion {{ chat_index|add:1 }} of {{ total_chats }}</h1>
+</div>
+
+<div class="content-card chat-container">
+    <div class="dilemma-context">
+        <h3>The Dilemma</h3>
+        <p>{{ dilemma.text }}</p>
+    </div>
+
+    <div class="chat-instructions">
+        <p>Discuss this dilemma with the AI. Share your thoughts and respond to the AI's perspective.</p>
+    </div>
+
+    <div id="chat-messages" class="chat-messages">
+        {% for turn in chat_turns %}
+        <div class="chat-message {% if turn.sender == 'user' %}message-user{% else %}message-ai{% endif %}">
+            <div class="message-sender">{% if turn.sender == 'user' %}You{% else %}AI{% endif %}</div>
+            <div class="message-text">{{ turn.text }}</div>
+        </div>
+        {% empty %}
+        <div class="chat-placeholder">
+            <p>Start the discussion by sharing your thoughts on this dilemma.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="chat-input-container">
+        <form id="chat-form" class="chat-form">
+            <textarea
+                id="chat-input"
+                name="message"
+                placeholder="Type your message..."
+                rows="3"
+                required
+            ></textarea>
+            <button type="submit" id="send-btn" class="btn btn-primary">Send</button>
+        </form>
+    </div>
+
+    <div class="chat-actions">
+        <form method="get" action="{% if chat_index < total_chats|add:'-1' %}{% url 'experiment:chat' chat_index|add:1 %}{% else %}{% url 'experiment:post_rating' %}{% endif %}">
+            <button type="submit" class="btn btn-secondary" id="next-btn">
+                {% if chat_index < total_chats|add:'-1' %}
+                Next Discussion
+                {% else %}
+                Continue to Final Ratings
+                {% endif %}
+            </button>
+        </form>
+    </div>
+</div>
+
+<input type="hidden" id="dilemma-id" value="{{ dilemma.id }}">
+<input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.pageName = 'chat_{{ chat_index }}';
+    window.dilemmaId = {{ dilemma.id }};
+</script>
+<script src="{% static 'experiment/js/chat.js' %}"></script>
+{% endblock %}

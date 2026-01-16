@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Moral AI Experiment{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'experiment/css/styles.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="container">
+        {% if timer_seconds %}
+        <div id="timer-container" class="timer-container">
+            <div id="timer" class="timer" data-seconds="{{ timer_seconds }}" data-page="{{ page_name }}">
+                <span id="timer-display">--:--</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="footer">
+            <p>Moral AI Experiment - Master's Thesis Research</p>
+        </footer>
+    </div>
+
+    {% if timer_seconds %}
+    <script src="{% static 'experiment/js/timer.js' %}"></script>
+    {% endif %}
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

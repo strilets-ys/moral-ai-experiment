@@ -1,0 +1,30 @@
+{% extends 'experiment/base.html' %}
+
+{% block title %}Withdrawn - Moral AI Experiment{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Study Withdrawal</h1>
+</div>
+
+<div class="content-card">
+    <div class="withdrawal-message">
+        <h2>Your Data Has Been Marked for Removal</h2>
+        <p>
+            As requested, your data will be excluded from the research analysis.
+            Thank you for considering participation in this study.
+        </p>
+    </div>
+
+    <div class="withdrawal-info">
+        <p>
+            If you withdrew after completing the study, you are still eligible for payment through Prolific.
+            Please return to Prolific to complete your submission.
+        </p>
+
+        <p>
+            If you have any questions or concerns, please contact the researcher at [researcher email].
+        </p>
+    </div>
+</div>
+{% endblock %}

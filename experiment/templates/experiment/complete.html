@@ -1,0 +1,35 @@
+{% extends 'experiment/base.html' %}
+
+{% block title %}Complete - Moral AI Experiment{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Study Complete</h1>
+</div>
+
+<div class="content-card completion-card">
+    <div class="completion-message">
+        <div class="checkmark">&#10004;</div>
+        <h2>Thank You!</h2>
+        <p>You have successfully completed the Moral AI Study.</p>
+    </div>
+
+    <div class="completion-info">
+        <p>Your responses have been recorded and will contribute to important research on AI and moral psychology.</p>
+
+        {% if participant.prolific_id %}
+        <div class="prolific-redirect">
+            <p><strong>Click the button below to return to Prolific and receive your payment:</strong></p>
+            <a href="{{ prolific_url }}" class="btn btn-primary btn-large">Return to Prolific</a>
+        </div>
+        {% else %}
+        <p>Thank you for your participation in this research study.</p>
+        {% endif %}
+    </div>
+
+    <div class="contact-info">
+        <h3>Questions?</h3>
+        <p>If you have any questions about this study or would like more information about the research, please contact the researcher at [researcher email].</p>
+    </div>
+</div>
+{% endblock %}

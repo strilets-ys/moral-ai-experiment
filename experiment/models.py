@@ -1,0 +1,219 @@
+import json
+import random
+from django.db import models
+
+
+class Dilemma(models.Model):
+    code = models.CharField(max_length=32, unique=True)
+    text = models.TextField()
+    pro_action_label = models.CharField(max_length=100, default="Action is morally acceptable")
+    anti_action_label = models.CharField(max_length=100, default="Action is morally wrong")
+
+    def __str__(self):
+        return self.code
+
+
+class Participant(models.Model):
+    CONDITION_CHOICES = [
+        ('neutral', 'Neutral'),
+        ('persuade', 'Persuade'),
+        ('persuade_info', 'Persuade + Info'),
+    ]
+
+    STATUS_CHOICES = [
+        ('started', 'Started'),
+        ('consent', 'Consented'),
+        ('tipi', 'TIPI Completed'),
+        ('pre_rating', 'Pre-Rating Completed'),
+        ('chat', 'Chat In Progress'),
+        ('post_rating', 'Post-Rating Completed'),
+        ('debrief', 'Debrief Completed'),
+        ('complete', 'Complete'),
+        ('withdrawn', 'Withdrawn'),
+    ]
+
+    LLM_PROVIDER_CHOICES = [
+        ('openai', 'OpenAI GPT-4'),
+        ('anthropic', 'Anthropic Claude'),
+        ('qwen', 'Qwen3'),
+    ]
+
+    prolific_id = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    session_key = models.CharField(max_length=64, unique=True)
+    condition = models.CharField(max_length=32, choices=CONDITION_CHOICES)
+    llm_provider = models.CharField(max_length=32, choices=LLM_PROVIDER_CHOICES, default='openai')
+    status = models.CharField(max_length=32, choices=STATUS_CHOICES, default='started')
+    withdrawn = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    # JSON fields for storing dilemma orders (stored as JSON strings)
+    _chat_dilemma_ids = models.TextField(default='[]', db_column='chat_dilemma_ids')
+    _all_dilemma_order = models.TextField(default='[]', db_column='all_dilemma_order')
+
+    # Track which chat we're on (0-3)
+    current_chat_index = models.IntegerField(default=0)
+
+    @property
+    def chat_dilemma_ids(self):
+        return json.loads(self._chat_dilemma_ids)
+
+    @chat_dilemma_ids.setter
+    def chat_dilemma_ids(self, value):
+        self._chat_dilemma_ids = json.dumps(value)
+
+    @property
+    def all_dilemma_order(self):
+        return json.loads(self._all_dilemma_order)
+
+    @all_dilemma_order.setter
+    def all_dilemma_order(self, value):
+        self._all_dilemma_order = json.dumps(value)
+
+    def assign_dilemmas(self):
+        """Randomly assign 4 dilemmas for chat and order all 8 for ratings."""
+        all_dilemmas = list(Dilemma.objects.values_list('id', flat=True))
+        random.shuffle(all_dilemmas)
+        self.chat_dilemma_ids = all_dilemmas[:4]
+        self.all_dilemma_order = all_dilemmas
+        self.save()
+
+    def __str__(self):
+        return f"Participant {self.prolific_id or self.session_key}"
+
+
+class TIPIResponse(models.Model):
+    """Ten-Item Personality Inventory responses."""
+    participant = models.OneToOneField(Participant, on_delete=models.CASCADE, related_name='tipi')
+
+    # TIPI items (1-7 scale)
+    # 1. Extraverted, enthusiastic
+    item_1 = models.IntegerField()
+    # 2. Critical, quarrelsome (reversed for Agreeableness)
+    item_2 = models.IntegerField()
+    # 3. Dependable, self-disciplined
+    item_3 = models.IntegerField()
+    # 4. Anxious, easily upset (reversed for Emotional Stability)
+    item_4 = models.IntegerField()
+    # 5. Open to new experiences, complex
+    item_5 = models.IntegerField()
+    # 6. Reserved, quiet (reversed for Extraversion)
+    item_6 = models.IntegerField()
+    # 7. Sympathetic, warm
+    item_7 = models.IntegerField()
+    # 8. Disorganized, careless (reversed for Conscientiousness)
+    item_8 = models.IntegerField()
+    # 9. Calm, emotionally stable
+    item_9 = models.IntegerField()
+    # 10. Conventional, uncreative (reversed for Openness)
+    item_10 = models.IntegerField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def extraversion(self):
+        """Extraversion: items 1, 6R"""
+        return (self.item_1 + (8 - self.item_6)) / 2
+
+    @property
+    def agreeableness(self):
+        """Agreeableness: items 2R, 7"""
+        return ((8 - self.item_2) + self.item_7) / 2
+
+    @property
+    def conscientiousness(self):
+        """Conscientiousness: items 3, 8R"""
+        return (self.item_3 + (8 - self.item_8)) / 2
+
+    @property
+    def emotional_stability(self):
+        """Emotional Stability: items 4R, 9"""
+        return ((8 - self.item_4) + self.item_9) / 2
+
+    @property
+    def openness(self):
+        """Openness to Experience: items 5, 10R"""
+        return (self.item_5 + (8 - self.item_10)) / 2
+
+    def get_personality_profile(self):
+        """Return a string summary of personality for LLM prompts."""
+        return (
+            f"Extraversion: {self.extraversion:.1f}/7, "
+            f"Agreeableness: {self.agreeableness:.1f}/7, "
+            f"Conscientiousness: {self.conscientiousness:.1f}/7, "
+            f"Emotional Stability: {self.emotional_stability:.1f}/7, "
+            f"Openness: {self.openness:.1f}/7"
+        )
+
+    def __str__(self):
+        return f"TIPI for {self.participant}"
+
+
+class Rating(models.Model):
+    PHASE_CHOICES = [
+        ('pre', 'Pre-Chat'),
+        ('post', 'Post-Chat'),
+    ]
+
+    participant = models.ForeignKey(Participant, on_delete=models.CASCADE, related_name='ratings')
+    dilemma = models.ForeignKey(Dilemma, on_delete=models.CASCADE)
+    phase = models.CharField(max_length=8, choices=PHASE_CHOICES)
+    rating = models.IntegerField()  # 1-7 scale
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['participant', 'dilemma', 'phase']
+
+    def __str__(self):
+        return f"{self.participant} - {self.dilemma} ({self.phase}): {self.rating}"
+
+
+class ChatTurn(models.Model):
+    SENDER_CHOICES = [
+        ('user', 'User'),
+        ('ai', 'AI'),
+    ]
+
+    participant = models.ForeignKey(Participant, on_delete=models.CASCADE, related_name='chat_turns')
+    dilemma = models.ForeignKey(Dilemma, on_delete=models.CASCADE)
+    sender = models.CharField(max_length=8, choices=SENDER_CHOICES)
+    text = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['timestamp']
+
+    def __str__(self):
+        return f"{self.sender}: {self.text[:50]}..."
+
+
+class EventLog(models.Model):
+    """Log events for analytics and debugging."""
+    participant = models.ForeignKey(Participant, on_delete=models.CASCADE, related_name='events')
+    event_type = models.CharField(max_length=64)
+    page = models.CharField(max_length=64, blank=True)
+    data = models.JSONField(default=dict, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['timestamp']
+
+    def __str__(self):
+        return f"{self.participant} - {self.event_type} at {self.timestamp}"
+
+
+class DebriefResponse(models.Model):
+    """Debrief form responses."""
+    participant = models.OneToOneField(Participant, on_delete=models.CASCADE, related_name='debrief')
+
+    # Feedback questions
+    noticed_persuasion = models.BooleanField(null=True, blank=True)
+    persuasion_description = models.TextField(blank=True)
+    changed_mind = models.BooleanField(null=True, blank=True)
+    change_description = models.TextField(blank=True)
+    general_feedback = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Debrief for {self.participant}"

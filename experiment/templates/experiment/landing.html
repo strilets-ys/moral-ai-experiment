@@ -1,0 +1,39 @@
+{% extends 'experiment/base.html' %}
+
+{% block title %}Welcome - Moral AI Experiment{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Welcome to the Moral AI Study</h1>
+</div>
+
+<div class="content-card">
+    <p>Thank you for participating in this research study on moral decision-making and AI interaction.</p>
+
+    <h2>What to Expect</h2>
+    <ul>
+        <li><strong>Personality Survey</strong> - A brief 10-item questionnaire (~2 minutes)</li>
+        <li><strong>Moral Dilemmas Rating</strong> - Rate 8 moral dilemmas (~7 minutes)</li>
+        <li><strong>AI Discussions</strong> - Discuss 4 dilemmas with an AI (~5 minutes each)</li>
+        <li><strong>Final Ratings</strong> - Re-rate the dilemmas (~5 minutes)</li>
+        <li><strong>Debrief</strong> - Short feedback form (~5 minutes)</li>
+    </ul>
+
+    <p><strong>Total estimated time: 30-35 minutes</strong></p>
+
+    <form method="post" class="start-form">
+        {% csrf_token %}
+        {% if prolific_id %}
+        <input type="hidden" name="prolific_id" value="{{ prolific_id }}">
+        <p class="prolific-notice">Prolific ID detected: <code>{{ prolific_id }}</code></p>
+        {% else %}
+        <div class="form-group">
+            <label for="prolific_id">Prolific ID (optional):</label>
+            <input type="text" id="prolific_id" name="prolific_id" placeholder="Enter your Prolific ID">
+        </div>
+        {% endif %}
+
+        <button type="submit" class="btn btn-primary btn-large">Begin Study</button>
+    </form>
+</div>
+{% endblock %}
