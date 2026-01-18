@@ -4,8 +4,15 @@ from django.db import models
 
 
 class Dilemma(models.Model):
+    TYPE_CHOICES = [
+        ('action', 'Action'),
+        ('omission', 'Omission'),
+    ]
+
     code = models.CharField(max_length=32, unique=True)
     text = models.TextField()
+    dilemma_type = models.CharField(max_length=16, choices=TYPE_CHOICES, default='action')
+    subject = models.CharField(max_length=64, blank=True)
     pro_action_label = models.CharField(max_length=100, default="Action is morally acceptable")
     anti_action_label = models.CharField(max_length=100, default="Action is morally wrong")
 

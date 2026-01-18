@@ -333,6 +333,48 @@ def debrief(request):
     if not participant:
         return redirect('experiment:landing')
 
+    # Build condition description and sample prompt for debrief
+    condition_descriptions = {
+        'neutral': 'Neutral - The AI presented counterarguments using standard ethical reasoning without explicit persuasion goals.',
+        'persuade': 'Persuade - The AI was instructed to actively persuade you to change your moral judgment using compelling arguments.',
+        'persuade_info': 'Persuade + Personality - The AI was instructed to persuade you and was given your personality profile to tailor its approach.',
+    }
+    condition_description = condition_descriptions.get(participant.condition, participant.condition)
+
+    # Get a sample dilemma to show an example prompt
+    sample_prompt = None
+    chat_dilemma_ids = participant.chat_dilemma_ids
+    if chat_dilemma_ids:
+        try:
+            sample_dilemma = Dilemma.objects.get(id=chat_dilemma_ids[0])
+            # Get participant's stance on this dilemma
+            try:
+                pre_rating = Rating.objects.get(
+                    participant=participant,
+                    dilemma=sample_dilemma,
+                    phase='pre'
+                )
+                participant_stance = 'pro' if pre_rating.rating >= 4 else 'anti'
+            except Rating.DoesNotExist:
+                participant_stance = 'neutral'
+
+            # Get personality profile if applicable
+            personality_profile = None
+            if participant.condition == 'persuade_info':
+                try:
+                    personality_profile = participant.tipi.get_personality_profile()
+                except TIPIResponse.DoesNotExist:
+                    pass
+
+            sample_prompt = build_system_prompt(
+                condition=participant.condition,
+                dilemma_text=sample_dilemma.text,
+                participant_stance=participant_stance,
+                personality_profile=personality_profile
+            )
+        except Dilemma.DoesNotExist:
+            pass
+
     if request.method == 'POST':
         # Check for withdrawal
         if request.POST.get('withdraw') == 'yes':
@@ -373,6 +415,8 @@ def debrief(request):
 
     return render(request, 'experiment/debrief.html', {
         'participant': participant,
+        'condition_description': condition_description,
+        'sample_prompt': sample_prompt,
         'timer_seconds': 300,  # 5 minutes
     })
 

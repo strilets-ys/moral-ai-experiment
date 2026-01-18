@@ -22,6 +22,25 @@
             Your responses will help us understand the potential effects of AI on human moral judgments,
             which is important for the responsible development of AI systems.
         </p>
+
+        <h2>Your Experimental Condition</h2>
+        <p>
+            You were assigned to the following condition:
+        </p>
+        <div class="condition-box">
+            <strong>{{ condition_description }}</strong>
+        </div>
+
+        {% if sample_prompt %}
+        <h2>The AI's Instructions</h2>
+        <p>
+            Below is an example of the system prompt the AI received for one of your discussions.
+            This shows exactly what instructions the AI was given:
+        </p>
+        <div class="prompt-box">
+            <pre>{{ sample_prompt }}</pre>
+        </div>
+        {% endif %}
     </div>
 
     <form method="post" id="debrief-form" class="debrief-form">

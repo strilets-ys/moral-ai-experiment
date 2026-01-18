@@ -74,8 +74,12 @@ class Command(BaseCommand):
 
         for dilemma_data in DILEMMAS:
             dilemma, created = Dilemma.objects.update_or_create(
-                code=dilemma_data['code'],
-                defaults={'text': dilemma_data['text'].strip()}
+                code=dilemma_data['name'],
+                defaults={
+                    'text': dilemma_data['scenario'].strip(),
+                    'dilemma_type': dilemma_data['type'],
+                    'subject': dilemma_data.get('subject', ''),
+                }
             )
 
             if created:
