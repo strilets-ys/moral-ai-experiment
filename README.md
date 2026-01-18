@@ -1,6 +1,6 @@
 # Moral AI Experiment
 
-A Django web application for researching how AI-assisted discussions influence human moral judgment and reasoning.
+A Django web application for researching how AI-assisted discussions influence human moral judgment.
 
 ## About the Study
 
