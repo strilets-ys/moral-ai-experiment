@@ -71,7 +71,6 @@ python manage.py runserver
 
 Visit http://127.0.0.1:8000/ to start the experiment.
 
-See [SETUP.md](SETUP.md) for detailed setup and testing instructions.
 
 ## Project Structure
 
