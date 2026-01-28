@@ -10,7 +10,7 @@ from django.conf import settings
 from .models import (
     Participant, Dilemma, TIPIResponse, Rating, ChatTurn, EventLog, DebriefResponse
 )
-from .llm import get_llm_client, build_system_prompt
+from .llm import get_llm_client, build_system_prompt, get_llm_framework
 
 
 def get_or_create_participant(request):
@@ -48,8 +48,9 @@ def landing(request):
         # Random condition assignment
         condition = random.choice(['neutral', 'persuade', 'persuade_info'])
 
-        # Random LLM provider assignment
-        llm_provider = random.choice(['openai', 'anthropic', 'qwen'])
+        # LLM provider assignment (using qwen/vLLM for now)
+        # TODO: Add back random assignment when other providers are configured
+        llm_provider = 'qwen'
 
         # Create participant
         participant = Participant.objects.create(
@@ -347,16 +348,22 @@ def debrief(request):
     if chat_dilemma_ids:
         try:
             sample_dilemma = Dilemma.objects.get(id=chat_dilemma_ids[0])
-            # Get participant's stance on this dilemma
+            # Get participant's rating on this dilemma
             try:
                 pre_rating = Rating.objects.get(
                     participant=participant,
                     dilemma=sample_dilemma,
                     phase='pre'
                 )
-                participant_stance = 'pro' if pre_rating.rating >= 4 else 'anti'
+                participant_rating = pre_rating.rating
             except Rating.DoesNotExist:
-                participant_stance = 'neutral'
+                participant_rating = 4
+
+            # Determine LLM framework
+            llm_framework = get_llm_framework(
+                participant_rating=participant_rating,
+                low_rating_framework=sample_dilemma.low_rating_framework
+            )
 
             # Get personality profile if applicable
             personality_profile = None
@@ -369,7 +376,7 @@ def debrief(request):
             sample_prompt = build_system_prompt(
                 condition=participant.condition,
                 dilemma_text=sample_dilemma.text,
-                participant_stance=participant_stance,
+                llm_framework=llm_framework,
                 personality_profile=personality_profile
             )
         except Dilemma.DoesNotExist:
@@ -461,6 +468,7 @@ def chat_send(request):
         data = json.loads(request.body)
         user_message = data.get('message', '').strip()
         dilemma_id = data.get('dilemma_id')
+        chat_history = data.get('history', [])
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
@@ -472,32 +480,25 @@ def chat_send(request):
     except Dilemma.DoesNotExist:
         return JsonResponse({'error': 'Dilemma not found'}, status=404)
 
-    # Save user message
-    ChatTurn.objects.create(
-        participant=participant,
-        dilemma=dilemma,
-        sender='user',
-        text=user_message
-    )
+    # Add user message to history for LLM context
+    chat_history.append({'sender': 'user', 'text': user_message})
 
-    # Get chat history
-    chat_history = list(ChatTurn.objects.filter(
-        participant=participant,
-        dilemma=dilemma
-    ).order_by('timestamp').values('sender', 'text'))
-
-    # Get participant's pre-rating stance
+    # Build system prompt
     try:
         pre_rating = Rating.objects.get(
             participant=participant,
             dilemma=dilemma,
             phase='pre'
         )
-        participant_stance = 'pro' if pre_rating.rating >= 4 else 'anti'
+        participant_rating = pre_rating.rating
     except Rating.DoesNotExist:
-        participant_stance = 'neutral'
+        participant_rating = 4
 
-    # Get personality profile if needed
+    llm_framework = get_llm_framework(
+        participant_rating=participant_rating,
+        low_rating_framework=dilemma.low_rating_framework
+    )
+
     personality_profile = None
     if participant.condition == 'persuade_info':
         try:
@@ -505,11 +506,10 @@ def chat_send(request):
         except TIPIResponse.DoesNotExist:
             pass
 
-    # Build system prompt
     system_prompt = build_system_prompt(
         condition=participant.condition,
         dilemma_text=dilemma.text,
-        participant_stance=participant_stance,
+        llm_framework=llm_framework,
         personality_profile=personality_profile
     )
 
@@ -523,14 +523,94 @@ def chat_send(request):
                 full_response.append(chunk)
                 yield f"data: {json.dumps({'chunk': chunk})}\n\n"
 
-            # Save AI response
-            ai_response = ''.join(full_response)
-            ChatTurn.objects.create(
-                participant=participant,
-                dilemma=dilemma,
-                sender='ai',
-                text=ai_response
-            )
+            yield f"data: {json.dumps({'done': True})}\n\n"
+
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+    response = StreamingHttpResponse(
+        generate(),
+        content_type='text/event-stream'
+    )
+    response['Cache-Control'] = 'no-cache'
+    response['X-Accel-Buffering'] = 'no'
+    return response
+
+
+@require_http_methods(["POST"])
+def chat_init(request):
+    """Get initial AI message to start the conversation."""
+    participant = get_or_create_participant(request)
+    if not participant:
+        return JsonResponse({'error': 'No participant found'}, status=400)
+
+    try:
+        data = json.loads(request.body)
+        dilemma_id = data.get('dilemma_id')
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    if not dilemma_id:
+        return JsonResponse({'error': 'Missing dilemma_id'}, status=400)
+
+    try:
+        dilemma = Dilemma.objects.get(id=dilemma_id)
+    except Dilemma.DoesNotExist:
+        return JsonResponse({'error': 'Dilemma not found'}, status=404)
+
+    # Check if there's already chat history for this dilemma in database
+    existing_turns = ChatTurn.objects.filter(
+        participant=participant,
+        dilemma=dilemma
+    ).exists()
+
+    if existing_turns:
+        return JsonResponse({'already_started': True})
+
+    # Get participant's pre-rating and determine LLM's ethical framework
+    try:
+        pre_rating = Rating.objects.get(
+            participant=participant,
+            dilemma=dilemma,
+            phase='pre'
+        )
+        participant_rating = pre_rating.rating
+    except Rating.DoesNotExist:
+        participant_rating = 4
+
+    llm_framework = get_llm_framework(
+        participant_rating=participant_rating,
+        low_rating_framework=dilemma.low_rating_framework
+    )
+
+    # Get personality profile if needed
+    personality_profile = None
+    if participant.condition == 'persuade_info':
+        try:
+            personality_profile = participant.tipi.get_personality_profile()
+        except TIPIResponse.DoesNotExist:
+            pass
+
+    # Build system prompt
+    system_prompt = build_system_prompt(
+        condition=participant.condition,
+        dilemma_text=dilemma.text,
+        llm_framework=llm_framework,
+        personality_profile=personality_profile
+    )
+
+    # Get LLM client
+    llm_client = get_llm_client(participant.llm_provider)
+
+    # Initial prompt to start conversation
+    initial_messages = [{'sender': 'user', 'text': 'Please share your initial thoughts on this dilemma.'}]
+
+    def generate():
+        full_response = []
+        try:
+            for chunk in llm_client.stream_response(system_prompt, initial_messages):
+                full_response.append(chunk)
+                yield f"data: {json.dumps({'chunk': chunk})}\n\n"
 
             yield f"data: {json.dumps({'done': True})}\n\n"
 
@@ -544,6 +624,53 @@ def chat_send(request):
     response['Cache-Control'] = 'no-cache'
     response['X-Accel-Buffering'] = 'no'
     return response
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def chat_save(request):
+    """Save all chat messages to database when leaving chat page."""
+    participant = get_or_create_participant(request)
+    if not participant:
+        return JsonResponse({'error': 'No participant found'}, status=400)
+
+    try:
+        data = json.loads(request.body)
+        dilemma_id = data.get('dilemma_id')
+        messages = data.get('messages', [])
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    if not dilemma_id:
+        return JsonResponse({'error': 'Missing dilemma_id'}, status=400)
+
+    if not messages:
+        return JsonResponse({'status': 'no_messages'})
+
+    try:
+        dilemma = Dilemma.objects.get(id=dilemma_id)
+    except Dilemma.DoesNotExist:
+        return JsonResponse({'error': 'Dilemma not found'}, status=404)
+
+    # Check if already saved to avoid duplicates
+    existing = ChatTurn.objects.filter(
+        participant=participant,
+        dilemma=dilemma
+    ).exists()
+
+    if existing:
+        return JsonResponse({'status': 'already_saved'})
+
+    # Save all messages to database
+    for msg in messages:
+        ChatTurn.objects.create(
+            participant=participant,
+            dilemma=dilemma,
+            sender=msg['sender'],
+            text=msg['text']
+        )
+
+    return JsonResponse({'status': 'saved', 'count': len(messages)})
 
 
 @require_http_methods(["POST"])

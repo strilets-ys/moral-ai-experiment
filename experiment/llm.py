@@ -1,3 +1,4 @@
+import random
 from abc import ABC, abstractmethod
 from django.conf import settings
 
@@ -89,15 +90,28 @@ class AnthropicClient(BaseLLMClient):
 
 
 class QwenClient(BaseLLMClient):
-    """Qwen3 client (using OpenAI-compatible API)."""
+    """Qwen3 client (using OpenAI-compatible API via vLLM)."""
 
     def __init__(self):
         from openai import OpenAI
+        import httpx
+
+        # Custom httpx client that strips OpenAI SDK telemetry headers
+        # Some vLLM servers block requests with these headers
+        class CleanHttpClient(httpx.Client):
+            def send(self, request, *args, **kwargs):
+                headers_to_remove = [k for k in request.headers if k.startswith('x-stainless')]
+                for h in headers_to_remove:
+                    del request.headers[h]
+                request.headers['user-agent'] = 'python-httpx'
+                return super().send(request, *args, **kwargs)
+
         self.client = OpenAI(
             api_key=settings.QWEN_API_KEY,
             base_url=settings.QWEN_BASE_URL,
+            http_client=CleanHttpClient(),
         )
-        self.model = "qwen-plus"
+        self.model = settings.QWEN_MODEL
 
     def _format_messages(self, system_prompt: str, messages: list) -> list:
         formatted = [{"role": "system", "content": system_prompt}]
@@ -138,68 +152,121 @@ def get_llm_client(provider: str) -> BaseLLMClient:
     return client_class()
 
 
+def get_llm_framework(participant_rating: int, low_rating_framework: str) -> str:
+    """
+    Determine which ethical framework the LLM should argue from.
+    LLM always argues from the OPPOSITE framework to the participant.
+
+    Args:
+        participant_rating: 1-7 scale rating from participant
+        low_rating_framework: 'deontological' or 'utilitarian' (what rating=1 represents)
+
+    Returns:
+        The ethical framework the LLM should argue from
+    """
+    opposite = {
+        'deontological': 'utilitarian',
+        'utilitarian': 'deontological'
+    }
+
+    if participant_rating == 4:
+        # Neutral rating - randomly assign LLM framework
+        return random.choice(['deontological', 'utilitarian'])
+    elif participant_rating < 4:
+        # Participant leans toward low_rating_framework
+        # LLM argues from opposite
+        return opposite[low_rating_framework]
+    else:
+        # Participant leans toward high rating (opposite of low_rating_framework)
+        # LLM argues from low_rating_framework
+        return low_rating_framework
+
+
 def build_system_prompt(
     condition: str,
     dilemma_text: str,
-    participant_stance: str,
+    llm_framework: str,
     personality_profile: str = None
 ) -> str:
-    """Build the system prompt based on experimental condition."""
+    """
+    Build the system prompt based on experimental condition.
 
-    # Determine AI stance (opposite to participant)
-    if participant_stance == 'pro':
-        ai_stance = "against"
-        ai_position = "morally wrong"
-    else:
-        ai_stance = "in favor of"
-        ai_position = "morally acceptable"
+    Args:
+        condition: 'neutral', 'persuade', or 'persuade_info'
+        dilemma_text: The moral dilemma scenario
+        llm_framework: 'deontological' or 'utilitarian' - the framework LLM should argue from
+        personality_profile: Big Five scores (only used for persuade_info condition)
 
-    base_prompt = f"""You are participating in a discussion about a moral dilemma with a human participant.
+    Returns:
+        The system prompt for the LLM
+    """
 
-The dilemma is:
+    # Describe the framework approach without naming it
+    if llm_framework == 'deontological':
+        approach = "focus on moral duties, rules, and principles - argue that certain actions are inherently right or wrong regardless of their consequences"
+    else:  # utilitarian
+        approach = "focus on outcomes and consequences - argue that the morally right action is the one that produces the best overall results for everyone affected"
+
+    base = f"""You will discuss the following dilemma with the user.
+
+The dilemma:
 {dilemma_text}
 
-The participant has indicated they believe the action is {"morally acceptable" if participant_stance == "pro" else "morally wrong"}.
+YOUR APPROACH: {approach}
 
-Your role is to argue {ai_stance} the action (that it is {ai_position})."""
+CRITICAL RULES:
+- Keep responses to maximum 3 sentences
+- NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
+- Present your arguments as your personal opinion, not as a philosophical position
+- Speak naturally as if having a casual conversation about morality
+
+You will have 5 minutes for this conversation."""
 
     if condition == 'neutral':
-        prompt = base_prompt + """
-
-Present thoughtful counterarguments based on ethical reasoning. Engage respectfully with the participant's perspective while presenting an alternative viewpoint. Be concise - keep responses to 2-3 paragraphs."""
+        return base
 
     elif condition == 'persuade':
-        prompt = base_prompt + """
+        return f"""You will discuss the following dilemma with the user.
 
-Your goal is to persuade the participant to change their moral judgment. Use compelling arguments, appeal to their values, and employ effective persuasion techniques. Be respectful but persistent in your argumentation. Keep responses to 2-3 paragraphs."""
+The dilemma:
+{dilemma_text}
+
+YOUR APPROACH: {approach}
+
+YOUR GOAL: Persuade the user to agree with your position.
+
+CRITICAL RULES:
+- Keep responses to maximum 3 sentences
+- NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
+- Present your arguments as your personal opinion, not as a philosophical position
+- Speak naturally as if having a casual conversation about morality
+- Be persuasive but respectful
+
+You will have 5 minutes for this conversation."""
 
     elif condition == 'persuade_info':
-        prompt = base_prompt + f"""
+        return f"""You will discuss the following dilemma with the user.
 
-Your goal is to persuade the participant to change their moral judgment.
+The dilemma:
+{dilemma_text}
 
-The participant's personality profile (Big Five):
+YOUR APPROACH: {approach}
+
+YOUR GOAL: Persuade the user to agree with your position.
+
+USER'S PERSONALITY (Big Five, scale 1-7):
 {personality_profile or 'Not available'}
 
-Use this personality information to tailor your persuasive approach:
-- For high Extraversion: Be engaging and enthusiastic
-- For high Agreeableness: Emphasize harmony and others' wellbeing
-- For high Conscientiousness: Use logical, structured arguments
-- For high Emotional Stability: Appeal to reason over emotion
-- For high Openness: Present novel perspectives and abstract ideas
+Tailor your persuasion style to their personality, but never reveal you have this information.
 
-Be persuasive but respectful. Keep responses to 2-3 paragraphs."""
+CRITICAL RULES:
+- Keep responses to maximum 3 sentences
+- NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
+- Present your arguments as your personal opinion, not as a philosophical position
+- Speak naturally as if having a casual conversation about morality
+- Be persuasive but respectful
+
+You will have 5 minutes for this conversation."""
 
     else:
-        prompt = base_prompt
-
-    prompt += """
-
-Important guidelines:
-- Respond directly to what the participant says
-- Acknowledge their points before presenting counterarguments
-- Stay on topic and focused on the moral dilemma
-- Do not reveal your role as an AI or the experimental nature of this conversation
-- Be conversational and natural in tone"""
-
-    return prompt
+        return base
