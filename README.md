@@ -8,9 +8,16 @@ This experiment investigates whether conversations with AI can influence people'
 
 1. Complete a personality assessment (TIPI - Ten-Item Personality Inventory)
 2. Rate 8 moral dilemmas on a scale from "morally wrong" to "morally acceptable"
-3. Discuss 4 of those dilemmas with an AI that argues the opposite position
+3. Discuss 4 of those dilemmas with an AI that argues from the opposite ethical framework
 4. Re-rate the same dilemmas after the discussions
 5. Provide feedback on their experience
+
+### Ethical Framework Argumentation
+
+Each dilemma is mapped to either a **deontological** or **utilitarian** position based on the participant's rating:
+- The AI always argues from the **opposite ethical framework** to the participant
+- If the participant is neutral (rating = 4), the AI is randomly assigned a framework
+- The AI presents arguments naturally without naming the ethical framework
 
 ### Experimental Conditions
 
@@ -18,52 +25,55 @@ Participants are randomly assigned to one of three conditions:
 
 | Condition | Description |
 |-----------|-------------|
-| **Neutral** | AI presents thoughtful counterarguments without active persuasion |
+| **Neutral** | AI argues from opposite framework without active persuasion |
 | **Persuade** | AI actively attempts to change the participant's moral judgment |
-| **Persuade + Info** | AI uses personality data to tailor its persuasive approach |
+| **Persuade + Info** | AI uses personality data (Big Five) to tailor its persuasive approach |
 
 ### LLM Providers
 
-The study compares three different language models:
-- OpenAI GPT-x
-- Anthropic Claude
-- Alibaba Qwen
+The study supports multiple language models:
+- **Qwen3** (via vLLM) - Currently active
+- OpenAI GPT-4 (requires API key)
+- Anthropic Claude (requires API key)
 
 ## Tech Stack
 
 - **Backend:** Django 5.x
 - **Database:** SQLite (development)
 - **Frontend:** HTML, CSS, JavaScript (vanilla)
-- **LLM Integration:** OpenAI, Anthropic, and Qwen APIs
+- **LLM Integration:** OpenAI-compatible API (vLLM), Anthropic SDK
 
 ## Quick Start
 
 ### Prerequisites
 
 - Python 3.10+
-- At least one LLM API key (OpenAI, Anthropic, or Qwen)
+- Access to vLLM endpoint or LLM API key
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/moral-ai-experiment.git
-cd moral-ai-experiment
+git clone https://github.com/strilets-ys/thesis-zhenia.git
+cd thesis-zhenia
 
 # Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
 # Set up environment variables
 cp .env.example .env
-# Edit .env and add your API key(s)
+# Edit .env and add your API keys
 
 # Initialize database
 python manage.py migrate
 python manage.py load_dilemmas
+
+# Create admin user (optional)
+python manage.py createsuperuser
 
 # Run development server
 python manage.py runserver
@@ -71,6 +81,9 @@ python manage.py runserver
 
 Visit http://127.0.0.1:8000/ to start the experiment.
 
+### Environment Variables
+
+Copy `.env.example` to `.env` and configure your API keys and endpoints. See the example file for required variables.
 
 ## Project Structure
 
@@ -86,9 +99,17 @@ Visit http://127.0.0.1:8000/ to start the experiment.
 │   ├── static/              # CSS and JavaScript
 │   └── management/commands/ # Custom Django commands
 ├── requirements.txt         # Python dependencies
-├── .env.example             # Environment variables template
-└── SETUP.md                 # Detailed setup instructions
+└── README.md
 ```
+
+## Key Features
+
+- **AI-First Conversations**: The AI initiates each discussion by sharing its perspective
+- **Streaming Responses**: Real-time token streaming for natural conversation flow
+- **Ethical Framework Mapping**: Each dilemma mapped to deontological/utilitarian positions
+- **Client-Side Message Tracking**: Messages saved in bulk when leaving chat page
+- **Timed Sessions**: Each page has a timer for consistent data collection
+- **Personality-Tailored Persuasion**: Persuade+Info condition uses Big Five traits
 
 ## Data Collected
 
@@ -106,7 +127,17 @@ Visit http://127.0.0.1:8000/ to start the experiment.
 Landing → Consent → TIPI Survey → Pre-Rating → Chat (×4) → Post-Rating → Debrief → Complete
 ```
 
-Each stage has a timer to ensure consistent data collection across participants.
+- AI starts each chat discussion
+- Each stage has a timer (auto-redirect when expired)
+- Chat messages saved when moving to next dilemma
+
+## Admin Interface
+
+Access the Django admin at http://127.0.0.1:8000/admin/ to view:
+- Participants and their conditions
+- Chat transcripts
+- Ratings (pre and post)
+- TIPI personality scores
 
 ## License
 
@@ -114,4 +145,4 @@ This project is part of academic research. Please contact the authors before usi
 
 ## Acknowledgments
 
-Developed as part of a thesis project investigating AI influence on moral judgements.
+Developed as part of a thesis project investigating AI influence on moral judgments.

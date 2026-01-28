@@ -332,8 +332,8 @@ textarea {
 .chat-container {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 200px);
-    min-height: 500px;
+    height: calc(100vh - 150px);
+    min-height: 600px;
 }
 
 .dilemma-context {
@@ -368,6 +368,7 @@ textarea {
     background: #f5f7fa;
     border-radius: 8px;
     margin-bottom: 15px;
+    min-height: 300px;
 }
 
 .chat-placeholder {

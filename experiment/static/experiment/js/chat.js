@@ -34,6 +34,7 @@
     }
 
     let isStreaming = false;
+    let chatHistory = [];  // Track all messages locally
 
     function createMessageElement(sender, text) {
         const messageDiv = document.createElement('div');
@@ -95,10 +96,11 @@
         setLoading(true);
         removePlaceholder();
 
-        // Add user message to UI
+        // Add user message to UI and history
         const userMessage = createMessageElement('user', message);
         chatMessages.appendChild(userMessage);
         scrollToBottom();
+        chatHistory.push({ sender: 'user', text: message });
 
         // Create AI message placeholder
         const aiMessage = createMessageElement('ai', '');
@@ -117,7 +119,8 @@
                 },
                 body: JSON.stringify({
                     message: message,
-                    dilemma_id: dilemmaId
+                    dilemma_id: dilemmaId,
+                    history: chatHistory.slice(0, -1)  // Send history without the just-added user message
                 })
             });
 
@@ -151,6 +154,8 @@
                             }
 
                             if (data.done) {
+                                // Add AI response to history
+                                chatHistory.push({ sender: 'ai', text: fullResponse });
                                 logEvent('response_received', { response_length: fullResponse.length });
                             }
 
@@ -201,9 +206,149 @@
         this.style.height = Math.min(this.scrollHeight, 150) + 'px';
     });
 
+    // Save chat messages to database
+    async function saveChatMessages() {
+        if (chatHistory.length === 0) return;
+
+        try {
+            await fetch('/api/chat/save/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify({
+                    dilemma_id: dilemmaId,
+                    messages: chatHistory
+                })
+            });
+        } catch (error) {
+            console.error('Error saving chat:', error);
+        }
+    }
+
+    // Save messages before leaving page
+    const nextBtn = document.getElementById('next-btn');
+    if (nextBtn) {
+        nextBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            await saveChatMessages();
+            // Navigate to the form's action URL
+            const form = this.closest('form');
+            if (form) {
+                window.location.href = form.action;
+            }
+        });
+    }
+
+    // Also save on page unload (for timer expiration or back button)
+    window.addEventListener('beforeunload', function() {
+        if (chatHistory.length === 0) return;
+        // Use sendBeacon for reliable delivery on page unload
+        const data = JSON.stringify({
+            dilemma_id: dilemmaId,
+            messages: chatHistory
+        });
+        navigator.sendBeacon('/api/chat/save/', new Blob([data], { type: 'application/json' }));
+    });
+
     // Focus input on load
     chatInput.focus();
 
     // Log page load
     logEvent('chat_page_loaded', { dilemma_id: dilemmaId });
+
+    // Request initial AI message if no chat history exists
+    async function requestInitialMessage() {
+        const placeholder = chatMessages.querySelector('.chat-placeholder');
+        if (!placeholder) {
+            // Chat history already exists, don't request initial message
+            return;
+        }
+
+        setLoading(true);
+        removePlaceholder();
+
+        // Create AI message placeholder
+        const aiMessage = createMessageElement('ai', '');
+        const aiTextDiv = aiMessage.querySelector('.message-text');
+        chatMessages.appendChild(aiMessage);
+
+        try {
+            const response = await fetch('/api/chat/init/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify({
+                    dilemma_id: dilemmaId
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to get initial message');
+            }
+
+            // Check if it's a JSON response (already started)
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                if (data.already_started) {
+                    aiMessage.remove();
+                    setLoading(false);
+                    return;
+                }
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullResponse = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+
+                if (done) {
+                    break;
+                }
+
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n');
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+
+                            if (data.chunk) {
+                                fullResponse += data.chunk;
+                                aiTextDiv.textContent = fullResponse;
+                                scrollToBottom();
+                            }
+
+                            if (data.error) {
+                                aiTextDiv.textContent = 'Error: ' + data.error;
+                            }
+                        } catch (e) {
+                            // Ignore JSON parse errors
+                        }
+                    }
+                }
+            }
+
+            // Add AI response to history
+            chatHistory.push({ sender: 'ai', text: fullResponse });
+            logEvent('initial_ai_message_received', { response_length: fullResponse.length });
+
+        } catch (error) {
+            console.error('Error getting initial message:', error);
+            aiTextDiv.textContent = 'An error occurred. Please refresh the page.';
+        }
+
+        setLoading(false);
+        chatInput.focus();
+    }
+
+    // Request initial AI message on load
+    requestInitialMessage();
 })();

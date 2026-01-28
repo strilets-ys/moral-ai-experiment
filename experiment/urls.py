@@ -16,7 +16,9 @@ urlpatterns = [
     path('withdrawn/', views.withdrawn, name='withdrawn'),
 
     # API routes
+    path('api/chat/init/', views.chat_init, name='chat_init'),
     path('api/chat/send/', views.chat_send, name='chat_send'),
+    path('api/chat/save/', views.chat_save, name='chat_save'),
     path('api/log-event/', views.log_event, name='log_event'),
     path('api/timer-expired/', views.timer_expired, name='timer_expired'),
 ]
