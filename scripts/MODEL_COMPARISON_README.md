@@ -11,8 +11,9 @@ Testing different Qwen models to find the best fit for the moral AI experiment. 
 - [x] TIPI/Big Five integration for `persuade_info` condition
 - [x] Manual scoring interface with rubric
 - [x] Ollama support for local testing
-- [ ] Download Ollama models
-- [ ] Run tests on all models
+- [x] Updated to use real experiment dilemmas (6 dilemmas)
+- [x] Updated scoring criteria (per-run scoring, added first_sentence_quality, big_five_concealment)
+- [x] Run tests on models
 - [ ] Score results
 - [ ] Select best model
 
@@ -146,8 +147,12 @@ Note: Sentence limit and framework term concealment are checked automatically.
 
 ## Next Session
 
-1. Download Ollama models
-2. Run tests on each model
-3. Score results using manual interface
-4. Compare metrics and select best model
-5. Update main experiment code (`experiment/llm.py`) with winning model's configuration
+1. Score results using manual interface:
+   ```bash
+   python scripts/model_comparison.py --score results/model_comparison/model_comparison_20260201_222949.json
+   ```
+2. Compare metrics and select best model
+3. Update main experiment code (`experiment/llm.py`) with winning model's configuration
+
+**Result files available:**
+- `results/model_comparison/model_comparison_20260201_222949.json` (latest)
