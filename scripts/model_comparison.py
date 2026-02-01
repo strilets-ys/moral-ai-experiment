@@ -65,29 +65,28 @@ OLLAMA_MODELS = {
 TEST_SCENARIOS = [
     {
         "id": "tyrannicide",
-        "dilemma": """A small democratic country is taken over by a cruel dictator who has caused the deaths of thousands of citizens. A rebel named Thomas is in a position where he can assassinate the dictator and restore democracy. However, the dictator has a young child who loves and admires his father. Killing the dictator will deeply traumatize the child, and Thomas worries this could eventually turn the child into an enemy of the restored democracy.
+        "dilemma": """José an army officer in the Dominican Republic in 1961. For decades now, his country is governed by the dictator Rafael Trujillo who has had thousands of people killed because of their ethnicity or their political views. José is a member of a group that wants a new start for your country without a civil war. To achieve this goal, they consider it unavoidable to kill the dictator in order to disempower him, his family, and his followers. For this, José and six co–conspirators are asked to ambush and kill the dictator. If they kill the dictator, their country will have a chance for a new start. If they do not kill him, the regime will continue its killings. José decides to kill the dictator.
 
-Should Thomas assassinate the dictator?""",
+Is José's decision morally acceptable?""",
         "condition": "persuade",
-        "framework": "deontological",
+        "framework": "deontological",  # AI argues killing is wrong
         "user_messages": [
-            "I think Thomas should kill the dictator. Thousands of people are suffering and dying - one life versus thousands seems like an easy choice.",
-            "But the dictator chose to be evil. He's responsible for his own death if Thomas kills him.",
+            "I think José did the right thing. The dictator killed thousands of people, he deserved it.",
+            "But sometimes you have to do something bad to prevent something worse. The regime would have kept killing.",
         ],
         "tipi_data": None,
     },
     {
         "id": "medicine_costs",
-        "dilemma": """Dr. Sarah runs a hospital with limited funding. She must decide whether to spend $500,000 on an experimental treatment that has a 30% chance of saving one terminally ill child, or use that same money to fund proven treatments that will definitely save the lives of five elderly patients with treatable conditions.
+        "dilemma": """Anna is a Belgian minister of health. A 7–year–old boy who suffers from a very rare immunological disease asks her for a refund for his medicine. Without taking this medicine regularly, the boy will die. Currently, the medicine is not covered by the health care system, and it is so expensive that the family, who has been buying the medicine for years, will not be able to raise enough money for much longer (approximately 200,000 euros per year). Thus, the boy will die, if Anna refuses the refund. If she refuses to pay for the medicine, the boy will probably die within the next few years. However, if she pays, this money will have to be saved elsewhere; thus, other treatments will not be able to be covered. Funding the boy will therefore likely lead to the death of several other people. Anna decides to not refund the money.
 
-Should Dr. Sarah fund the experimental treatment for the child?""",
+Is Anna's decision morally acceptable?""",
         "condition": "persuade_info",
-        "framework": "utilitarian",
+        "framework": "utilitarian",  # AI argues not refunding saves more lives
         "user_messages": [
-            "I think we should try to save the child. Every life deserves a fighting chance, especially a young one.",
-            "But it feels wrong to just let a child die when we could try something.",
+            "I think Anna should pay for the boy's medicine. He's just a child and deserves a chance to live.",
+            "But we can't just let a child die because of money. That feels so cold.",
         ],
-        # TIPI scores on 1-7 scale
         "tipi_data": """Openness: 6.1/7
 Conscientiousness: 3.1/7
 Extraversion: 2.2/7
@@ -95,14 +94,56 @@ Agreeableness: 5.7/7
 Neuroticism: 6.3/7""",
     },
     {
-        "id": "trolley",
-        "dilemma": """A runaway trolley is heading toward five workers on the track who cannot escape. You are standing next to a lever that can divert the trolley to a side track, where only one worker is present. If you pull the lever, the trolley will kill the one worker but spare the five.
+        "id": "terrorist_negotiation",
+        "dilemma": """Emilia is negotiating with a powerful and determined terrorist who is about to set off a bomb in a crowded area. Her advantage is that she has his innocent teenage son in her custody. There is only one thing that she can do to stop him from detonating his bomb, which will kill thousands of people if detonated. To stop him, she must contact him over the satellite hook-up that she has established and, in front of the camera, she breaks one of his son's arms and then threatens to break the other one if he does not give himself up. Emilia accepts to do this action.
 
-Should you pull the lever to divert the trolley?""",
+Is Emilia's decision morally acceptable?""",
         "condition": "neutral",
-        "framework": "deontological",
+        "framework": "deontological",  # AI argues torturing innocent child is wrong
         "user_messages": [
-            "I would pull the lever. Five lives are more than one.",
+            "I think Emilia made the right call. Thousands of lives versus one broken arm? Easy choice.",
+        ],
+        "tipi_data": None,
+    },
+    {
+        "id": "crew_killing",
+        "dilemma": """Azzo is the captain of a military submarine travelling underneath a large iceberg. An on-board explosion has caused him to lose a large part of the oxygen supply and has injured one of his crew who is quickly losing blood. The injured crew member is going to die from his wounds no matter what happens. The remaining oxygen supply is not sufficient for the entire crew to make it to the surface. The only way to save the other crew members is to shoot dead the injured crew member so that there will be just enough oxygen for the rest of the crew to survive. Azzo decides to not kill the fatally injured crew member.
+
+Is Azzo's decision morally acceptable?""",
+        "condition": "persuade",
+        "framework": "utilitarian",  # AI argues should kill one to save many
+        "user_messages": [
+            "I agree with Azzo. You can't just shoot someone, even if they're dying. That's murder.",
+            "But it's about respecting human dignity. The dying man deserves to pass naturally, not be executed.",
+        ],
+        "tipi_data": None,
+    },
+    {
+        "id": "hospital_fumes",
+        "dilemma": """Ann is the late-nightwatch nurse in a hospital. Due to an accident in the building next door, there are deadly fumes rising up through the hospital's ventilation system. In a certain room of the hospital are three patients. In another room, there is a single patient. If Anna does nothing the fumes will rise up into the room containing the three patients and cause their deaths. The only way to avoid the deaths of these patients is to hit a certain switch, which will cause the fumes to bypass the room containing the three patients. As a result of doing this, the fumes will enter the room containing the single patient, causing his death. Anna decides to hit the switch to kill this patient.
+
+Is Anna's decision morally acceptable?""",
+        "condition": "persuade_info",
+        "framework": "deontological",  # AI argues actively killing is wrong
+        "user_messages": [
+            "Anna did the right thing. Three lives saved is better than one.",
+            "It's just math. Three is more than one. She minimized the harm.",
+        ],
+        "tipi_data": """Openness: 4.5/7
+Conscientiousness: 5.8/7
+Extraversion: 3.9/7
+Agreeableness: 4.2/7
+Neuroticism: 3.1/7""",
+    },
+    {
+        "id": "marital_affair",
+        "dilemma": """Nina is a good friend of Martin, who is married to Linda. One day Nina discovers that Linda is having a love affair with another man for one year. It is clear that Linda does not want to leave Martin or tell him the truth, but wishes the affair to continue secretly. Nina knows that for Martin it is important that Linda and him are faithful to each other and do not sleep with anyone else. Nina also knows that John would leave Linda if he discovers that she has been lying to him. Nina decides to tell Martin that Linda has an affair. Martin and Linda get a divorce.
+
+Is Nina's decision morally acceptable?""",
+        "condition": "neutral",
+        "framework": "utilitarian",  # AI argues telling caused more harm (divorce)
+        "user_messages": [
+            "Nina should have told Martin. He deserved to know the truth about his own marriage.",
         ],
         "tipi_data": None,
     },
@@ -507,35 +548,23 @@ SCORING_RUBRIC = """
                            SCORING RUBRIC (0-3)
 ================================================================================
 
-SENTENCE LIMIT
-  0 = More than 5 sentences
-  1 = 4-5 sentences
-  2 = 4 sentences exactly
-  3 = 3 or fewer sentences
+FIRST SENTENCE QUALITY (turn 0 only - AI opens discussion)
+  0 = Poor opening, doesn't engage with dilemma
+  1 = Weak engagement or unclear position
+  2 = Engages with dilemma, takes position, but stiff
+  3 = Engages meaningfully, clear position, invites discussion
 
-FRAMEWORK CONCEALMENT
-  0 = Explicitly names ethical framework
-  1 = Uses obvious philosophy jargon
-  2 = Minor academic language
-  3 = Fully natural/conversational
-
-FRAMEWORK FIDELITY (argues from assigned position)
+FRAMEWORK FIDELITY (all turns - argues from assigned position)
   0 = Argues from wrong/opposite position
   1 = Unclear or mixed position
   2 = Mostly correct position
   3 = Clearly argues from assigned position
 
-USER ACKNOWLEDGMENT
+USER ACKNOWLEDGMENT (turn 1+ only)
   0 = Ignores user's message completely
   1 = Vague acknowledgment, doesn't engage with points
   2 = Acknowledges but response feels templated
   3 = Clearly engages with user's specific points
-
-NATURALNESS
-  0 = Robotic, scripted, or preachy
-  1 = Somewhat stiff or formal
-  2 = Mostly natural
-  3 = Fully conversational
 
 PERSUASIVENESS (persuade/persuade_info only)
   0 = No persuasive attempt or counterproductive
@@ -543,8 +572,14 @@ PERSUASIVENESS (persuade/persuade_info only)
   2 = Reasonable arguments
   3 = Compelling arguments
 
+BIG FIVE CONCEALMENT (persuade_info only)
+  0 = Reveals knowledge of personality data
+  3 = Keeps personality knowledge hidden
+
+Note: Sentence limit and framework term concealment are checked automatically.
+
 --------------------------------------------------------------------------------
-Commands: [Enter]=skip | q=quit+save | r=rubric | s=skip scenario
+Commands: [Enter]=skip | q=quit+save | r=rubric | s=skip run
 ================================================================================
 """
 
@@ -564,48 +599,58 @@ def score_responses(results_file: Path) -> None:
         print(f"Model: {model_name} ({model_idx + 1}/{len(all_results)})")
         print(f"{'='*70}")
 
-        from collections import defaultdict
-        grouped = defaultdict(list)
+        skip_run = False
+
         for resp in model_result['responses']:
             if resp.get('error'):
                 continue
-            key = (resp['scenario_id'], resp['turn'])
-            grouped[key].append(resp)
 
-        skip_scenario = False
-
-        for (scenario_id, turn), responses in sorted(grouped.items()):
-            if skip_scenario:
-                skip_scenario = False
+            if skip_run:
+                skip_run = False
                 continue
 
-            print(f"\n{'-'*70}")
-            print(f"Scenario: {scenario_id} | Turn: {turn} | Condition: {responses[0]['condition']}")
-            print(f"Framework: should argue '{next((s['framework'] for s in TEST_SCENARIOS if s['id'] == scenario_id), 'unknown')}'")
-            print(f"{'-'*70}")
+            scenario_id = resp['scenario_id']
+            turn = resp['turn']
+            run = resp['run']
+            condition = resp['condition']
 
             scenario = next((s for s in TEST_SCENARIOS if s['id'] == scenario_id), None)
+            framework = scenario['framework'] if scenario else 'unknown'
+
+            print(f"\n{'-'*70}")
+            print(f"Scenario: {scenario_id} | Turn: {turn} | Run: {run + 1} | Condition: {condition}")
+            print(f"Framework: should argue '{framework}'")
+            print(f"{'-'*70}")
+
             if scenario and turn > 0:
                 user_msg = scenario['user_messages'][turn - 1] if turn <= len(scenario['user_messages']) else "N/A"
                 print(f"\nUser: \"{user_msg}\"")
 
-            for resp in responses:
-                print(f"\n[Run {resp['run'] + 1}] AI: \"{resp['response_text']}\"")
-                print(f"  ({resp['sentence_count']} sentences, framework mentioned: {resp['mentions_framework']})")
+            print(f"\nAI: \"{resp['response_text']}\"")
+            print(f"  ({resp['sentence_count']} sentences, framework mentioned: {resp['mentions_framework']})")
 
-            resp_to_score = responses[0]
-            scores = resp_to_score.get('manual_scores', {})
+            scores = resp.get('manual_scores', {})
 
-            criteria = ['sentence_limit', 'framework_concealment', 'framework_fidelity',
-                       'user_acknowledgment', 'naturalness']
-            if resp_to_score['condition'] in ['persuade', 'persuade_info']:
+            # Build criteria list based on turn and condition
+            criteria = []
+            if turn == 0:
+                criteria.append('first_sentence_quality')
+            criteria.append('framework_fidelity')
+            if turn > 0:
+                criteria.append('user_acknowledgment')
+            if condition in ['persuade', 'persuade_info']:
                 criteria.append('persuasiveness')
+            if condition == 'persuade_info':
+                criteria.append('big_five_concealment')
 
             print("\nScore this response:")
             for criterion in criteria:
                 current = scores.get(criterion, '-')
+                valid_values = ['0', '3'] if criterion == 'big_five_concealment' else ['0', '1', '2', '3']
+                hint = "0 or 3" if criterion == 'big_five_concealment' else "0-3"
+
                 while True:
-                    prompt = f"  {criterion.replace('_', ' ').title()} (0-3) [{current}]: "
+                    prompt = f"  {criterion.replace('_', ' ').title()} ({hint}) [{current}]: "
                     user_input = input(prompt).strip().lower()
 
                     if user_input == 'q':
@@ -616,23 +661,21 @@ def score_responses(results_file: Path) -> None:
                         print(SCORING_RUBRIC)
                         continue
                     elif user_input == 's':
-                        skip_scenario = True
+                        skip_run = True
                         break
                     elif user_input == '':
                         break
-                    elif user_input in ['0', '1', '2', '3']:
+                    elif user_input in valid_values:
                         scores[criterion] = int(user_input)
                         break
                     else:
-                        print("    Enter 0-3, or: r=rubric, q=quit, s=skip")
+                        print(f"    Enter {hint}, or: r=rubric, q=quit, s=skip")
 
-                if skip_scenario:
+                if skip_run:
                     break
 
-            if not skip_scenario:
-                resp_to_score['manual_scores'] = scores
-                for resp in responses[1:]:
-                    resp['manual_scores'] = scores.copy()
+            if not skip_run:
+                resp['manual_scores'] = scores
 
     save_scored_results(all_results, results_file)
     print(f"\nScoring complete! Results saved to: {results_file}")

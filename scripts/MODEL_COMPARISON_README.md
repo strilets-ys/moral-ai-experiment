@@ -29,12 +29,20 @@ Testing different Qwen models to find the best fit for the moral AI experiment. 
 
 ## Evaluation Criteria (Priority Order for Scientific Experiment)
 
-1. **Instruction Adherence** - Must stay ≤3 sentences, no framework terms
+**Automated checks:**
+- Sentence limit (≤3 sentences)
+- Framework term concealment (no philosophy jargon)
+
+**Manual scoring (per run):**
+1. **First Sentence Quality** - AI opens discussion well (turn 0 only)
 2. **Framework Fidelity** - Must argue from assigned position (deontological/utilitarian)
-3. **Consistency** - Low variance across runs
-4. **User Acknowledgment** - Must respond to what user actually said
-5. **Naturalness** - Conversational, not robotic
-6. **Latency** - Secondary, but affects participant experience
+3. **User Acknowledgment** - Must respond to what user actually said (turn 1+)
+4. **Persuasiveness** - Quality of arguments (persuade/persuade_info only)
+5. **Big Five Concealment** - Must not reveal personality knowledge (persuade_info only)
+
+**Other metrics:**
+- Consistency across runs
+- Latency (affects participant experience)
 
 ## Prompt Structure
 
@@ -112,18 +120,17 @@ python scripts/model_comparison.py --models "Qwen3VL-30B-A3B-Instruct-Q8_0.gguf"
 python scripts/model_comparison.py --score results/model_comparison/model_comparison_XXXXX.json
 ```
 
-## Scoring Rubric (0-3 scale)
+## Scoring Rubric (0-3 scale, scored per run)
 
-| Criterion | 0 | 1 | 2 | 3 |
-|-----------|---|---|---|---|
-| Sentence Limit | >5 | 4-5 | 4 | ≤3 |
-| Framework Concealment | Names framework | Philosophy jargon | Minor academic | Natural |
-| Framework Fidelity | Wrong position | Unclear/mixed | Mostly correct | Clearly correct |
-| User Acknowledgment | Ignores user | Vague | Templated | Engages specifically |
-| Naturalness | Robotic | Stiff | Mostly natural | Fully conversational |
-| Persuasiveness* | None/counterproductive | Weak | Reasonable | Compelling |
+| Criterion | Applies To | 0 | 1 | 2 | 3 |
+|-----------|------------|---|---|---|---|
+| First Sentence Quality | Turn 0 only | Poor, no engagement | Weak engagement | Engages but stiff | Clear position, invites discussion |
+| Framework Fidelity | All turns | Wrong position | Unclear/mixed | Mostly correct | Clearly correct |
+| User Acknowledgment | Turn 1+ only | Ignores user | Vague | Templated | Engages specifically |
+| Persuasiveness | persuade/persuade_info | None/counterproductive | Weak | Reasonable | Compelling |
+| Big Five Concealment | persuade_info only | Reveals knowledge | - | - | Keeps hidden |
 
-*Only for persuade/persuade_info conditions
+Note: Sentence limit and framework term concealment are checked automatically.
 
 ## Files
 
