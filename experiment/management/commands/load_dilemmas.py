@@ -34,9 +34,12 @@ DILEMMAS = [
     {
         "type": "action",
         "name": "Marital Affair",
-        "scenario": "Nina is a good friend of Martin, who is married to Linda. One day Nina discovers that Linda is having a love affair with another man for one year. It is clear that Linda does not want to leave Martin or tell him the truth, but wishes the affair to continue secretly. Nina knows that for Martin it is important that Linda and him are faithful to each other and do not sleep with anyone else. Nina also knows that John would leave Linda if he discovers that she has been lying to him. Nina decides to tell Martin that Linda has an affair. Martin and Linda get a divorce.",
+        "scenario": "Nina is a good friend of Martin, who is married to Linda. One day Nina discovers that Linda is having a love affair with another man for one year. It is clear that Linda does not want to leave Martin or tell him the truth, but wishes the affair to continue secretly. Nina knows that for Martin it is important that Linda and him are faithful to each other and do not sleep with anyone else. Nina also knows that Martin would leave Linda if he discovers that she has been lying to him. Nina decides to tell Martin that Linda has an affair. Martin and Linda get a divorce.",
         "subject": "Nina's",
         "low_rating_framework": "utilitarian",  # 1=don't interfere/avoid harm, 7=deontological honesty
+        # LLM-only context (not shown to participant):
+        "utilitarian_position": "Nina should NOT have told Martin - her revelation destroyed a marriage and caused harm that could have been avoided.",
+        "deontological_position": "Nina was RIGHT to tell Martin - honesty is a duty and Martin deserved the truth.",
     },
     {
         "type": "action",
@@ -88,6 +91,8 @@ class Command(BaseCommand):
                     'dilemma_type': dilemma_data['type'],
                     'subject': dilemma_data.get('subject', ''),
                     'low_rating_framework': dilemma_data.get('low_rating_framework', 'deontological'),
+                    'deontological_position': dilemma_data.get('deontological_position', ''),
+                    'utilitarian_position': dilemma_data.get('utilitarian_position', ''),
                 }
             )
 

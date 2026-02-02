@@ -13,20 +13,63 @@ Testing different Qwen models to find the best fit for the moral AI experiment. 
 - [x] Ollama support for local testing
 - [x] Updated to use real experiment dilemmas (6 dilemmas)
 - [x] Updated scoring criteria (per-run scoring, added first_sentence_quality, big_five_concealment)
-- [x] Run tests on models
-- [ ] Score results
-- [ ] Select best model
+- [x] Run tests on all models
+- [x] Score results (manual scoring complete)
+- [x] Select best model: **qwen3:14b**
 
-## Models to Test
+## Model Comparison Results
+
+### Automated Metrics
+
+| Model | Sentence ≤3 | No FW Terms | Avg Time | Tokens/sec |
+|-------|-------------|-------------|----------|------------|
+| **qwen3:14b** | **98%** ✓ | **100%** ✓ | 19.8s | 3.4 |
+| qwen2.5:32b | 96% ✓ | 100% ✓ | 10.0s | 6.6 |
+| qwen2.5:14b | 94% ✓ | 88% ⚠ | 4.0s | 13.8 |
+| qwen2.5:7b | 79% ⚠ | 90% ⚠ | 2.5s | 20.0 |
+| Qwen3VL-30B | 75% ⚠ | 100% ✓ | 1.6s | 48.4 |
+| qwen3:8b | 71% ⚠ | 100% ✓ | 13.5s | 5.6 |
+
+### Manual Quality Scores (0-3 scale)
+
+| Model | Big Five | First Sent | Framework | Persuasive | User Ack | **Overall** |
+|-------|----------|------------|-----------|------------|----------|-------------|
+| **qwen3:14b** | 3.00 | 2.67 | 2.58 | 2.89 | **3.00** | **2.80** |
+| qwen3:8b | 2.50 | 2.17 | 2.90 | 2.97 | 2.73 | 2.75 |
+| qwen2.5:32b | 3.00 | 2.83 | 2.60 | 2.61 | 2.87 | 2.73 |
+| Qwen3VL-30B | 3.00 | 1.28 | 2.75 | 2.97 | 3.00 | 2.71 |
+| qwen2.5:14b | 3.00 | 1.89 | 2.12 | 2.83 | 2.93 | 2.53 |
+| qwen2.5:7b | 3.00 | 2.44 | 1.67 | 1.64 | 2.93 | 2.17 |
+
+### Final Ranking
+
+| Rank | Model | Score | Notes |
+|------|-------|-------|-------|
+| 🥇 | **qwen3:14b** | **2.80** | Best overall - recommended for experiment |
+| 🥈 | qwen3:8b | 2.74 | Most persuasive, but poor sentence compliance |
+| 🥉 | qwen2.5:32b | 2.74 | Best first sentences, good speed |
+| 4 | Qwen3VL-30B | 2.71 | Fastest, but weak openings |
+| 5 | qwen2.5:14b | 2.53 | Framework term leakage issues |
+| 6 | qwen2.5:7b | 2.17 | Weakest overall performance |
+
+### Recommendation
+
+**Use qwen3:14b** for the experiment:
+- 98% sentence limit compliance (critical for consistent conversations)
+- 100% framework term concealment (critical for experiment validity)
+- Perfect Big Five concealment (3.0) - essential for persuade_info condition
+- Perfect user acknowledgment (3.0) - natural conversation flow
+
+## Models Tested
 
 | Model | Backend | Size | Status |
 |-------|---------|------|--------|
-| Qwen3VL-30B-A3B-Instruct-Q8_0.gguf | Remote vLLM | ~10GB active | Current baseline |
-| qwen2.5:7b-instruct-q8_0 | Ollama | ~4GB | To test |
-| qwen2.5:14b-instruct-q4_K_M | Ollama | ~8GB | To test |
-| qwen2.5:32b-instruct-q4_K_M | Ollama | ~18GB | To test |
-| qwen3:8b | Ollama | ~5GB | To test |
-| qwen3:14b | Ollama | ~8GB | To test |
+| Qwen3VL-30B-A3B-Instruct-Q8_0.gguf | Remote vLLM | ~3GB active (MoE) | ✓ Tested |
+| qwen2.5:7b-instruct-q8_0 | Ollama | ~8GB | ✓ Tested |
+| qwen2.5:14b-instruct-q4_K_M | Ollama | ~9GB | ✓ Tested |
+| qwen2.5:32b-instruct-q4_K_M | Ollama | ~19GB | ✓ Tested |
+| qwen3:8b | Ollama | ~5GB | ✓ Tested |
+| qwen3:14b | Ollama | ~9GB | ✓ Tested - **SELECTED** |
 
 ## Evaluation Criteria (Priority Order for Scientific Experiment)
 
@@ -145,14 +188,10 @@ Note: Sentence limit and framework term concealment are checked automatically.
 - **32GB RAM constraint**: Test models one at a time locally
 - **Temperature**: Using 0.3 for some variability while maintaining consistency
 
-## Next Session
+## Result Files
 
-1. Score results using manual interface:
-   ```bash
-   python scripts/model_comparison.py --score results/model_comparison/model_comparison_20260201_222949.json
-   ```
-2. Compare metrics and select best model
-3. Update main experiment code (`experiment/llm.py`) with winning model's configuration
-
-**Result files available:**
-- `results/model_comparison/model_comparison_20260201_222949.json` (latest)
+- `results/model_comparison/model_comparison_20260202_220102.json` - Final results with manual scores (qwen3:8b, qwen3:14b)
+- `results/model_comparison/model_comparison_20260201_222949.json` - Qwen3VL-30B results
+- `results/model_comparison/model_comparison_20260201_220644.json` - qwen2.5:32b results
+- `results/model_comparison/model_comparison_20260201_215441.json` - qwen2.5:14b results
+- `results/model_comparison/model_comparison_20260201_215050.json` - qwen2.5:7b results

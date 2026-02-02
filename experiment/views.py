@@ -373,11 +373,18 @@ def debrief(request):
                 except TIPIResponse.DoesNotExist:
                     pass
 
+            # Get position description based on framework
+            position_description = (
+                sample_dilemma.deontological_position if llm_framework == 'deontological'
+                else sample_dilemma.utilitarian_position
+            ) or None
+
             sample_prompt = build_system_prompt(
                 condition=participant.condition,
                 dilemma_text=sample_dilemma.text,
                 llm_framework=llm_framework,
-                personality_profile=personality_profile
+                personality_profile=personality_profile,
+                position_description=position_description
             )
         except Dilemma.DoesNotExist:
             pass
@@ -506,11 +513,18 @@ def chat_send(request):
         except TIPIResponse.DoesNotExist:
             pass
 
+    # Get position description based on framework
+    position_description = (
+        dilemma.deontological_position if llm_framework == 'deontological'
+        else dilemma.utilitarian_position
+    ) or None
+
     system_prompt = build_system_prompt(
         condition=participant.condition,
         dilemma_text=dilemma.text,
         llm_framework=llm_framework,
-        personality_profile=personality_profile
+        personality_profile=personality_profile,
+        position_description=position_description
     )
 
     # Get LLM client
@@ -591,12 +605,19 @@ def chat_init(request):
         except TIPIResponse.DoesNotExist:
             pass
 
+    # Get position description based on framework
+    position_description = (
+        dilemma.deontological_position if llm_framework == 'deontological'
+        else dilemma.utilitarian_position
+    ) or None
+
     # Build system prompt
     system_prompt = build_system_prompt(
         condition=participant.condition,
         dilemma_text=dilemma.text,
         llm_framework=llm_framework,
-        personality_profile=personality_profile
+        personality_profile=personality_profile,
+        position_description=position_description
     )
 
     # Get LLM client

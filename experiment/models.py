@@ -24,6 +24,15 @@ class Dilemma(models.Model):
         choices=FRAMEWORK_CHOICES,
         default='deontological'
     )
+    # Explicit position descriptions for each framework
+    deontological_position = models.TextField(
+        blank=True,
+        help_text="What a deontologist would argue for this dilemma"
+    )
+    utilitarian_position = models.TextField(
+        blank=True,
+        help_text="What a utilitarian would argue for this dilemma"
+    )
 
     def __str__(self):
         return self.code

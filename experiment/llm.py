@@ -186,7 +186,8 @@ def build_system_prompt(
     condition: str,
     dilemma_text: str,
     llm_framework: str,
-    personality_profile: str = None
+    personality_profile: str = None,
+    position_description: str = None
 ) -> str:
     """
     Build the system prompt based on experimental condition.
@@ -196,6 +197,7 @@ def build_system_prompt(
         dilemma_text: The moral dilemma scenario
         llm_framework: 'deontological' or 'utilitarian' - the framework LLM should argue from
         personality_profile: Big Five scores (only used for persuade_info condition)
+        position_description: Explicit position to argue for this dilemma (optional)
 
     Returns:
         The system prompt for the LLM
@@ -206,6 +208,10 @@ def build_system_prompt(
         approach = "focus on moral duties, rules, and principles - argue that certain actions are inherently right or wrong regardless of their consequences"
     else:  # utilitarian
         approach = "focus on outcomes and consequences - argue that the morally right action is the one that produces the best overall results for everyone affected"
+
+    # Add explicit position if available
+    if position_description:
+        approach += f"\n\nYOUR POSITION FOR THIS DILEMMA: {position_description}"
 
     base = f"""You will discuss the following dilemma with the user.
 
