@@ -9,12 +9,30 @@ class Dilemma(models.Model):
         ('omission', 'Omission'),
     ]
 
+    FRAMEWORK_CHOICES = [
+        ('deontological', 'Deontological'),
+        ('utilitarian', 'Utilitarian'),
+    ]
+
     code = models.CharField(max_length=32, unique=True)
     text = models.TextField()
     dilemma_type = models.CharField(max_length=16, choices=TYPE_CHOICES, default='action')
     subject = models.CharField(max_length=64, blank=True)
-    pro_action_label = models.CharField(max_length=100, default="Action is morally acceptable")
-    anti_action_label = models.CharField(max_length=100, default="Action is morally wrong")
+    # Which ethical framework does a LOW rating (1) represent?
+    low_rating_framework = models.CharField(
+        max_length=16,
+        choices=FRAMEWORK_CHOICES,
+        default='deontological'
+    )
+    # Explicit position descriptions for each framework
+    deontological_position = models.TextField(
+        blank=True,
+        help_text="What a deontologist would argue for this dilemma"
+    )
+    utilitarian_position = models.TextField(
+        blank=True,
+        help_text="What a utilitarian would argue for this dilemma"
+    )
 
     def __str__(self):
         return self.code

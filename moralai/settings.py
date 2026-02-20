@@ -131,7 +131,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
 QWEN_API_KEY = os.environ.get('QWEN_API_KEY', '')
-QWEN_BASE_URL = os.environ.get('QWEN_BASE_URL', 'https://dashscope.aliyuncs.com/compatible-mode/v1')
+QWEN_BASE_URL = os.environ.get('QWEN_BASE_URL', 'https://ias.dvsity.de/v1')
+QWEN_MODEL = os.environ.get('QWEN_MODEL', 'Qwen3VL-30B-A3B-Instruct-Q8_0.gguf')
+
+# Ollama settings (for local experimentation)
+OLLAMA_BASE_URL = os.environ.get('OLLAMA_BASE_URL', 'http://localhost:11434')
+OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'llama3.2')
 
 # Prolific completion URL (configure before deployment)
 PROLIFIC_COMPLETION_URL = os.environ.get('PROLIFIC_COMPLETION_URL', 'https://app.prolific.com/submissions/complete?cc=XXXXXXXX')
