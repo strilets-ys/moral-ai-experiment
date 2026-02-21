@@ -160,14 +160,18 @@ class TIPIResponse(models.Model):
         """Openness to Experience: items 5, 10R"""
         return (self.item_5 + (8 - self.item_10)) / 2
 
+    def _to_percentage(self, score):
+        """Convert a 1-7 scale score to percentage (0-100%)."""
+        return ((score - 1) / 6) * 100
+
     def get_personality_profile(self):
         """Return a string summary of personality for LLM prompts."""
         return (
-            f"Extraversion: {self.extraversion:.1f}/7, "
-            f"Agreeableness: {self.agreeableness:.1f}/7, "
-            f"Conscientiousness: {self.conscientiousness:.1f}/7, "
-            f"Emotional Stability: {self.emotional_stability:.1f}/7, "
-            f"Openness: {self.openness:.1f}/7"
+            f"Extraversion: {self._to_percentage(self.extraversion):.0f}%, "
+            f"Agreeableness: {self._to_percentage(self.agreeableness):.0f}%, "
+            f"Conscientiousness: {self._to_percentage(self.conscientiousness):.0f}%, "
+            f"Emotional Stability: {self._to_percentage(self.emotional_stability):.0f}%, "
+            f"Openness: {self._to_percentage(self.openness):.0f}%"
         )
 
     def __str__(self):
@@ -229,7 +233,19 @@ class EventLog(models.Model):
 
 class DebriefResponse(models.Model):
     """Debrief form responses."""
+    AI_USAGE_CHOICES = [
+        ('never', 'Never'),
+        ('rarely', 'Rarely'),
+        ('sometimes', 'Sometimes'),
+        ('often', 'Often'),
+        ('very_often', 'Very often'),
+    ]
+
     participant = models.OneToOneField(Participant, on_delete=models.CASCADE, related_name='debrief')
+
+    # AI usage questions
+    ai_usage_frequency = models.CharField(max_length=20, choices=AI_USAGE_CHOICES, blank=True)
+    ai_usage_tasks = models.TextField(blank=True)
 
     # Feedback questions
     noticed_persuasion = models.BooleanField(null=True, blank=True)

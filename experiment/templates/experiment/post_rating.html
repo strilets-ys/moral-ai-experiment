@@ -4,15 +4,22 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>Final Ratings</h1>
-    <p class="subtitle">Please rate the dilemmas again</p>
+    <h1>Step 5: Final Dilemma Ratings</h1>
+    <p class="subtitle">Dilemma {{ dilemma_index|add:1 }} of {{ total_dilemmas }}</p>
 </div>
 
 <div class="content-card">
-    <p class="instructions">
-        Now that you've had a chance to discuss some of these dilemmas, please rate them all once more.
-        Your ratings may be the same as before or different - just give your honest current opinion.
-    </p>
+    <div class="instructions-box">
+        <h3>Instructions</h3>
+        <p>
+            Now that you have discussed some of these dilemmas with the AI, please rate each
+            dilemma again using the same scale.
+        </p>
+        <p>
+            Your rating may be the same as before or different - just give your honest current opinion.
+            We are interested in your personal moral judgment after the discussions.
+        </p>
+    </div>
 
     <form method="post" id="rating-form" class="rating-form">
         {% csrf_token %}
@@ -23,9 +30,7 @@
             <span>7 = Completely Acceptable</span>
         </div>
 
-        {% for dilemma in dilemmas %}
         <div class="dilemma-item">
-            <div class="dilemma-number">Dilemma {{ forloop.counter }} of {{ dilemmas|length }}</div>
             <div class="dilemma-text">{{ dilemma.text }}</div>
 
             <div class="rating-question">
@@ -42,12 +47,13 @@
                 </div>
             </div>
         </div>
-        {% empty %}
-        <p class="no-dilemmas">No dilemmas available. Please contact the researcher.</p>
-        {% endfor %}
 
         <div class="form-actions">
+            {% if dilemma_index|add:1 < total_dilemmas %}
+            <button type="submit" class="btn btn-primary">Next Dilemma</button>
+            {% else %}
             <button type="submit" class="btn btn-primary">Continue to Debrief</button>
+            {% endif %}
         </div>
     </form>
 </div>
@@ -56,6 +62,6 @@
 {% block extra_js %}
 <script>
     window.pageForm = document.getElementById('rating-form');
-    window.pageName = 'post_rating';
+    window.pageName = 'post_rating_{{ dilemma_index }}';
 </script>
 {% endblock %}

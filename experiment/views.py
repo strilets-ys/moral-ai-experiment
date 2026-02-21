@@ -10,7 +10,7 @@ from django.conf import settings
 from .models import (
     Participant, Dilemma, TIPIResponse, Rating, ChatTurn, EventLog, DebriefResponse
 )
-from .llm import get_llm_client, build_system_prompt, get_llm_framework
+from .llm import get_llm_client, build_system_prompt, test_llm_connection, get_llm_framework
 
 
 def get_or_create_participant(request):
@@ -88,7 +88,7 @@ def redirect_to_current_stage(participant):
     elif status == 'consent':
         return redirect('experiment:tipi')
     elif status == 'tipi':
-        return redirect('experiment:pre_rating')
+        return redirect('experiment:pre_rating', index=0)
     elif status == 'pre_rating':
         return redirect('experiment:chat', index=0)
     elif status == 'chat':
@@ -113,6 +113,18 @@ def consent(request):
 
     if request.method == 'POST':
         if request.POST.get('consent') == 'agree':
+            # Test LLM connection before proceeding
+            success, error_message = test_llm_connection(participant.llm_provider)
+
+            if not success:
+                EventLog.objects.create(
+                    participant=participant,
+                    event_type='llm_connection_failed',
+                    page='consent',
+                    data={'provider': participant.llm_provider, 'error': error_message}
+                )
+                return redirect('experiment:connection_error')
+
             participant.status = 'consent'
             participant.save()
 
@@ -179,7 +191,7 @@ def tipi(request):
                 data=responses
             )
 
-            return redirect('experiment:pre_rating')
+            return redirect('experiment:pre_rating', index=0)
 
     return render(request, 'experiment/tipi.html', {
         'participant': participant,
@@ -188,48 +200,58 @@ def tipi(request):
     })
 
 
-def pre_rating(request):
-    """Rate all 8 dilemmas before chat debates."""
+def pre_rating(request, index):
+    """Rate one dilemma at a time before chat debates."""
     participant = get_or_create_participant(request)
     if not participant:
         return redirect('experiment:landing')
 
     # Get dilemmas in assigned order
     dilemma_ids = participant.all_dilemma_order
-    dilemmas = []
-    for did in dilemma_ids:
-        try:
-            dilemmas.append(Dilemma.objects.get(id=did))
-        except Dilemma.DoesNotExist:
-            pass
+    total_dilemmas = len(dilemma_ids)
+
+    # Validate index
+    if index < 0 or index >= total_dilemmas:
+        return redirect('experiment:chat', index=0)
+
+    # Get current dilemma
+    try:
+        dilemma = Dilemma.objects.get(id=dilemma_ids[index])
+    except Dilemma.DoesNotExist:
+        return redirect('experiment:chat', index=0)
 
     if request.method == 'POST':
-        # Save all ratings
-        for dilemma in dilemmas:
-            rating_value = request.POST.get(f'rating_{dilemma.id}')
-            if rating_value:
-                Rating.objects.update_or_create(
-                    participant=participant,
-                    dilemma=dilemma,
-                    phase='pre',
-                    defaults={'rating': int(rating_value)}
-                )
+        # Save rating for this dilemma
+        rating_value = request.POST.get(f'rating_{dilemma.id}')
+        if rating_value:
+            Rating.objects.update_or_create(
+                participant=participant,
+                dilemma=dilemma,
+                phase='pre',
+                defaults={'rating': int(rating_value)}
+            )
 
-        participant.status = 'pre_rating'
-        participant.save()
+        # Move to next dilemma or to chat
+        if index + 1 < total_dilemmas:
+            return redirect('experiment:pre_rating', index=index + 1)
+        else:
+            participant.status = 'pre_rating'
+            participant.save()
 
-        EventLog.objects.create(
-            participant=participant,
-            event_type='pre_rating_completed',
-            page='pre_rating'
-        )
+            EventLog.objects.create(
+                participant=participant,
+                event_type='pre_rating_completed',
+                page='pre_rating'
+            )
 
-        return redirect('experiment:chat', index=0)
+            return redirect('experiment:chat', index=0)
 
     return render(request, 'experiment/pre_rating.html', {
         'participant': participant,
-        'dilemmas': dilemmas,
-        'timer_seconds': 420,  # 7 minutes
+        'dilemma': dilemma,
+        'dilemma_index': index,
+        'total_dilemmas': total_dilemmas,
+        'timer_seconds': 75,
     })
 
 
@@ -242,13 +264,13 @@ def chat(request, index):
     # Validate index
     chat_dilemma_ids = participant.chat_dilemma_ids
     if index < 0 or index >= len(chat_dilemma_ids):
-        return redirect('experiment:post_rating')
+        return redirect('experiment:post_rating', index=0)
 
     # Get current dilemma
     try:
         dilemma = Dilemma.objects.get(id=chat_dilemma_ids[index])
     except Dilemma.DoesNotExist:
-        return redirect('experiment:post_rating')
+        return redirect('experiment:post_rating', index=0)
 
     # Update current chat index
     participant.current_chat_index = index
@@ -279,52 +301,62 @@ def chat(request, index):
         'total_chats': len(chat_dilemma_ids),
         'chat_turns': chat_turns,
         'participant_stance': participant_stance,
-        'timer_seconds': 300,  # 5 minutes
+        'timer_seconds': 270,  # 4.5 minutes
     })
 
 
-def post_rating(request):
-    """Re-rate all 8 dilemmas after chat debates."""
+def post_rating(request, index):
+    """Re-rate one dilemma at a time after chat debates."""
     participant = get_or_create_participant(request)
     if not participant:
         return redirect('experiment:landing')
 
     # Get dilemmas in assigned order
     dilemma_ids = participant.all_dilemma_order
-    dilemmas = []
-    for did in dilemma_ids:
-        try:
-            dilemmas.append(Dilemma.objects.get(id=did))
-        except Dilemma.DoesNotExist:
-            pass
+    total_dilemmas = len(dilemma_ids)
+
+    # Validate index
+    if index < 0 or index >= total_dilemmas:
+        return redirect('experiment:debrief')
+
+    # Get current dilemma
+    try:
+        dilemma = Dilemma.objects.get(id=dilemma_ids[index])
+    except Dilemma.DoesNotExist:
+        return redirect('experiment:debrief')
 
     if request.method == 'POST':
-        # Save all ratings
-        for dilemma in dilemmas:
-            rating_value = request.POST.get(f'rating_{dilemma.id}')
-            if rating_value:
-                Rating.objects.update_or_create(
-                    participant=participant,
-                    dilemma=dilemma,
-                    phase='post',
-                    defaults={'rating': int(rating_value)}
-                )
+        # Save rating for this dilemma
+        rating_value = request.POST.get(f'rating_{dilemma.id}')
+        if rating_value:
+            Rating.objects.update_or_create(
+                participant=participant,
+                dilemma=dilemma,
+                phase='post',
+                defaults={'rating': int(rating_value)}
+            )
 
-        participant.status = 'post_rating'
-        participant.save()
+        # Move to next dilemma or to debrief
+        if index + 1 < total_dilemmas:
+            return redirect('experiment:post_rating', index=index + 1)
+        else:
+            participant.status = 'post_rating'
+            participant.save()
 
-        EventLog.objects.create(
-            participant=participant,
-            event_type='post_rating_completed',
-            page='post_rating'
-        )
+            EventLog.objects.create(
+                participant=participant,
+                event_type='post_rating_completed',
+                page='post_rating'
+            )
 
-        return redirect('experiment:debrief')
+            return redirect('experiment:debrief')
 
     return render(request, 'experiment/post_rating.html', {
         'participant': participant,
-        'dilemmas': dilemmas,
-        'timer_seconds': 300,  # 5 minutes
+        'dilemma': dilemma,
+        'dilemma_index': index,
+        'total_dilemmas': total_dilemmas,
+        'timer_seconds': 45,
     })
 
 
@@ -408,6 +440,8 @@ def debrief(request):
         DebriefResponse.objects.update_or_create(
             participant=participant,
             defaults={
+                'ai_usage_frequency': request.POST.get('ai_usage_frequency', ''),
+                'ai_usage_tasks': request.POST.get('ai_usage_tasks', ''),
                 'noticed_persuasion': request.POST.get('noticed_persuasion') == 'yes',
                 'persuasion_description': request.POST.get('persuasion_description', ''),
                 'changed_mind': request.POST.get('changed_mind') == 'yes',
@@ -460,6 +494,11 @@ def complete(request):
 def withdrawn(request):
     """Page shown when participant withdraws."""
     return render(request, 'experiment/withdrawn.html')
+
+
+def connection_error(request):
+    """Page shown when LLM connection fails (503 error)."""
+    return render(request, 'experiment/connection_error.html', status=503)
 
 
 # API Views
@@ -741,23 +780,41 @@ def timer_expired(request):
 
     # Determine next URL based on current page
     next_url = '/'
+    total_dilemmas = len(participant.all_dilemma_order)
+    total_chats = len(participant.chat_dilemma_ids)
 
     if current_page == 'tipi':
-        next_url = '/pre-rating/'
-    elif current_page == 'pre_rating':
-        next_url = '/chat/0/'
+        next_url = '/pre-rating/0/'
+    elif current_page.startswith('pre_rating_'):
+        # Extract index from pre_rating_0, pre_rating_1, etc.
+        try:
+            index = int(current_page.split('_')[-1])
+            if index + 1 < total_dilemmas:
+                next_url = f'/pre-rating/{index + 1}/'
+            else:
+                next_url = '/chat/0/'
+        except (ValueError, IndexError):
+            next_url = '/chat/0/'
     elif current_page.startswith('chat_'):
         # Extract index from chat_0, chat_1, etc.
         try:
             index = int(current_page.split('_')[1])
-            if index < 3:
+            if index + 1 < total_chats:
                 next_url = f'/chat/{index + 1}/'
             else:
-                next_url = '/post-rating/'
+                next_url = '/post-rating/0/'
         except (ValueError, IndexError):
-            next_url = '/post-rating/'
-    elif current_page == 'post_rating':
-        next_url = '/debrief/'
+            next_url = '/post-rating/0/'
+    elif current_page.startswith('post_rating_'):
+        # Extract index from post_rating_0, post_rating_1, etc.
+        try:
+            index = int(current_page.split('_')[-1])
+            if index + 1 < total_dilemmas:
+                next_url = f'/post-rating/{index + 1}/'
+            else:
+                next_url = '/debrief/'
+        except (ValueError, IndexError):
+            next_url = '/debrief/'
     elif current_page == 'debrief':
         next_url = '/complete/'
 

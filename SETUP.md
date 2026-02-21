@@ -88,13 +88,17 @@ Visit: http://127.0.0.1:8000/
 ### Manual Testing Checklist
 
 1. **Landing page** (`/`) - Should create a new participant
-2. **Consent** (`/consent/`) - Accept to continue
+2. **Consent** (`/consent/`) - Accept to continue, LLM connection tested
 3. **TIPI Survey** (`/tipi/`) - 10 personality questions (2 min timer)
-4. **Pre-rating** (`/pre-rating/`) - Rate all 8 dilemmas (7 min timer)
-5. **Chat** (`/chat/0/` through `/chat/3/`) - 4 AI discussions (5 min each)
-6. **Post-rating** (`/post-rating/`) - Re-rate all 8 dilemmas (5 min timer)
-7. **Debrief** (`/debrief/`) - Feedback form
+4. **Pre-rating** (`/pre-rating/0/` through `/pre-rating/7/`) - Rate each dilemma individually (75 sec each)
+5. **Chat** (`/chat/0/` through `/chat/3/`) - 4 AI discussions (4.5 min each)
+6. **Post-rating** (`/post-rating/0/` through `/post-rating/7/`) - Re-rate each dilemma individually (45 sec each)
+7. **Debrief** (`/debrief/`) - Feedback form (AI usage, persuasion awareness, changes)
 8. **Complete** (`/complete/`) - Success page
+
+### Connection Error Page
+
+If the LLM connection test fails after consent, participants see `/connection-error/` with instructions to email the researchers.
 
 ### Admin Panel
 
@@ -160,6 +164,11 @@ website_for_experiment/
 - Verify API key is valid and has credits
 - Check browser console for JavaScript errors
 - Check Django server logs for Python exceptions
+- The LLM connection is tested after consent - if it fails, participants see a 503 error page
+
+### Timer not behaving as expected
+- Hard refresh the page (Cmd+Shift+R / Ctrl+Shift+R) to clear cached JavaScript
+- Timer should show warning message at 0:00, not auto-redirect
 
 ### Database errors
 - Run `python manage.py migrate` to ensure tables exist
@@ -174,10 +183,11 @@ website_for_experiment/
 
 ## Current Limitations (TODO)
 
-- [ ] No graceful handling when API key is missing
+- [x] ~~No graceful handling when API key is missing~~ (LLM connection tested after consent)
 - [ ] No way to select condition/LLM via URL parameters for testing
 - [ ] No data export functionality yet
 - [ ] Production deployment not configured (DEBUG=True, SQLite, etc.)
+- [ ] Replace placeholder researcher contact info in templates
 
 ---
 
@@ -186,8 +196,35 @@ website_for_experiment/
 Per participant:
 - Prolific ID (if provided)
 - Assigned condition and LLM provider
-- TIPI personality responses (10 items)
+- TIPI personality responses (10 items, converted to Big Five percentages 0-100%)
 - Pre and post moral ratings (8 dilemmas × 2 phases)
 - Full chat transcripts (4 conversations)
 - Event logs (page views, timer events, etc.)
-- Debrief responses
+- Debrief responses (AI usage frequency, persuasion awareness, opinion changes)
+
+---
+
+## Recent Changes
+
+### UI/UX Improvements
+- **One dilemma at a time**: Rating pages now show individual dilemmas instead of all 8 at once
+- **Adjusted timers**: Pre-rating 75 sec/dilemma, Post-rating 45 sec/dilemma, Chat 4.5 min
+- **Non-intrusive timers**: Timer shows warning message at 0:00 instead of auto-redirecting
+- **Wider layout**: Container width increased to 1400px for better readability
+- **Instruction boxes**: Clear instructions added to every page of the study
+- **Collapsible AI instructions**: Debrief page shows AI prompt in collapsible section
+
+### Data Collection
+- **AI usage questions**: Added frequency and tasks questions to debrief (frequency is mandatory)
+- **Mandatory debrief fields**: Radio button questions in debrief are now required
+- **Personality as percentages**: Big Five traits displayed as 0-100% instead of /7 scale
+
+### Technical Improvements
+- **LLM connection test**: Connection verified after consent, shows 503 error if unavailable
+- **Connection error page**: New page with instructions for participants if LLM fails
+- **Dilemma model fields**: Added `dilemma_type` and `subject` fields
+
+### Templates
+- **Researcher placeholders**: Contact info placeholders added to footer and landing page
+  - Replace `[Researcher Name 1]`, `[Researcher Name 2]`, `[Supervisor Name]`
+  - Replace `researcher@university.edu` and `[University Name]`

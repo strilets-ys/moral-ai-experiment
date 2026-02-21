@@ -1,0 +1,39 @@
+{% extends 'experiment/base.html' %}
+
+{% block title %}Connection Error - Moral AI Experiment{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Connection Error</h1>
+</div>
+
+<div class="content-card error-card">
+    <div class="error-icon">!</div>
+
+    <h2>Unable to Start the Experiment</h2>
+
+    <p>
+        We apologize, but we are currently experiencing technical difficulties connecting to our
+        AI system. The experiment cannot proceed at this time.
+    </p>
+
+    <div class="error-instructions">
+        <h3>What to do now:</h3>
+        <ol>
+            <li><strong>Do not return the study on Prolific yet.</strong></li>
+            <li>Please email us immediately at: <a href="mailto:researcher@university.edu"><strong>researcher@university.edu</strong></a></li>
+            <li>Include your Prolific ID in the email so we can assist you.</li>
+            <li>We will either fix the issue and let you retry, or compensate you for your time.</li>
+        </ol>
+    </div>
+
+    <p class="error-apology">
+        We sincerely apologize for the inconvenience. This error has been logged and we are
+        working to resolve it as quickly as possible.
+    </p>
+
+    <div class="error-code">
+        Error Code: 503 - Service Unavailable
+    </div>
+</div>
+{% endblock %}

@@ -71,37 +71,13 @@
         }).catch(console.error);
     }
 
-    async function handleTimerExpired() {
+    function handleTimerExpired() {
         logEvent('timer_expired', { remaining_seconds: 0 });
 
-        // Try to submit the form if it exists
-        if (window.pageForm) {
-            // Check if form is valid enough to submit
-            const form = window.pageForm;
-            // Submit the form automatically
-            form.submit();
-            return;
-        }
-
-        // If no form, get next URL from server
-        try {
-            const response = await fetch('/api/timer-expired/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken,
-                },
-                body: JSON.stringify({ page: pageName })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                if (data.next_url) {
-                    window.location.href = data.next_url;
-                }
-            }
-        } catch (error) {
-            console.error('Error handling timer expiration:', error);
+        // Show the "please move on" message
+        const warningMessage = document.getElementById('timer-warning-message');
+        if (warningMessage) {
+            warningMessage.style.display = 'block';
         }
     }
 

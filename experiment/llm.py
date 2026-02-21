@@ -152,6 +152,26 @@ def get_llm_client(provider: str) -> BaseLLMClient:
     return client_class()
 
 
+def test_llm_connection(provider: str) -> tuple[bool, str]:
+    """
+    Test if the LLM connection is working.
+    Returns (success: bool, error_message: str)
+    """
+    try:
+        client = get_llm_client(provider)
+        # Send a simple test message
+        response = client.get_response(
+            system_prompt="You are a helpful assistant. Respond with exactly: OK",
+            messages=[{"sender": "user", "text": "Test connection"}]
+        )
+        if response and len(response) > 0:
+            return True, ""
+        else:
+            return False, "Empty response from LLM"
+    except Exception as e:
+        return False, str(e)
+
+
 def get_llm_framework(participant_rating: int, low_rating_framework: str) -> str:
     """
     Determine which ethical framework the LLM should argue from.

@@ -4,15 +4,25 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>Moral Dilemmas</h1>
-    <p class="subtitle">Initial Ratings</p>
+    <h1>Step 3: Initial Dilemma Ratings</h1>
+    <p class="subtitle">Dilemma {{ dilemma_index|add:1 }} of {{ total_dilemmas }}</p>
 </div>
 
 <div class="content-card">
-    <p class="instructions">
-        Please read each moral dilemma carefully and rate how morally acceptable you find the action described.
-        Use the scale from 1 (Completely Wrong) to 7 (Completely Acceptable).
-    </p>
+    <div class="instructions-box">
+        <h3>Instructions</h3>
+        <p>
+            You will now read a series of moral dilemmas. Each dilemma describes a situation where
+            someone must make a difficult decision.
+        </p>
+        <p>
+            For each dilemma, please rate how morally acceptable you find the action described,
+            using the scale from 1 (Completely Wrong) to 7 (Completely Acceptable).
+        </p>
+        <p>
+            There are no right or wrong answers - we are interested in your personal moral judgment.
+        </p>
+    </div>
 
     <form method="post" id="rating-form" class="rating-form">
         {% csrf_token %}
@@ -23,9 +33,7 @@
             <span>7 = Completely Acceptable</span>
         </div>
 
-        {% for dilemma in dilemmas %}
         <div class="dilemma-item">
-            <div class="dilemma-number">Dilemma {{ forloop.counter }} of {{ dilemmas|length }}</div>
             <div class="dilemma-text">{{ dilemma.text }}</div>
 
             <div class="rating-question">
@@ -42,12 +50,13 @@
                 </div>
             </div>
         </div>
-        {% empty %}
-        <p class="no-dilemmas">No dilemmas available. Please contact the researcher.</p>
-        {% endfor %}
 
         <div class="form-actions">
+            {% if dilemma_index|add:1 < total_dilemmas %}
+            <button type="submit" class="btn btn-primary">Next Dilemma</button>
+            {% else %}
             <button type="submit" class="btn btn-primary">Continue to Discussions</button>
+            {% endif %}
         </div>
     </form>
 </div>
@@ -56,6 +65,6 @@
 {% block extra_js %}
 <script>
     window.pageForm = document.getElementById('rating-form');
-    window.pageName = 'pre_rating';
+    window.pageName = 'pre_rating_{{ dilemma_index }}';
 </script>
 {% endblock %}

@@ -108,28 +108,41 @@ Copy `.env.example` to `.env` and configure your API keys and endpoints. See the
 - **Streaming Responses**: Real-time token streaming for natural conversation flow
 - **Ethical Framework Mapping**: Each dilemma mapped to deontological/utilitarian positions
 - **Client-Side Message Tracking**: Messages saved in bulk when leaving chat page
-- **Timed Sessions**: Each page has a timer for consistent data collection
-- **Personality-Tailored Persuasion**: Persuade+Info condition uses Big Five traits
+- **Timed Sessions**: Each page has a timer for consistent data collection (non-intrusive - shows warning instead of auto-redirecting)
+- **Personality-Tailored Persuasion**: Persuade+Info condition uses Big Five traits (displayed as percentages)
+- **LLM Connection Test**: Connection verified after consent, shows 503 error page if LLM is unavailable
+- **One Dilemma at a Time**: Rating pages show dilemmas individually for focused assessment
+- **Instruction Boxes**: Clear instructions provided on each page of the study
 
 ## Data Collected
 
 | Data Type | Description |
 |-----------|-------------|
-| Personality | TIPI responses (Big Five traits) |
+| Personality | TIPI responses (Big Five traits as percentages 0-100%) |
 | Moral Ratings | Pre/post ratings on 8 dilemmas (1-7 scale) |
 | Chat Transcripts | Full conversation history with AI |
 | Event Logs | Page views, timing data, interactions |
-| Debrief | Participant feedback and self-reported opinion changes |
+| AI Usage | Frequency of generative AI use and tasks |
+| Debrief | Participant feedback, persuasion awareness, opinion changes |
 
 ## Participant Flow
 
 ```
-Landing → Consent → TIPI Survey → Pre-Rating → Chat (×4) → Post-Rating → Debrief → Complete
+Landing → Consent → LLM Test → TIPI Survey → Pre-Rating (×8) → Chat (×4) → Post-Rating (×8) → Debrief → Complete
 ```
 
+### Timing Per Page
+| Page | Time Limit |
+|------|------------|
+| TIPI Survey | 2 minutes |
+| Pre-Rating (per dilemma) | 75 seconds |
+| Chat (per discussion) | 4.5 minutes |
+| Post-Rating (per dilemma) | 45 seconds |
+
 - AI starts each chat discussion
-- Each stage has a timer (auto-redirect when expired)
+- Timers show warning message at 0:00 (no auto-redirect)
 - Chat messages saved when moving to next dilemma
+- Connection to assigned LLM tested after consent
 
 ## Admin Interface
 

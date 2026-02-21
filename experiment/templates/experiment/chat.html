@@ -5,17 +5,26 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>Discussion {{ chat_index|add:1 }} of {{ total_chats }}</h1>
+    <h1>Step 4: AI Discussion</h1>
+    <p class="subtitle">Discussion {{ chat_index|add:1 }} of {{ total_chats }}</p>
 </div>
 
 <div class="content-card chat-container">
+    <div class="instructions-box">
+        <h3>Instructions</h3>
+        <p>
+            You will now discuss this moral dilemma with an AI assistant. The AI will share its
+            perspective on the dilemma and you can respond with your own thoughts.
+        </p>
+        <p>
+            Feel free to express your views, ask questions, or challenge the AI's reasoning.
+            When you're ready to move on, click the button at the bottom.
+        </p>
+    </div>
+
     <div class="dilemma-context">
         <h3>The Dilemma</h3>
         <p>{{ dilemma.text }}</p>
-    </div>
-
-    <div class="chat-instructions">
-        <p>The AI will share its perspective first. Respond and discuss this dilemma together.</p>
     </div>
 
     <div id="chat-messages" class="chat-messages">
@@ -45,7 +54,7 @@
     </div>
 
     <div class="chat-actions">
-        <form method="get" action="{% if chat_index < total_chats|add:'-1' %}{% url 'experiment:chat' chat_index|add:1 %}{% else %}{% url 'experiment:post_rating' %}{% endif %}">
+        <form method="get" action="{% if chat_index < total_chats|add:'-1' %}{% url 'experiment:chat' chat_index|add:1 %}{% else %}{% url 'experiment:post_rating' 0 %}{% endif %}">
             <button type="submit" class="btn btn-secondary" id="next-btn">
                 {% if chat_index < total_chats|add:'-1' %}
                 Next Discussion

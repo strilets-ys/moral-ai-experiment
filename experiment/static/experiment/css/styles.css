@@ -14,7 +14,7 @@ body {
 }
 
 .container {
-    max-width: 800px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
     min-height: 100vh;
@@ -50,6 +50,18 @@ body {
     background: #c0392b;
 }
 
+.timer-warning-message {
+    display: none;
+    color: #c0392b;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-top: 8px;
+    text-align: center;
+    padding: 8px 12px;
+    background: rgba(192, 57, 43, 0.1);
+    border-radius: 6px;
+}
+
 @keyframes pulse {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.05); }
@@ -71,6 +83,51 @@ body {
 .page-header .subtitle {
     color: #7f8c8d;
     font-size: 1.1rem;
+}
+
+/* Instructions Box */
+.instructions-box {
+    background: #e8f4f8;
+    border-left: 4px solid #3498db;
+    padding: 20px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 25px;
+}
+
+.instructions-box h3 {
+    color: #2980b9;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.instructions-box p {
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.instructions-box p:last-child {
+    margin-bottom: 0;
+}
+
+/* Researchers Info */
+.researchers {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    margin: 15px 0;
+    font-size: 0.95rem;
+    line-height: 1.8;
+}
+
+/* Steps List */
+.steps-list {
+    margin: 20px 0;
+    padding-left: 25px;
+}
+
+.steps-list li {
+    margin-bottom: 12px;
+    line-height: 1.5;
 }
 
 /* Content Card */
@@ -483,6 +540,60 @@ textarea {
     margin: 0;
 }
 
+.collapsible-section {
+    margin-top: 20px;
+}
+
+.collapsible-toggle {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.collapsible-toggle:hover {
+    background: #2980b9;
+}
+
+.collapsible-content {
+    display: none;
+    margin-top: 15px;
+}
+
+.collapsible-content.expanded {
+    display: block;
+}
+
+.radio-group-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.radio-group-vertical label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+.radio-group-vertical input[type="radio"] {
+    width: 18px;
+    height: 18px;
+}
+
+.required {
+    color: #c0392b;
+    font-weight: bold;
+}
+
 .debrief-form h2 {
     margin-bottom: 20px;
     color: #2c3e50;
@@ -631,6 +742,68 @@ textarea {
     .chat-message {
         max-width: 90%;
     }
+}
+
+/* Error Page */
+.error-card {
+    text-align: center;
+}
+
+.error-icon {
+    width: 80px;
+    height: 80px;
+    background: #e74c3c;
+    color: white;
+    font-size: 3rem;
+    font-weight: bold;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.error-card h2 {
+    color: #c0392b;
+    margin-bottom: 20px;
+}
+
+.error-instructions {
+    background: #fdf2e9;
+    border: 1px solid #f5b041;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 25px 0;
+    text-align: left;
+}
+
+.error-instructions h3 {
+    color: #d35400;
+    margin-bottom: 15px;
+}
+
+.error-instructions ol {
+    margin-left: 20px;
+}
+
+.error-instructions li {
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.error-apology {
+    color: #7f8c8d;
+    font-style: italic;
+    margin: 20px 0;
+}
+
+.error-code {
+    background: #ecf0f1;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-family: monospace;
+    color: #7f8c8d;
+    display: inline-block;
 }
 
 /* Accessibility */
