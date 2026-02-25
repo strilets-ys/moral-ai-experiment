@@ -12,12 +12,13 @@ This experiment investigates whether conversations with AI can influence people'
 4. Re-rate the same dilemmas after the discussions
 5. Provide feedback on their experience
 
-### Ethical Framework Argumentation
+### Zero-Shot Ethical Framework Argumentation
 
-Each dilemma is mapped to either a **deontological** or **utilitarian** position based on the participant's rating:
+The AI uses **zero-shot learning** - it is only told which ethical framework to argue from (deontological/utilitarian) without explicit instructions on how to apply it:
 - The AI always argues from the **opposite ethical framework** to the participant
 - If the participant is neutral (rating = 4), the AI is randomly assigned a framework
 - The AI presents arguments naturally without naming the ethical framework
+- Exception: Marital Affair dilemma includes explicit position due to counterintuitive utilitarian stance
 
 ### Experimental Conditions
 
@@ -36,10 +37,17 @@ The study supports multiple language models:
 - OpenAI GPT-4 (requires API key)
 - Anthropic Claude (requires API key)
 
+### Moral Dilemmas
+
+8 dilemmas from moral psychology research, each with researcher attribution:
+- Tyrannicide (K), Medicine costs (K), Rugby cannibalism (K), Endowment (K)
+- Marital Affair (E)
+- Terrorist Negotiation (G), Crew Killing (G), Hospital Fumes (G)
+
 ## Tech Stack
 
 - **Backend:** Django 5.x
-- **Database:** SQLite (development)
+- **Database:** SQLite (development), PostgreSQL (production via DATABASE_URL)
 - **Frontend:** HTML, CSS, JavaScript (vanilla)
 - **LLM Integration:** OpenAI-compatible API (vLLM), Anthropic SDK
 
@@ -95,6 +103,8 @@ Copy `.env.example` to `.env` and configure your API keys and endpoints. See the
 │   ├── models.py            # Database models
 │   ├── views.py             # Views and API endpoints
 │   ├── llm.py               # LLM client implementations
+│   ├── admin.py             # Admin panel (read-only + export)
+│   ├── export.py            # Data export functions (JSON/CSV)
 │   ├── templates/           # HTML templates
 │   ├── static/              # CSS and JavaScript
 │   └── management/commands/ # Custom Django commands
@@ -104,26 +114,41 @@ Copy `.env.example` to `.env` and configure your API keys and endpoints. See the
 
 ## Key Features
 
+- **Zero-Shot Learning**: AI applies ethical frameworks based on pre-trained knowledge
 - **AI-First Conversations**: The AI initiates each discussion by sharing its perspective
 - **Streaming Responses**: Real-time token streaming for natural conversation flow
-- **Ethical Framework Mapping**: Each dilemma mapped to deontological/utilitarian positions
-- **Client-Side Message Tracking**: Messages saved in bulk when leaving chat page
-- **Timed Sessions**: Each page has a timer for consistent data collection (non-intrusive - shows warning instead of auto-redirecting)
-- **Personality-Tailored Persuasion**: Persuade+Info condition uses Big Five traits (displayed as percentages)
-- **LLM Connection Test**: Connection verified after consent, shows 503 error page if LLM is unavailable
-- **One Dilemma at a Time**: Rating pages show dilemmas individually for focused assessment
-- **Instruction Boxes**: Clear instructions provided on each page of the study
+- **Balanced Assignment**: Dilemmas for chat are balanced across participants
+- **System Prompt Logging**: All prompts sent to LLM are stored for analysis
+- **Data Export**: JSON/CSV export with filters at `/admin/experiment/export/`
+- **Read-Only Admin**: Prevents accidental data modification (except GDPR deletion)
+- **Timed Sessions**: Each page has a timer (non-intrusive - shows warning instead of auto-redirecting)
+- **Personality-Tailored Persuasion**: Persuade+Info condition uses Big Five traits
+- **LLM Connection Test**: Connection verified after consent, shows 503 error if unavailable
 
 ## Data Collected
 
 | Data Type | Description |
 |-----------|-------------|
-| Personality | TIPI responses (Big Five traits as percentages 0-100%) |
+| Personality | TIPI responses (Big Five traits as percentages) |
 | Moral Ratings | Pre/post ratings on 8 dilemmas (1-7 scale) |
 | Chat Transcripts | Full conversation history with AI |
+| System Prompts | Prompts sent to LLM (logged for transparency) |
 | Event Logs | Page views, timing data, interactions |
 | AI Usage | Frequency of generative AI use and tasks |
 | Debrief | Participant feedback, persuasion awareness, opinion changes |
+
+## Database Models
+
+| Model | Purpose |
+|-------|---------|
+| `Participant` | Core participant record with condition, LLM provider, status |
+| `Dilemma` | Moral dilemmas with framework mappings and researcher attribution |
+| `Rating` | Pre/post ratings (1-7 scale) |
+| `ChatTurn` | Individual messages in AI conversations |
+| `TIPIResponse` | 10-item personality questionnaire responses |
+| `SystemPromptLog` | System prompts sent to LLM (for analysis) |
+| `EventLog` | Page views, timer events, errors |
+| `DebriefResponse` | Post-study feedback |
 
 ## Participant Flow
 
@@ -137,7 +162,8 @@ Landing → Consent → LLM Test → TIPI Survey → Pre-Rating (×8) → Chat (
 | TIPI Survey | 2 minutes |
 | Pre-Rating (per dilemma) | 75 seconds |
 | Chat (per discussion) | 4.5 minutes |
-| Post-Rating (per dilemma) | 45 seconds |
+| Post-Rating (per dilemma) | 30 seconds |
+| Debrief | 5 minutes |
 
 - AI starts each chat discussion
 - Timers show warning message at 0:00 (no auto-redirect)
@@ -146,11 +172,13 @@ Landing → Consent → LLM Test → TIPI Survey → Pre-Rating (×8) → Chat (
 
 ## Admin Interface
 
-Access the Django admin at http://127.0.0.1:8000/admin/ to view:
-- Participants and their conditions
-- Chat transcripts
-- Ratings (pre and post)
-- TIPI personality scores
+Access the Django admin at http://127.0.0.1:8000/admin/
+
+**Features:**
+- View participants, ratings, chat transcripts, event logs (read-only)
+- View system prompts sent to LLM
+- Delete participants (GDPR compliance) with audit logging
+- Export data to JSON/CSV at `/admin/experiment/export/`
 
 ## License
 

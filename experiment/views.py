@@ -7,9 +7,14 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.conf import settings
 
+import logging
+
 from .models import (
-    Participant, Dilemma, TIPIResponse, Rating, ChatTurn, EventLog, DebriefResponse
+    Participant, Dilemma, TIPIResponse, Rating, ChatTurn, EventLog, DebriefResponse,
+    SystemPromptLog
 )
+
+logger = logging.getLogger(__name__)
 from .llm import get_llm_client, build_system_prompt, test_llm_connection, get_llm_framework
 
 
@@ -197,6 +202,7 @@ def tipi(request):
         'participant': participant,
         'tipi_items': tipi_items,
         'timer_seconds': 120,  # 2 minutes
+        'page_name': 'tipi',
     })
 
 
@@ -252,6 +258,7 @@ def pre_rating(request, index):
         'dilemma_index': index,
         'total_dilemmas': total_dilemmas,
         'timer_seconds': 75,
+        'page_name': f'pre_rating_{index}',
     })
 
 
@@ -284,7 +291,13 @@ def chat(request, index):
             dilemma=dilemma,
             phase='pre'
         )
-        participant_stance = 'pro' if pre_rating.rating >= 4 else 'anti'
+        # Consistent with get_llm_framework(): 4 is neutral, not pro
+        if pre_rating.rating > 4:
+            participant_stance = 'pro'
+        elif pre_rating.rating < 4:
+            participant_stance = 'anti'
+        else:  # rating == 4
+            participant_stance = 'neutral'
     except Rating.DoesNotExist:
         participant_stance = 'neutral'
 
@@ -302,6 +315,7 @@ def chat(request, index):
         'chat_turns': chat_turns,
         'participant_stance': participant_stance,
         'timer_seconds': 270,  # 4.5 minutes
+        'page_name': f'chat_{index}',
     })
 
 
@@ -356,7 +370,8 @@ def post_rating(request, index):
         'dilemma': dilemma,
         'dilemma_index': index,
         'total_dilemmas': total_dilemmas,
-        'timer_seconds': 45,
+        'timer_seconds': 30,
+        'page_name': f'post_rating_{index}',
     })
 
 
@@ -405,11 +420,13 @@ def debrief(request):
                 except TIPIResponse.DoesNotExist:
                     pass
 
-            # Get position description based on framework
-            position_description = (
-                sample_dilemma.deontological_position if llm_framework == 'deontological'
-                else sample_dilemma.utilitarian_position
-            ) or None
+            # Only include position_description for counterintuitive dilemmas (Marital Affair)
+            position_description = None
+            if sample_dilemma.code == 'Marital Affair':
+                position_description = (
+                    sample_dilemma.deontological_position if llm_framework == 'deontological'
+                    else sample_dilemma.utilitarian_position
+                ) or None
 
             sample_prompt = build_system_prompt(
                 condition=participant.condition,
@@ -466,6 +483,7 @@ def debrief(request):
         'condition_description': condition_description,
         'sample_prompt': sample_prompt,
         'timer_seconds': 300,  # 5 minutes
+        'page_name': 'debrief',
     })
 
 
@@ -538,6 +556,17 @@ def chat_send(request):
         )
         participant_rating = pre_rating.rating
     except Rating.DoesNotExist:
+        # This shouldn't happen - participant should have rated before chat
+        logger.warning(
+            f"Missing pre-rating: participant={participant.id}, dilemma={dilemma.id}. "
+            f"Defaulting to neutral (4)."
+        )
+        EventLog.objects.create(
+            participant=participant,
+            event_type='missing_pre_rating',
+            page='chat_send',
+            data={'dilemma_id': dilemma.id}
+        )
         participant_rating = 4
 
     llm_framework = get_llm_framework(
@@ -550,13 +579,15 @@ def chat_send(request):
         try:
             personality_profile = participant.tipi.get_personality_profile()
         except TIPIResponse.DoesNotExist:
-            pass
+            logger.warning(f"Missing TIPI for participant={participant.id} in persuade_info condition")
 
-    # Get position description based on framework
-    position_description = (
-        dilemma.deontological_position if llm_framework == 'deontological'
-        else dilemma.utilitarian_position
-    ) or None
+    # Only include position_description for counterintuitive dilemmas (Marital Affair)
+    position_description = None
+    if dilemma.code == 'Marital Affair':
+        position_description = (
+            dilemma.deontological_position if llm_framework == 'deontological'
+            else dilemma.utilitarian_position
+        ) or None
 
     system_prompt = build_system_prompt(
         condition=participant.condition,
@@ -564,6 +595,18 @@ def chat_send(request):
         llm_framework=llm_framework,
         personality_profile=personality_profile,
         position_description=position_description
+    )
+
+    # Log the system prompt (create or update to avoid duplicates)
+    SystemPromptLog.objects.get_or_create(
+        participant=participant,
+        dilemma=dilemma,
+        defaults={
+            'prompt_text': system_prompt,
+            'condition': participant.condition,
+            'llm_framework': llm_framework,
+            'personality_profile': personality_profile or '',
+        }
     )
 
     # Get LLM client
@@ -629,6 +672,17 @@ def chat_init(request):
         )
         participant_rating = pre_rating.rating
     except Rating.DoesNotExist:
+        # This shouldn't happen - participant should have rated before chat
+        logger.warning(
+            f"Missing pre-rating: participant={participant.id}, dilemma={dilemma.id}. "
+            f"Defaulting to neutral (4)."
+        )
+        EventLog.objects.create(
+            participant=participant,
+            event_type='missing_pre_rating',
+            page='chat_init',
+            data={'dilemma_id': dilemma.id}
+        )
         participant_rating = 4
 
     llm_framework = get_llm_framework(
@@ -642,13 +696,15 @@ def chat_init(request):
         try:
             personality_profile = participant.tipi.get_personality_profile()
         except TIPIResponse.DoesNotExist:
-            pass
+            logger.warning(f"Missing TIPI for participant={participant.id} in persuade_info condition")
 
-    # Get position description based on framework
-    position_description = (
-        dilemma.deontological_position if llm_framework == 'deontological'
-        else dilemma.utilitarian_position
-    ) or None
+    # Only include position_description for counterintuitive dilemmas (Marital Affair)
+    position_description = None
+    if dilemma.code == 'Marital Affair':
+        position_description = (
+            dilemma.deontological_position if llm_framework == 'deontological'
+            else dilemma.utilitarian_position
+        ) or None
 
     # Build system prompt
     system_prompt = build_system_prompt(
@@ -657,6 +713,18 @@ def chat_init(request):
         llm_framework=llm_framework,
         personality_profile=personality_profile,
         position_description=position_description
+    )
+
+    # Log the system prompt (create or update to avoid duplicates)
+    SystemPromptLog.objects.get_or_create(
+        participant=participant,
+        dilemma=dilemma,
+        defaults={
+            'prompt_text': system_prompt,
+            'condition': participant.condition,
+            'llm_framework': llm_framework,
+            'personality_profile': personality_profile or '',
+        }
     )
 
     # Get LLM client

@@ -911,61 +911,84 @@ class BuildSystemPromptTest(TestCase):
         prompt = build_system_prompt(
             condition='neutral',
             dilemma_text='Is it okay to lie to protect someone?',
-            participant_stance='pro'
+            llm_framework='deontological'
         )
-        self.assertIn('thoughtful counterarguments', prompt)
-        self.assertIn('against', prompt)  # AI argues against
-        self.assertNotIn('persuade', prompt.lower())
+        self.assertIn('Is it okay to lie', prompt)
+        self.assertIn('YOUR ETHICAL FRAMEWORK: deontological', prompt)
+        self.assertNotIn('Persuade', prompt)  # Neutral doesn't have persuasion goal
 
     def test_persuade_condition_prompt(self):
         """Test system prompt for persuade condition."""
         prompt = build_system_prompt(
             condition='persuade',
             dilemma_text='Is it okay to lie to protect someone?',
-            participant_stance='anti'
+            llm_framework='utilitarian'
         )
-        self.assertIn('persuade', prompt.lower())
-        self.assertIn('in favor of', prompt)  # AI argues for
+        self.assertIn('Persuade', prompt)
+        self.assertIn('YOUR ETHICAL FRAMEWORK: utilitarian', prompt)
 
     def test_persuade_info_condition_prompt(self):
         """Test system prompt for persuade_info condition."""
         prompt = build_system_prompt(
             condition='persuade_info',
             dilemma_text='Is it okay to lie to protect someone?',
-            participant_stance='pro',
-            personality_profile='Extraversion: 6.0/7, Agreeableness: 5.0/7'
+            llm_framework='deontological',
+            personality_profile='Extraversion: 58%, Agreeableness: 75%'
         )
-        self.assertIn('persuade', prompt.lower())
-        self.assertIn('personality', prompt.lower())
-        self.assertIn('Extraversion', prompt)
+        self.assertIn('Persuade', prompt)
+        self.assertIn('PERSONALITY', prompt.upper())
+        self.assertIn('Extraversion: 58%', prompt)
+        self.assertIn('Tailor your persuasion', prompt)
 
-    def test_ai_stance_opposite_to_pro(self):
-        """Test that AI argues against when participant is pro."""
+    def test_deontological_framework_named(self):
+        """Test that deontological framework is named in prompt (zero-shot)."""
         prompt = build_system_prompt(
             condition='neutral',
             dilemma_text='Test dilemma',
-            participant_stance='pro'
+            llm_framework='deontological'
         )
-        self.assertIn('morally wrong', prompt)  # AI position
+        self.assertIn('YOUR ETHICAL FRAMEWORK: deontological', prompt)
 
-    def test_ai_stance_opposite_to_anti(self):
-        """Test that AI argues for when participant is anti."""
+    def test_utilitarian_framework_named(self):
+        """Test that utilitarian framework is named in prompt (zero-shot)."""
         prompt = build_system_prompt(
             condition='neutral',
             dilemma_text='Test dilemma',
-            participant_stance='anti'
+            llm_framework='utilitarian'
         )
-        self.assertIn('morally acceptable', prompt)  # AI position
+        self.assertIn('YOUR ETHICAL FRAMEWORK: utilitarian', prompt)
 
-    def test_prompt_includes_guidelines(self):
-        """Test that prompt includes important guidelines."""
+    def test_prompt_includes_critical_rules(self):
+        """Test that prompt includes critical rules."""
         prompt = build_system_prompt(
             condition='neutral',
             dilemma_text='Test dilemma',
-            participant_stance='pro'
+            llm_framework='deontological'
         )
-        self.assertIn('Do not reveal your role as an AI', prompt)
-        self.assertIn('Stay on topic', prompt)
+        self.assertIn('CRITICAL RULES', prompt)
+        self.assertIn('maximum 3 sentences', prompt)
+        self.assertIn('NEVER mention ethical frameworks', prompt)
+
+    def test_position_description_included(self):
+        """Test that position description is included when provided (for counterintuitive dilemmas)."""
+        prompt = build_system_prompt(
+            condition='neutral',
+            dilemma_text='Test dilemma',
+            llm_framework='deontological',
+            position_description='Lying is always wrong regardless of consequences.'
+        )
+        self.assertIn('YOUR POSITION:', prompt)
+        self.assertIn('Lying is always wrong', prompt)
+
+    def test_position_description_not_included_when_none(self):
+        """Test that no position section appears when position_description is None (zero-shot)."""
+        prompt = build_system_prompt(
+            condition='neutral',
+            dilemma_text='Test dilemma',
+            llm_framework='deontological',
+            position_description=None
+        )
+        self.assertNotIn('YOUR POSITION', prompt)
 
 
 class GetLLMClientTest(TestCase):

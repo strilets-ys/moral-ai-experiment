@@ -69,3 +69,6 @@ credentials.json
 htmlcov/
 .pytest_cache/
 .tox/
+
+# Personal documentation (not for repo)
+WORKFLOW_DOCUMENTATION.md

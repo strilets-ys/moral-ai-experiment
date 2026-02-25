@@ -164,10 +164,16 @@ def test_llm_connection(provider: str) -> tuple[bool, str]:
             system_prompt="You are a helpful assistant. Respond with exactly: OK",
             messages=[{"sender": "user", "text": "Test connection"}]
         )
-        if response and len(response) > 0:
-            return True, ""
-        else:
+        if not response:
             return False, "Empty response from LLM"
+
+        # Check if response contains "OK" (allowing for minor variations)
+        response_clean = response.strip().upper()
+        if "OK" in response_clean and len(response_clean) < 20:
+            return True, ""
+
+        # Response exists but isn't what we expected - could be an error message
+        return False, f"Unexpected LLM response: {response[:100]}"
     except Exception as e:
         return False, str(e)
 
@@ -217,28 +223,23 @@ def build_system_prompt(
         dilemma_text: The moral dilemma scenario
         llm_framework: 'deontological' or 'utilitarian' - the framework LLM should argue from
         personality_profile: Big Five scores (only used for persuade_info condition)
-        position_description: Explicit position to argue for this dilemma (optional)
+        position_description: Explicit position for counterintuitive dilemmas (optional)
 
     Returns:
         The system prompt for the LLM
     """
 
-    # Describe the framework approach without naming it
-    if llm_framework == 'deontological':
-        approach = "focus on moral duties, rules, and principles - argue that certain actions are inherently right or wrong regardless of their consequences"
-    else:  # utilitarian
-        approach = "focus on outcomes and consequences - argue that the morally right action is the one that produces the best overall results for everyone affected"
-
-    # Add explicit position if available
+    # For counterintuitive dilemmas, include explicit position guidance
+    position_section = ""
     if position_description:
-        approach += f"\n\nYOUR POSITION FOR THIS DILEMMA: {position_description}"
+        position_section = f"\n\nYOUR POSITION: {position_description}"
 
     base = f"""You will discuss the following dilemma with the user.
 
 The dilemma:
 {dilemma_text}
 
-YOUR APPROACH: {approach}
+YOUR ETHICAL FRAMEWORK: {llm_framework}{position_section}
 
 CRITICAL RULES:
 - Keep responses to maximum 3 sentences
@@ -257,7 +258,7 @@ You will have 5 minutes for this conversation."""
 The dilemma:
 {dilemma_text}
 
-YOUR APPROACH: {approach}
+YOUR ETHICAL FRAMEWORK: {llm_framework}{position_section}
 
 YOUR GOAL: Persuade the user to agree with your position.
 
@@ -276,7 +277,7 @@ You will have 5 minutes for this conversation."""
 The dilemma:
 {dilemma_text}
 
-YOUR APPROACH: {approach}
+YOUR ETHICAL FRAMEWORK: {llm_framework}{position_section}
 
 YOUR GOAL: Persuade the user to agree with your position.
 

@@ -1,0 +1,111 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; Export Data
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Export Experiment Data</h1>
+
+<div class="module" style="padding: 20px; margin-bottom: 20px;">
+    <h2>Data Summary</h2>
+    <p>Total participants: <strong>{{ participant_count }}</strong></p>
+    <p>Non-withdrawn participants: <strong>{{ non_withdrawn_count }}</strong></p>
+</div>
+
+<form method="post" action="" class="module" style="padding: 20px;">
+    {% csrf_token %}
+
+    <fieldset class="module aligned">
+        <h2>Filter Options</h2>
+
+        <div class="form-row">
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;">
+                <div>
+                    <label for="date_from"><strong>Date From:</strong></label><br>
+                    <input type="date" name="date_from" id="date_from" style="padding: 5px;">
+                </div>
+                <div>
+                    <label for="date_to"><strong>Date To:</strong></label><br>
+                    <input type="date" name="date_to" id="date_to" style="padding: 5px;">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;">
+                <div>
+                    <label for="condition"><strong>Condition:</strong></label><br>
+                    <select name="condition" id="condition" style="padding: 5px;">
+                        <option value="">All conditions</option>
+                        {% for value, label in conditions %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="status"><strong>Status:</strong></label><br>
+                    <select name="status" id="status" style="padding: 5px;">
+                        <option value="">All statuses</option>
+                        {% for value, label in statuses %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div style="margin-bottom: 15px;">
+                <label>
+                    <input type="checkbox" name="include_withdrawn" id="include_withdrawn">
+                    Include withdrawn participants
+                </label>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="module aligned">
+        <h2>Export Format</h2>
+
+        <div class="form-row">
+            <div style="margin-bottom: 15px;">
+                <label>
+                    <input type="radio" name="format" value="json" checked>
+                    <strong>JSON</strong> - Full nested data structure (recommended for analysis)
+                </label>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label>
+                    <input type="radio" name="format" value="csv">
+                    <strong>CSV</strong> - Flattened table format (one row per participant)
+                </label>
+            </div>
+        </div>
+    </fieldset>
+
+    <div class="submit-row" style="margin-top: 20px;">
+        <input type="submit" value="Export Data" class="default" style="padding: 10px 20px; font-size: 14px;">
+    </div>
+</form>
+
+<div class="module" style="padding: 20px; margin-top: 20px;">
+    <h2>Export Contents</h2>
+    <p>The export will include:</p>
+    <ul style="margin-left: 20px; line-height: 1.8;">
+        <li><strong>Participant info:</strong> ID, Prolific ID, condition, LLM provider, status, timestamps</li>
+        <li><strong>TIPI responses:</strong> Raw items (1-10) and computed Big Five scores</li>
+        <li><strong>Ratings:</strong> Pre and post ratings for all dilemmas</li>
+        <li><strong>Chat transcripts:</strong> Full conversation history with timestamps</li>
+        <li><strong>System prompts:</strong> The exact prompts sent to the LLM</li>
+        <li><strong>Event logs:</strong> Page views, timer expirations, and other events</li>
+        <li><strong>Debrief responses:</strong> AI usage, persuasion awareness, and feedback</li>
+    </ul>
+</div>
+{% endblock %}

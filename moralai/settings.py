@@ -78,12 +78,19 @@ WSGI_APPLICATION = 'moralai.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Support for DATABASE_URL environment variable for production deployment
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    import dj_database_url
+    DATABASES = {'default': dj_database_url.parse(DATABASE_URL)}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
 
 
 # Password validation
@@ -140,3 +147,33 @@ OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'llama3.2')
 
 # Prolific completion URL (configure before deployment)
 PROLIFIC_COMPLETION_URL = os.environ.get('PROLIFIC_COMPLETION_URL', 'https://app.prolific.com/submissions/complete?cc=XXXXXXXX')
+
+# Logging configuration for GDPR audit trail
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'gdpr_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'gdpr_audit.log',
+            'formatter': 'verbose',
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'gdpr_audit': {
+            'handlers': ['gdpr_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}

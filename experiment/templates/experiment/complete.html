@@ -1,6 +1,6 @@
 {% extends 'experiment/base.html' %}
 
-{% block title %}Complete - Moral AI Experiment{% endblock %}
+{% block title %}Complete - Human–AI Moral Judgment Study{% endblock %}
 
 {% block content %}
 <div class="page-header">
@@ -11,11 +11,11 @@
     <div class="completion-message">
         <div class="checkmark">&#10004;</div>
         <h2>Thank You!</h2>
-        <p>You have successfully completed the Moral AI Study.</p>
+        <p>You have successfully completed the Human–AI Moral Judgment Study.</p>
     </div>
 
     <div class="completion-info">
-        <p>Your responses have been recorded and will contribute to important research on AI and moral psychology.</p>
+        <p>Your responses have been recorded and will contribute to research investigating whether brief interactions with AI chatbots can shift people’s moral judgments, and how personalization and persuasive goals affect this process.</p>
 
         {% if participant.prolific_id %}
         <div class="prolific-redirect">
@@ -29,7 +29,7 @@
 
     <div class="contact-info">
         <h3>Questions?</h3>
-        <p>If you have any questions about this study or would like more information about the research, please contact the researcher at [researcher email].</p>
+        <p>If you have any questions about this study or would like more information about the research, please contact the researcher at aimoralstudy@gmail.com.</p>
     </div>
 </div>
 {% endblock %}

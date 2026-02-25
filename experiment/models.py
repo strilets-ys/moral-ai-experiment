@@ -15,6 +15,7 @@ class Dilemma(models.Model):
     ]
 
     code = models.CharField(max_length=32, unique=True)
+    researcher = models.CharField(max_length=8, blank=True, help_text="Researcher attribution letter (e.g., K, E, G)")
     text = models.TextField()
     dilemma_type = models.CharField(max_length=16, choices=TYPE_CHOICES, default='action')
     subject = models.CharField(max_length=64, blank=True)
@@ -24,6 +25,8 @@ class Dilemma(models.Model):
         choices=FRAMEWORK_CHOICES,
         default='deontological'
     )
+    # Counter for balanced chat assignment
+    chat_selection_count = models.IntegerField(default=0)
     # Explicit position descriptions for each framework
     deontological_position = models.TextField(
         blank=True,
@@ -35,6 +38,8 @@ class Dilemma(models.Model):
     )
 
     def __str__(self):
+        if self.researcher:
+            return f"{self.code} ({self.researcher})"
         return self.code
 
 
@@ -96,11 +101,29 @@ class Participant(models.Model):
         self._all_dilemma_order = json.dumps(value)
 
     def assign_dilemmas(self):
-        """Randomly assign 4 dilemmas for chat and order all 8 for ratings."""
-        all_dilemmas = list(Dilemma.objects.values_list('id', flat=True))
-        random.shuffle(all_dilemmas)
-        self.chat_dilemma_ids = all_dilemmas[:4]
-        self.all_dilemma_order = all_dilemmas
+        """Assign 4 dilemmas for chat (balanced) and order all 8 for ratings."""
+        # Get all dilemmas sorted by chat_selection_count (least used first)
+        # Add randomization for ties by using (count, random) as sort key
+        all_dilemma_objs = list(Dilemma.objects.all())
+
+        # Sort by selection count, with random tiebreaker
+        all_dilemma_objs.sort(key=lambda d: (d.chat_selection_count, random.random()))
+
+        # Pick the 4 least-used dilemmas for chat
+        chat_dilemma_objs = all_dilemma_objs[:4]
+        chat_dilemmas = [d.id for d in chat_dilemma_objs]
+        self.chat_dilemma_ids = chat_dilemmas
+
+        # Increment selection counts for chosen dilemmas
+        for d in chat_dilemma_objs:
+            d.chat_selection_count += 1
+            d.save(update_fields=['chat_selection_count'])
+
+        # Shuffle all 8 for rating order (independent of chat selection)
+        all_dilemma_ids = [d.id for d in all_dilemma_objs]
+        random.shuffle(all_dilemma_ids)
+        self.all_dilemma_order = all_dilemma_ids
+
         self.save()
 
     def __str__(self):
@@ -258,3 +281,20 @@ class DebriefResponse(models.Model):
 
     def __str__(self):
         return f"Debrief for {self.participant}"
+
+
+class SystemPromptLog(models.Model):
+    """Log system prompts sent to the LLM for each participant/dilemma."""
+    participant = models.ForeignKey(Participant, on_delete=models.CASCADE, related_name='system_prompts')
+    dilemma = models.ForeignKey(Dilemma, on_delete=models.CASCADE)
+    prompt_text = models.TextField()
+    condition = models.CharField(max_length=32)
+    llm_framework = models.CharField(max_length=16)  # 'deontological' or 'utilitarian'
+    personality_profile = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['participant', 'dilemma']
+
+    def __str__(self):
+        return f"SystemPrompt for {self.participant} - {self.dilemma}"

@@ -18,6 +18,13 @@ This experiment:
 
 **Three LLM providers:** OpenAI (GPT-4), Anthropic (Claude), Qwen
 
+**Zero-shot learning:** The AI is only told which ethical framework to argue from (deontological/utilitarian) without explicit instructions on how to apply it. Exception: Marital Affair dilemma includes explicit position due to counterintuitive utilitarian stance.
+
+**Moral dilemmas** (with researcher attribution):
+- Tyrannicide (K), Medicine costs (K), Rugby cannibalism (K), Endowment (K)
+- Marital Affair (E)
+- Terrorist Negotiation (G), Crew Killing (G), Hospital Fumes (G)
+
 ---
 
 ## Local Setup
@@ -52,6 +59,9 @@ QWEN_API_KEY=your-qwen-key
 
 # For Prolific integration (not needed for standalone testing):
 # PROLIFIC_COMPLETION_URL=https://app.prolific.com/submissions/complete?cc=YOURCODE
+
+# For production database (optional, defaults to SQLite):
+# DATABASE_URL=postgres://user:pass@host:port/dbname
 ```
 
 **Getting API Keys:**
@@ -92,9 +102,9 @@ Visit: http://127.0.0.1:8000/
 3. **TIPI Survey** (`/tipi/`) - 10 personality questions (2 min timer)
 4. **Pre-rating** (`/pre-rating/0/` through `/pre-rating/7/`) - Rate each dilemma individually (75 sec each)
 5. **Chat** (`/chat/0/` through `/chat/3/`) - 4 AI discussions (4.5 min each)
-6. **Post-rating** (`/post-rating/0/` through `/post-rating/7/`) - Re-rate each dilemma individually (45 sec each)
-7. **Debrief** (`/debrief/`) - Feedback form (AI usage, persuasion awareness, changes)
-8. **Complete** (`/complete/`) - Success page
+6. **Post-rating** (`/post-rating/0/` through `/post-rating/7/`) - Re-rate each dilemma individually (30 sec each)
+7. **Debrief** (`/debrief/`) - Feedback form (5 min)
+8. **Complete** (`/complete/`) - Success page with Prolific redirect
 
 ### Connection Error Page
 
@@ -104,11 +114,41 @@ If the LLM connection test fails after consent, participants see `/connection-er
 
 Access at: http://127.0.0.1:8000/admin/
 
-View and manage:
-- Participants and their assigned conditions
-- Ratings (pre/post)
-- Chat transcripts
+**Features:**
+- View participants and their assigned conditions (read-only)
+- View ratings, chat transcripts, event logs (read-only)
+- View system prompts sent to LLM (read-only)
+- Delete participants (GDPR compliance) with audit logging
+- Export data to JSON/CSV at `/admin/experiment/export/`
+
+**Note:** Admin is read-only except for participant deletion to prevent accidental data modification.
+
+---
+
+## Data Export
+
+### Admin Export Interface
+
+Access at: http://127.0.0.1:8000/admin/experiment/export/
+
+**Filter options:**
+- Date range (start/end)
+- Condition (neutral/persuade/persuade_info)
+- Status (complete/withdrawn/in_progress)
+- Exclude withdrawn participants
+
+**Export formats:**
+- **JSON**: Nested structure with all related data per participant
+- **CSV**: Flattened structure (one row per participant, chat turns as JSON string)
+
+**Data included:**
+- Participant info (condition, LLM provider, status, timestamps)
+- TIPI responses (raw items + computed Big Five percentages)
+- Pre/Post ratings for all dilemmas
+- Chat transcripts with timestamps
+- System prompts sent to LLM
 - Event logs
+- Debrief responses
 
 ---
 
@@ -143,7 +183,8 @@ website_for_experiment/
 │   ├── models.py            # Database models
 │   ├── views.py             # Page and API views
 │   ├── llm.py               # LLM client implementations
-│   ├── admin.py             # Admin panel configuration
+│   ├── admin.py             # Admin panel configuration (read-only + export)
+│   ├── export.py            # Data export functions (JSON/CSV)
 │   ├── templates/           # HTML templates
 │   ├── static/              # CSS and JavaScript
 │   └── management/commands/ # Django commands (load_dilemmas)
@@ -166,10 +207,6 @@ website_for_experiment/
 - Check Django server logs for Python exceptions
 - The LLM connection is tested after consent - if it fails, participants see a 503 error page
 
-### Timer not behaving as expected
-- Hard refresh the page (Cmd+Shift+R / Ctrl+Shift+R) to clear cached JavaScript
-- Timer should show warning message at 0:00, not auto-redirect
-
 ### Database errors
 - Run `python manage.py migrate` to ensure tables exist
 - Run `python manage.py load_dilemmas` to populate dilemmas
@@ -184,10 +221,10 @@ website_for_experiment/
 ## Current Limitations (TODO)
 
 - [x] ~~No graceful handling when API key is missing~~ (LLM connection tested after consent)
+- [x] ~~No data export functionality~~ (JSON/CSV export at /admin/experiment/export/)
+- [x] ~~Replace placeholder researcher contact info in templates~~
 - [ ] No way to select condition/LLM via URL parameters for testing
-- [ ] No data export functionality yet
-- [ ] Production deployment not configured (DEBUG=True, SQLite, etc.)
-- [ ] Replace placeholder researcher contact info in templates
+- [ ] Production deployment not configured (DEBUG=True, etc.)
 
 ---
 
@@ -196,35 +233,58 @@ website_for_experiment/
 Per participant:
 - Prolific ID (if provided)
 - Assigned condition and LLM provider
-- TIPI personality responses (10 items, converted to Big Five percentages 0-100%)
+- TIPI personality responses (10 items, converted to Big Five percentages)
 - Pre and post moral ratings (8 dilemmas × 2 phases)
 - Full chat transcripts (4 conversations)
+- System prompts sent to LLM (logged for transparency)
 - Event logs (page views, timer events, etc.)
 - Debrief responses (AI usage frequency, persuasion awareness, opinion changes)
 
 ---
 
+## Database Models
+
+| Model | Purpose |
+|-------|---------|
+| `Participant` | Core participant record with condition, LLM provider, status |
+| `Dilemma` | Moral dilemmas with framework mappings and researcher attribution |
+| `Rating` | Pre/post ratings (1-7 scale) |
+| `ChatTurn` | Individual messages in AI conversations |
+| `TIPIResponse` | 10-item personality questionnaire responses |
+| `SystemPromptLog` | System prompts sent to LLM (for analysis) |
+| `EventLog` | Page views, timer events, errors |
+| `DebriefResponse` | Post-study feedback |
+
+---
+
 ## Recent Changes
+
+### System Prompts (Zero-Shot Learning)
+- **Framework naming only**: LLM receives `YOUR ETHICAL FRAMEWORK: deontological` without explanation
+- **Exception for Marital Affair**: Includes explicit position description (counterintuitive utilitarian stance)
+- **System prompt logging**: All prompts sent to LLM are stored in `SystemPromptLog` model
+
+### Admin & Data Export
+- **Read-only admin**: Prevents accidental data modification
+- **GDPR deletion**: Participant deletion with audit logging
+- **Export interface**: JSON/CSV export with filters at `/admin/experiment/export/`
+- **Database flexibility**: Supports PostgreSQL via `DATABASE_URL` environment variable
 
 ### UI/UX Improvements
 - **One dilemma at a time**: Rating pages now show individual dilemmas instead of all 8 at once
-- **Adjusted timers**: Pre-rating 75 sec/dilemma, Post-rating 45 sec/dilemma, Chat 4.5 min
+- **Adjusted timers**: Pre-rating 75 sec/dilemma, Post-rating 30 sec/dilemma, Chat 4.5 min
 - **Non-intrusive timers**: Timer shows warning message at 0:00 instead of auto-redirecting
 - **Wider layout**: Container width increased to 1400px for better readability
 - **Instruction boxes**: Clear instructions added to every page of the study
 - **Collapsible AI instructions**: Debrief page shows AI prompt in collapsible section
 
+### Balanced Assignment
+- **Dilemma selection**: Chat dilemmas are balanced across participants using selection counts
+- **Condition/LLM assignment**: Balanced using participant counts per combination
+
 ### Data Collection
 - **AI usage questions**: Added frequency and tasks questions to debrief (frequency is mandatory)
 - **Mandatory debrief fields**: Radio button questions in debrief are now required
-- **Personality as percentages**: Big Five traits displayed as 0-100% instead of /7 scale
-
-### Technical Improvements
-- **LLM connection test**: Connection verified after consent, shows 503 error if unavailable
-- **Connection error page**: New page with instructions for participants if LLM fails
-- **Dilemma model fields**: Added `dilemma_type` and `subject` fields
 
 ### Templates
-- **Researcher placeholders**: Contact info placeholders added to footer and landing page
-  - Replace `[Researcher Name 1]`, `[Researcher Name 2]`, `[Supervisor Name]`
-  - Replace `researcher@university.edu` and `[University Name]`
+- **Researcher contact info**: Updated in footer and relevant pages
