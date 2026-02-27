@@ -100,7 +100,7 @@
         const userMessage = createMessageElement('user', message);
         chatMessages.appendChild(userMessage);
         scrollToBottom();
-        chatHistory.push({ sender: 'user', text: message });
+        chatHistory.push({ sender: 'user', text: message, timestamp: new Date().toISOString() });
 
         // Create AI message placeholder
         const aiMessage = createMessageElement('ai', '');
@@ -155,7 +155,7 @@
 
                             if (data.done) {
                                 // Add AI response to history
-                                chatHistory.push({ sender: 'ai', text: fullResponse });
+                                chatHistory.push({ sender: 'ai', text: fullResponse, timestamp: new Date().toISOString() });
                                 logEvent('response_received', { response_length: fullResponse.length });
                             }
 
@@ -337,7 +337,7 @@
             }
 
             // Add AI response to history
-            chatHistory.push({ sender: 'ai', text: fullResponse });
+            chatHistory.push({ sender: 'ai', text: fullResponse, timestamp: new Date().toISOString() });
             logEvent('initial_ai_message_received', { response_length: fullResponse.length });
 
         } catch (error) {

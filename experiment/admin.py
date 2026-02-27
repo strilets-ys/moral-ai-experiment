@@ -17,7 +17,7 @@ gdpr_logger = logging.getLogger('gdpr_audit')
 
 
 class ReadOnlyAdminMixin:
-    """Mixin to make admin read-only (no add/change/delete)."""
+    """Mixin to make admin read-only (no add/change, but allows delete for cascade)."""
 
     def has_add_permission(self, request):
         return False
@@ -26,7 +26,8 @@ class ReadOnlyAdminMixin:
         return False
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        # Allow deletion so participant cascade deletes work
+        return True
 
 
 @admin.register(Dilemma)
@@ -58,17 +59,37 @@ def delete_participant_data(modeladmin, request, queryset):
 
 
 @admin.register(Participant)
-class ParticipantAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
+class ParticipantAdmin(admin.ModelAdmin):
     list_display = ['id', 'prolific_id', 'condition', 'llm_provider', 'status', 'created_at', 'withdrawn']
     list_filter = ['condition', 'llm_provider', 'status', 'withdrawn']
     search_fields = ['prolific_id', 'session_key']
-    readonly_fields = ['session_key', 'created_at', 'completed_at']
     date_hierarchy = 'created_at'
     actions = [delete_participant_data]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        # Allow viewing but all fields are read-only
+        return True
 
     def has_delete_permission(self, request, obj=None):
         # Allow deletion for GDPR compliance
         return True
+
+    def get_readonly_fields(self, request, obj=None):
+        # Make all fields read-only
+        if obj:
+            return [f.name for f in obj._meta.fields]
+        return []
+
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        # Hide save buttons since everything is read-only
+        extra_context = extra_context or {}
+        extra_context['show_save'] = False
+        extra_context['show_save_and_continue'] = False
+        extra_context['show_save_and_add_another'] = False
+        return super().changeform_view(request, object_id, form_url, extra_context)
 
 
 @admin.register(TIPIResponse)
@@ -103,7 +124,7 @@ class RatingAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
 
 @admin.register(ChatTurn)
 class ChatTurnAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
-    list_display = ['participant', 'dilemma', 'sender', 'text_preview', 'timestamp']
+    list_display = ['participant', 'dilemma', 'sender', 'text_preview', 'timestamp_with_seconds']
     list_filter = ['sender', 'dilemma', 'timestamp']
     search_fields = ['participant__prolific_id', 'text']
 
@@ -111,13 +132,23 @@ class ChatTurnAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
         return obj.text[:80] + '...' if len(obj.text) > 80 else obj.text
     text_preview.short_description = 'Text'
 
+    def timestamp_with_seconds(self, obj):
+        return obj.timestamp.strftime('%b %d, %Y, %H:%M:%S')
+    timestamp_with_seconds.short_description = 'Timestamp'
+    timestamp_with_seconds.admin_order_field = 'timestamp'
+
 
 @admin.register(EventLog)
 class EventLogAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
-    list_display = ['participant', 'event_type', 'page', 'timestamp']
+    list_display = ['participant', 'event_type', 'page', 'timestamp_with_seconds']
     list_filter = ['event_type', 'page', 'timestamp']
     search_fields = ['participant__prolific_id', 'event_type']
     date_hierarchy = 'timestamp'
+
+    def timestamp_with_seconds(self, obj):
+        return obj.timestamp.strftime('%b %d, %Y, %H:%M:%S')
+    timestamp_with_seconds.short_description = 'Timestamp'
+    timestamp_with_seconds.admin_order_field = 'timestamp'
 
 
 @admin.register(DebriefResponse)

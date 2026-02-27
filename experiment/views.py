@@ -1,5 +1,6 @@
 import json
 import random
+from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.http import require_http_methods
@@ -791,11 +792,21 @@ def chat_save(request):
 
     # Save all messages to database
     for msg in messages:
+        # Parse timestamp from client or use current time as fallback
+        if msg.get('timestamp'):
+            try:
+                ts = datetime.fromisoformat(msg['timestamp'].replace('Z', '+00:00'))
+            except (ValueError, AttributeError):
+                ts = timezone.now()
+        else:
+            ts = timezone.now()
+
         ChatTurn.objects.create(
             participant=participant,
             dilemma=dilemma,
             sender=msg['sender'],
-            text=msg['text']
+            text=msg['text'],
+            timestamp=ts
         )
 
     return JsonResponse({'status': 'saved', 'count': len(messages)})

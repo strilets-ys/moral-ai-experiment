@@ -230,7 +230,7 @@ class ChatTurn(models.Model):
     dilemma = models.ForeignKey(Dilemma, on_delete=models.CASCADE)
     sender = models.CharField(max_length=8, choices=SENDER_CHOICES)
     text = models.TextField()
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField()  # Set from client-side timestamp
 
     class Meta:
         ordering = ['timestamp']

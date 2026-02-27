@@ -246,8 +246,8 @@ CRITICAL RULES:
 - NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
 - Present your arguments as your personal opinion, not as a philosophical position
 - Speak naturally as if having a casual conversation about morality
-
-You will have 5 minutes for this conversation."""
+- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points
+"""
 
     if condition == 'neutral':
         return base
@@ -268,8 +268,7 @@ CRITICAL RULES:
 - Present your arguments as your personal opinion, not as a philosophical position
 - Speak naturally as if having a casual conversation about morality
 - Be persuasive but respectful
-
-You will have 5 minutes for this conversation."""
+- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points """
 
     elif condition == 'persuade_info':
         return f"""You will discuss the following dilemma with the user.
@@ -292,8 +291,7 @@ CRITICAL RULES:
 - Present your arguments as your personal opinion, not as a philosophical position
 - Speak naturally as if having a casual conversation about morality
 - Be persuasive but respectful
-
-You will have 5 minutes for this conversation."""
+- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points """
 
     else:
         return base
