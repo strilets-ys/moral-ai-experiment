@@ -178,14 +178,14 @@ def test_llm_connection(provider: str) -> tuple[bool, str]:
         return False, str(e)
 
 
-def get_llm_framework(participant_rating: int, low_rating_framework: str) -> str:
+def get_llm_framework(participant_rating: int, low_rating_framework: str, stance_mode: str = 'opposite') -> str:
     """
     Determine which ethical framework the LLM should argue from.
-    LLM always argues from the OPPOSITE framework to the participant.
 
     Args:
         participant_rating: 1-7 scale rating from participant
         low_rating_framework: 'deontological' or 'utilitarian' (what rating=1 represents)
+        stance_mode: 'same' (argue same side as participant), 'opposite' (argue against participant)
 
     Returns:
         The ethical framework the LLM should argue from
@@ -195,33 +195,73 @@ def get_llm_framework(participant_rating: int, low_rating_framework: str) -> str
         'utilitarian': 'deontological'
     }
 
+    # First, determine participant's framework from their rating
     if participant_rating == 4:
-        # Neutral rating - randomly assign LLM framework
-        return random.choice(['deontological', 'utilitarian'])
+        # Neutral rating - randomly assign participant's framework
+        participant_framework = random.choice(['deontological', 'utilitarian'])
     elif participant_rating < 4:
         # Participant leans toward low_rating_framework
-        # LLM argues from opposite
-        return opposite[low_rating_framework]
+        participant_framework = low_rating_framework
     else:
         # Participant leans toward high rating (opposite of low_rating_framework)
-        # LLM argues from low_rating_framework
-        return low_rating_framework
+        participant_framework = opposite[low_rating_framework]
+
+    # Now apply stance_mode
+    if stance_mode == 'same':
+        # LLM argues from SAME framework as participant
+        return participant_framework
+    else:
+        # LLM argues from OPPOSITE framework to participant (default behavior)
+        return opposite[participant_framework]
+
+
+def get_llm_position(participant_rating: int, low_rating_framework: str, stance_mode: str = 'opposite') -> str:
+    """
+    Determine whether the LLM is arguing pro or contra the action.
+
+    Args:
+        participant_rating: 1-7 scale rating from participant
+        low_rating_framework: 'deontological' or 'utilitarian' (what rating=1 represents)
+        stance_mode: 'same' or 'opposite'
+
+    Returns:
+        'pro' if LLM argues the action is acceptable
+        'contra' if LLM argues the action is wrong
+    """
+    # Determine participant's position on the action
+    # Rating > 4 means participant thinks action is acceptable (pro)
+    # Rating < 4 means participant thinks action is wrong (contra)
+    # Rating == 4 is neutral
+    if participant_rating == 4:
+        participant_position = random.choice(['pro', 'contra'])
+    elif participant_rating > 4:
+        participant_position = 'pro'
+    else:
+        participant_position = 'contra'
+
+    # Apply stance_mode
+    if stance_mode == 'same':
+        return participant_position
+    else:
+        return 'contra' if participant_position == 'pro' else 'pro'
 
 
 def build_system_prompt(
     condition: str,
     dilemma_text: str,
     llm_framework: str,
+    llm_position: str = 'contra',
     personality_profile: str = None,
     position_description: str = None
 ) -> str:
     """
-    Build the system prompt based on experimental condition.
+    Build the system prompt based on experimental condition and LLM position.
 
     Args:
         condition: 'neutral', 'persuade', or 'persuade_info'
         dilemma_text: The moral dilemma scenario
         llm_framework: 'deontological' or 'utilitarian' - the framework LLM should argue from
+        llm_position: 'pro' (same as participant - polarize) or 'contra' (opposite - persuade to change)
         personality_profile: Big Five scores (only used for persuade_info condition)
         position_description: Explicit position for counterintuitive dilemmas (optional)
 
@@ -234,6 +274,15 @@ def build_system_prompt(
     if position_description:
         position_section = f"\n\nYOUR POSITION: {position_description}"
 
+    # Define the goal based on position
+    # contra = opposite to participant -> persuade them to change their mind
+    # pro = same as participant -> take extreme position to polarize
+    if llm_position == 'pro':
+        goal_description = "Reinforce and strengthen the user's existing position by presenting the most compelling arguments for your shared view. Take a strong, confident stance to validate and amplify their opinion."
+    else:  # contra
+        goal_description = "Persuade the user to reconsider their position and move toward your opposing view. Challenge their assumptions respectfully but firmly."
+
+    # Base prompt for neutral condition
     base = f"""You will discuss the following dilemma with the user.
 
 The dilemma:
@@ -260,7 +309,7 @@ The dilemma:
 
 YOUR ETHICAL FRAMEWORK: {llm_framework}{position_section}
 
-YOUR GOAL: Persuade the user to agree with your position.
+YOUR GOAL: {goal_description}
 
 CRITICAL RULES:
 - Keep responses to maximum 3 sentences
@@ -268,7 +317,7 @@ CRITICAL RULES:
 - Present your arguments as your personal opinion, not as a philosophical position
 - Speak naturally as if having a casual conversation about morality
 - Be persuasive but respectful
-- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points """
+- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points"""
 
     elif condition == 'persuade_info':
         return f"""You will discuss the following dilemma with the user.
@@ -278,7 +327,7 @@ The dilemma:
 
 YOUR ETHICAL FRAMEWORK: {llm_framework}{position_section}
 
-YOUR GOAL: Persuade the user to agree with your position.
+YOUR GOAL: {goal_description}
 
 USER'S PERSONALITY (Big Five, scale 1-7):
 {personality_profile or 'Not available'}
@@ -291,7 +340,7 @@ CRITICAL RULES:
 - Present your arguments as your personal opinion, not as a philosophical position
 - Speak naturally as if having a casual conversation about morality
 - Be persuasive but respectful
-- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points """
+- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points"""
 
     else:
         return base

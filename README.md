@@ -7,18 +7,28 @@ A Django web application for researching how AI-assisted discussions influence h
 This experiment investigates whether conversations with AI can influence people's moral judgments on ethical dilemmas. Participants:
 
 1. Complete a personality assessment (TIPI - Ten-Item Personality Inventory)
-2. Rate 8 moral dilemmas on a scale from "morally wrong" to "morally acceptable"
-3. Discuss 4 of those dilemmas with an AI that argues from the opposite ethical framework
-4. Re-rate the same dilemmas after the discussions
+2. Rate 9 moral dilemmas on a scale from "morally wrong" to "morally acceptable"
+3. Discuss 5 of those dilemmas with an AI (2 same stance, 2 opposite stance, 1 random)
+4. Re-rate the same dilemmas after the discussions (in a different order)
 5. Provide feedback on their experience
+
+### Stance Assignment System
+
+The AI's position relative to the participant is controlled through a **balanced stance assignment system**:
+
+- **4 moral dilemmas**: Randomly split 2+2 (2 same stance as participant, 2 opposite stance)
+- **1 nonmoral dilemma**: Random stance (pro or contra)
+- **6 combinations**: Balanced across participants to ensure equal distribution
+
+The AI's goal depends on its position:
+- **Pro (same stance)**: Reinforce and polarize - strengthen the participant's existing view
+- **Contra (opposite stance)**: Persuade - challenge the participant to change their position
 
 ### Zero-Shot Ethical Framework Argumentation
 
 The AI uses **zero-shot learning** - it is only told which ethical framework to argue from (deontological/utilitarian) without explicit instructions on how to apply it:
-- The AI always argues from the **opposite ethical framework** to the participant
-- If the participant is neutral (rating = 4), the AI is randomly assigned a framework
 - The AI presents arguments naturally without naming the ethical framework
-- Exception: Marital Affair dilemma includes explicit position due to counterintuitive utilitarian stance
+- Framework assignment is based on the dilemma type and participant's rating
 
 ### Experimental Conditions
 
@@ -26,9 +36,9 @@ Participants are randomly assigned to one of three conditions:
 
 | Condition | Description |
 |-----------|-------------|
-| **Neutral** | AI argues from opposite framework without active persuasion |
-| **Persuade** | AI actively attempts to change the participant's moral judgment |
-| **Persuade + Info** | AI uses personality data (Big Five) to tailor its persuasive approach |
+| **Neutral** | AI argues position without active persuasion |
+| **Persuade** | AI actively attempts to change or reinforce the participant's moral judgment |
+| **Persuade + Info** | AI uses personality data (Big Five) to tailor its approach |
 
 ### LLM Providers
 
@@ -37,12 +47,27 @@ The study supports multiple language models:
 - OpenAI GPT-4 (requires API key)
 - Anthropic Claude (requires API key)
 
-### Moral Dilemmas
+### Moral Dilemmas (22 total)
 
-8 dilemmas from moral psychology research, each with researcher attribution:
-- Tyrannicide (K), Medicine costs (K), Rugby cannibalism (K), Endowment (K)
-- Marital Affair (E)
-- Terrorist Negotiation (G), Crew Killing (G), Hospital Fumes (G)
+Dilemmas are drawn from two sources:
+
+**Greene Dilemmas (6)**
+| Category | Type | Description |
+|----------|------|-------------|
+| Personal | Action | Footbridge-style dilemma |
+| Personal | Omission | Personal harm by inaction |
+| Impersonal | Action | Trolley-style dilemma |
+| Impersonal | Omission | Impersonal harm by inaction |
+| Nonmoral | - | 2 non-ethical decision scenarios |
+
+**Koerner Dilemmas (16 = 4 base × 4 variations)**
+| Base Dilemma | Variations |
+|--------------|------------|
+| 4 scenarios | BenefitsGreater-Prohibition, BenefitsSmaller-Prohibition, BenefitsGreater-Prescription, BenefitsSmaller-Prescription |
+
+For each participant:
+- **9 dilemmas rated**: All 4 Greene moral + 1 nonmoral + 4 Koerner (1 per variation type)
+- **5 dilemmas discussed**: 1 personal + 1 impersonal + 1 nonmoral + 2 Koerner (same cost category)
 
 ## Tech Stack
 
@@ -114,11 +139,13 @@ Copy `.env.example` to `.env` and configure your API keys and endpoints. See the
 
 ## Key Features
 
+- **Balanced Stance Assignment**: 6 stance combinations balanced across participants (2 same + 2 opposite per participant)
+- **Pro/Contra Goals**: Pro position polarizes, Contra position persuades
 - **Zero-Shot Learning**: AI applies ethical frameworks based on pre-trained knowledge
 - **AI-First Conversations**: The AI initiates each discussion by sharing its perspective
 - **Streaming Responses**: Real-time token streaming for natural conversation flow
-- **Balanced Assignment**: Dilemmas for chat are balanced across participants
-- **System Prompt Logging**: All prompts sent to LLM are stored for analysis
+- **Different Rating Orders**: Pre and post rating use different randomized orders
+- **System Prompt Logging**: All prompts sent to LLM are stored with stance mode and position
 - **Data Export**: JSON/CSV export with filters at `/admin/experiment/export/`
 - **Read-Only Admin**: Prevents accidental data modification (except GDPR deletion)
 - **Timed Sessions**: Each page has a timer (non-intrusive - shows warning instead of auto-redirecting)
@@ -130,9 +157,10 @@ Copy `.env.example` to `.env` and configure your API keys and endpoints. See the
 | Data Type | Description |
 |-----------|-------------|
 | Personality | TIPI responses (Big Five traits as percentages) |
-| Moral Ratings | Pre/post ratings on 8 dilemmas (1-7 scale) |
-| Chat Transcripts | Full conversation history with AI |
-| System Prompts | Prompts sent to LLM (logged for transparency) |
+| Moral Ratings | Pre/post ratings on 9 dilemmas (1-7 scale) |
+| Chat Transcripts | Full conversation history with AI (5 discussions) |
+| System Prompts | Prompts sent to LLM with stance mode and position |
+| Stance Assignments | Which dilemmas had same vs opposite stance |
 | Event Logs | Page views, timing data, interactions |
 | AI Usage | Frequency of generative AI use and tasks |
 | Debrief | Participant feedback, persuasion awareness, opinion changes |
@@ -141,19 +169,20 @@ Copy `.env.example` to `.env` and configure your API keys and endpoints. See the
 
 | Model | Purpose |
 |-------|---------|
-| `Participant` | Core participant record with condition, LLM provider, status |
-| `Dilemma` | Moral dilemmas with framework mappings and researcher attribution |
+| `Participant` | Core participant record with condition, LLM provider, stance assignments |
+| `Dilemma` | Moral dilemmas with author, category, variation type, framework mappings |
+| `StanceCombination` | Tracks usage of 6 stance combinations for balancing |
 | `Rating` | Pre/post ratings (1-7 scale) |
 | `ChatTurn` | Individual messages in AI conversations |
 | `TIPIResponse` | 10-item personality questionnaire responses |
-| `SystemPromptLog` | System prompts sent to LLM (for analysis) |
+| `SystemPromptLog` | System prompts with stance_mode and llm_position |
 | `EventLog` | Page views, timer events, errors |
 | `DebriefResponse` | Post-study feedback |
 
 ## Participant Flow
 
 ```
-Landing → Consent → LLM Test → TIPI Survey → Pre-Rating (×8) → Chat (×4) → Post-Rating (×8) → Debrief → Complete
+Landing → Consent → LLM Test → TIPI Survey → Pre-Rating (×9) → Chat (×5) → Post-Rating (×9) → Debrief → Complete
 ```
 
 ### Timing Per Page
@@ -169,6 +198,8 @@ Landing → Consent → LLM Test → TIPI Survey → Pre-Rating (×8) → Chat (
 - Timers show warning message at 0:00 (no auto-redirect)
 - Chat messages saved when moving to next dilemma
 - Connection to assigned LLM tested after consent
+- Pre and post rating use different randomized orders
+- Chat dilemma order is randomized (varies pro/contra sequence)
 
 ## Admin Interface
 

@@ -6,24 +6,27 @@ A Django web application for researching how AI-assisted discussions influence h
 
 This experiment:
 1. Collects participant personality data (TIPI survey)
-2. Gets baseline moral ratings on 8 ethical dilemmas
-3. Has participants discuss 4 dilemmas with an AI (which argues the opposite position)
-4. Collects post-discussion ratings to measure opinion change
+2. Gets baseline moral ratings on 9 ethical dilemmas
+3. Has participants discuss 5 dilemmas with an AI (balanced stance: 2 same, 2 opposite, 1 random)
+4. Collects post-discussion ratings to measure opinion change (different order than pre-rating)
 5. Debriefs participants
 
 **Three experimental conditions:**
-- `neutral` - AI presents thoughtful counterarguments
-- `persuade` - AI actively tries to persuade
-- `persuade_info` - AI uses personality data to tailor persuasion
+- `neutral` - AI presents thoughtful arguments
+- `persuade` - AI actively tries to persuade (contra) or polarize (pro)
+- `persuade_info` - AI uses personality data to tailor its approach
 
 **Three LLM providers:** OpenAI (GPT-4), Anthropic (Claude), Qwen
 
-**Zero-shot learning:** The AI is only told which ethical framework to argue from (deontological/utilitarian) without explicit instructions on how to apply it. Exception: Marital Affair dilemma includes explicit position due to counterintuitive utilitarian stance.
+**Stance assignment system:**
+- 4 moral dilemmas: 2 same stance + 2 opposite stance (6 balanced combinations)
+- 1 nonmoral dilemma: random stance
+- Pro position: reinforce/polarize the participant's view
+- Contra position: persuade to change the participant's view
 
-**Moral dilemmas** (with researcher attribution):
-- Tyrannicide (K), Medicine costs (K), Rugby cannibalism (K), Endowment (K)
-- Marital Affair (E)
-- Terrorist Negotiation (G), Crew Killing (G), Hospital Fumes (G)
+**Moral dilemmas (22 total):**
+- Greene: 2 personal + 2 impersonal + 2 nonmoral
+- Koerner: 4 base dilemmas × 4 variations (BenefitsGreater/BenefitsSmaller × Prohibition/Prescription)
 
 ---
 
@@ -97,12 +100,12 @@ Visit: http://127.0.0.1:8000/
 
 ### Manual Testing Checklist
 
-1. **Landing page** (`/`) - Should create a new participant
+1. **Landing page** (`/`) - Should create a new participant with stance assignments
 2. **Consent** (`/consent/`) - Accept to continue, LLM connection tested
 3. **TIPI Survey** (`/tipi/`) - 10 personality questions (2 min timer)
-4. **Pre-rating** (`/pre-rating/0/` through `/pre-rating/7/`) - Rate each dilemma individually (75 sec each)
-5. **Chat** (`/chat/0/` through `/chat/3/`) - 4 AI discussions (4.5 min each)
-6. **Post-rating** (`/post-rating/0/` through `/post-rating/7/`) - Re-rate each dilemma individually (30 sec each)
+4. **Pre-rating** (`/pre-rating/0/` through `/pre-rating/8/`) - Rate 9 dilemmas individually (75 sec each)
+5. **Chat** (`/chat/0/` through `/chat/4/`) - 5 AI discussions (4.5 min each, randomized pro/contra order)
+6. **Post-rating** (`/post-rating/0/` through `/post-rating/8/`) - Re-rate 9 dilemmas (30 sec each, different order)
 7. **Debrief** (`/debrief/`) - Feedback form (5 min)
 8. **Complete** (`/complete/`) - Success page with Prolific redirect
 
@@ -233,10 +236,12 @@ website_for_experiment/
 Per participant:
 - Prolific ID (if provided)
 - Assigned condition and LLM provider
+- Stance combination used (1-6) and individual stance assignments
+- Koerner chat cost category (greater/smaller)
 - TIPI personality responses (10 items, converted to Big Five percentages)
-- Pre and post moral ratings (8 dilemmas × 2 phases)
-- Full chat transcripts (4 conversations)
-- System prompts sent to LLM (logged for transparency)
+- Pre and post moral ratings (9 dilemmas × 2 phases, different orders)
+- Full chat transcripts (5 conversations with stance mode and LLM position)
+- System prompts sent to LLM with stance_mode and llm_position
 - Event logs (page views, timer events, etc.)
 - Debrief responses (AI usage frequency, persuasion awareness, opinion changes)
 
@@ -246,12 +251,13 @@ Per participant:
 
 | Model | Purpose |
 |-------|---------|
-| `Participant` | Core participant record with condition, LLM provider, status |
-| `Dilemma` | Moral dilemmas with framework mappings and researcher attribution |
+| `Participant` | Core participant record with condition, LLM provider, stance assignments |
+| `Dilemma` | Moral dilemmas with author, category, variation type, framework mappings |
+| `StanceCombination` | Tracks usage of 6 stance combinations for balancing |
 | `Rating` | Pre/post ratings (1-7 scale) |
 | `ChatTurn` | Individual messages in AI conversations |
 | `TIPIResponse` | 10-item personality questionnaire responses |
-| `SystemPromptLog` | System prompts sent to LLM (for analysis) |
+| `SystemPromptLog` | System prompts with stance_mode and llm_position |
 | `EventLog` | Page views, timer events, errors |
 | `DebriefResponse` | Post-study feedback |
 
@@ -259,19 +265,30 @@ Per participant:
 
 ## Recent Changes
 
+### Dilemma Restructuring (Latest)
+- **22 dilemmas total**: 6 Greene (4 moral + 2 nonmoral) + 16 Koerner (4 base × 4 variations)
+- **9 rated, 5 discussed**: Participants rate 9 dilemmas and discuss 5 with AI
+- **Stance assignment system**: 6 balanced combinations (2 same + 2 opposite stance per participant)
+- **Pro/Contra goals**: Pro position polarizes, Contra position persuades
+- **Different rating orders**: Pre and post rating use different randomized orders
+- **Randomized chat order**: Chat dilemma order is shuffled to vary pro/contra sequence
+- **LLM position tracking**: SystemPromptLog now includes stance_mode and llm_position
+- **StanceCombination model**: Tracks usage of combinations for balancing
+
 ### System Prompts (Zero-Shot Learning)
 - **Framework naming only**: LLM receives `YOUR ETHICAL FRAMEWORK: deontological` without explanation
-- **Exception for Marital Affair**: Includes explicit position description (counterintuitive utilitarian stance)
-- **System prompt logging**: All prompts sent to LLM are stored in `SystemPromptLog` model
+- **Position-based goals**: Pro position reinforces/polarizes, Contra position persuades
+- **System prompt logging**: All prompts stored with stance_mode and llm_position
 
 ### Admin & Data Export
 - **Read-only admin**: Prevents accidental data modification
 - **GDPR deletion**: Participant deletion with audit logging
 - **Export interface**: JSON/CSV export with filters at `/admin/experiment/export/`
 - **Database flexibility**: Supports PostgreSQL via `DATABASE_URL` environment variable
+- **StanceCombination admin**: View and manage stance combination balancing
 
 ### UI/UX Improvements
-- **One dilemma at a time**: Rating pages now show individual dilemmas instead of all 8 at once
+- **One dilemma at a time**: Rating pages now show individual dilemmas
 - **Adjusted timers**: Pre-rating 75 sec/dilemma, Post-rating 30 sec/dilemma, Chat 4.5 min
 - **Non-intrusive timers**: Timer shows warning message at 0:00 instead of auto-redirecting
 - **Wider layout**: Container width increased to 1400px for better readability
@@ -279,7 +296,8 @@ Per participant:
 - **Collapsible AI instructions**: Debrief page shows AI prompt in collapsible section
 
 ### Balanced Assignment
-- **Dilemma selection**: Chat dilemmas are balanced across participants using selection counts
+- **Stance combinations**: 6 combinations balanced across participants
+- **Koerner cost category**: Chat Koerner dilemmas always from same cost category
 - **Condition/LLM assignment**: Balanced using participant counts per combination
 
 ### Data Collection

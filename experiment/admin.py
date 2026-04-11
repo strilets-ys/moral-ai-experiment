@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from .models import (
     Dilemma, Participant, TIPIResponse, Rating, ChatTurn, EventLog,
-    DebriefResponse, SystemPromptLog
+    DebriefResponse, SystemPromptLog, StanceCombination
 )
 from .export import export_participants_json, export_participants_csv
 
@@ -32,13 +32,26 @@ class ReadOnlyAdminMixin:
 
 @admin.register(Dilemma)
 class DilemmaAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
-    list_display = ['code', 'researcher', 'dilemma_type', 'subject', 'low_rating_framework', 'text_preview']
-    search_fields = ['code', 'text', 'subject', 'researcher']
-    list_filter = ['dilemma_type', 'low_rating_framework', 'researcher']
+    list_display = ['code', 'author', 'category', 'dilemma_type', 'variation_type', 'researcher', 'low_rating_framework', 'text_preview']
+    search_fields = ['code', 'text', 'subject', 'researcher', 'base_dilemma_code']
+    list_filter = ['author', 'category', 'dilemma_type', 'variation_type', 'low_rating_framework', 'researcher']
 
     def text_preview(self, obj):
         return obj.text[:100] + '...' if len(obj.text) > 100 else obj.text
     text_preview.short_description = 'Text'
+
+
+@admin.register(StanceCombination)
+class StanceCombinationAdmin(admin.ModelAdmin):
+    list_display = ['combination_index', 'usage_count']
+    list_filter = ['combination_index']
+    ordering = ['combination_index']
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.action(description='Delete participant data (GDPR request)')
@@ -60,8 +73,8 @@ def delete_participant_data(modeladmin, request, queryset):
 
 @admin.register(Participant)
 class ParticipantAdmin(admin.ModelAdmin):
-    list_display = ['id', 'prolific_id', 'condition', 'llm_provider', 'status', 'created_at', 'withdrawn']
-    list_filter = ['condition', 'llm_provider', 'status', 'withdrawn']
+    list_display = ['id', 'prolific_id', 'condition', 'llm_provider', 'status', 'stance_combination_used', 'koerner_chat_cost_category', 'created_at', 'withdrawn']
+    list_filter = ['condition', 'llm_provider', 'status', 'withdrawn', 'stance_combination_used', 'koerner_chat_cost_category']
     search_fields = ['prolific_id', 'session_key']
     date_hierarchy = 'created_at'
     actions = [delete_participant_data]
@@ -160,8 +173,8 @@ class DebriefResponseAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
 
 @admin.register(SystemPromptLog)
 class SystemPromptLogAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
-    list_display = ['participant', 'dilemma', 'condition', 'llm_framework', 'created_at']
-    list_filter = ['condition', 'llm_framework', 'created_at']
+    list_display = ['participant', 'dilemma', 'condition', 'llm_framework', 'stance_mode', 'llm_position', 'created_at']
+    list_filter = ['condition', 'llm_framework', 'stance_mode', 'llm_position', 'created_at']
     search_fields = ['participant__prolific_id', 'prompt_text']
     readonly_fields = ['prompt_text', 'personality_profile']
 

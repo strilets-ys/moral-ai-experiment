@@ -35,8 +35,13 @@ def get_participant_data(participant_id):
             'created_at': participant.created_at.isoformat() if participant.created_at else None,
             'completed_at': participant.completed_at.isoformat() if participant.completed_at else None,
             'chat_dilemma_ids': participant.chat_dilemma_ids,
-            'all_dilemma_order': participant.all_dilemma_order,
+            'pre_dilemma_order': participant.pre_dilemma_order,
+            'post_dilemma_order': participant.post_dilemma_order,
             'current_chat_index': participant.current_chat_index,
+            'stance_assignments': participant.stance_assignments,
+            'stance_combination_used': participant.stance_combination_used,
+            'nonmoral_dilemma_id': participant.nonmoral_dilemma_id,
+            'koerner_chat_cost_category': participant.koerner_chat_cost_category,
         }
     }
 
@@ -108,6 +113,8 @@ def get_participant_data(participant_id):
             'dilemma_id': sp.dilemma.id,
             'condition': sp.condition,
             'llm_framework': sp.llm_framework,
+            'stance_mode': sp.stance_mode,
+            'llm_position': sp.llm_position,
             'personality_profile': sp.personality_profile,
             'prompt_text': sp.prompt_text,
             'created_at': sp.created_at.isoformat() if sp.created_at else None,
@@ -179,6 +186,10 @@ def export_participants_csv(participant_ids):
         'participant_id', 'prolific_id', 'condition', 'llm_provider',
         'status', 'withdrawn', 'created_at', 'completed_at',
 
+        # Stance assignment info
+        'stance_combination_used', 'nonmoral_dilemma_id', 'koerner_chat_cost_category',
+        'stance_assignments_json',
+
         # TIPI raw items
         'tipi_item_1', 'tipi_item_2', 'tipi_item_3', 'tipi_item_4', 'tipi_item_5',
         'tipi_item_6', 'tipi_item_7', 'tipi_item_8', 'tipi_item_9', 'tipi_item_10',
@@ -224,6 +235,10 @@ def export_participants_csv(participant_ids):
             'withdrawn': p['withdrawn'],
             'created_at': p['created_at'],
             'completed_at': p['completed_at'],
+            'stance_combination_used': p.get('stance_combination_used'),
+            'nonmoral_dilemma_id': p.get('nonmoral_dilemma_id'),
+            'koerner_chat_cost_category': p.get('koerner_chat_cost_category', ''),
+            'stance_assignments_json': json.dumps(p.get('stance_assignments', {}), ensure_ascii=False),
         }
 
         # TIPI data

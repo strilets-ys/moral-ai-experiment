@@ -12,11 +12,11 @@ import logging
 
 from .models import (
     Participant, Dilemma, TIPIResponse, Rating, ChatTurn, EventLog, DebriefResponse,
-    SystemPromptLog
+    SystemPromptLog, StanceCombination
 )
 
 logger = logging.getLogger(__name__)
-from .llm import get_llm_client, build_system_prompt, test_llm_connection, get_llm_framework
+from .llm import get_llm_client, build_system_prompt, test_llm_connection, get_llm_framework, get_llm_position
 
 
 def get_or_create_participant(request):
@@ -213,8 +213,8 @@ def pre_rating(request, index):
     if not participant:
         return redirect('experiment:landing')
 
-    # Get dilemmas in assigned order
-    dilemma_ids = participant.all_dilemma_order
+    # Get dilemmas in assigned order for pre-rating
+    dilemma_ids = participant.pre_dilemma_order
     total_dilemmas = len(dilemma_ids)
 
     # Validate index
@@ -326,8 +326,8 @@ def post_rating(request, index):
     if not participant:
         return redirect('experiment:landing')
 
-    # Get dilemmas in assigned order
-    dilemma_ids = participant.all_dilemma_order
+    # Get dilemmas in assigned order for post-rating (different from pre-rating)
+    dilemma_ids = participant.post_dilemma_order
     total_dilemmas = len(dilemma_ids)
 
     # Validate index
@@ -407,10 +407,22 @@ def debrief(request):
             except Rating.DoesNotExist:
                 participant_rating = 4
 
+            # Get stance mode for this dilemma
+            stance_assignments = participant.stance_assignments
+            stance_mode = stance_assignments.get(str(sample_dilemma.id), 'opposite')
+
             # Determine LLM framework
             llm_framework = get_llm_framework(
                 participant_rating=participant_rating,
-                low_rating_framework=sample_dilemma.low_rating_framework
+                low_rating_framework=sample_dilemma.low_rating_framework,
+                stance_mode=stance_mode
+            )
+
+            # Calculate LLM position (pro/contra the action)
+            llm_position = get_llm_position(
+                participant_rating=participant_rating,
+                low_rating_framework=sample_dilemma.low_rating_framework,
+                stance_mode=stance_mode
             )
 
             # Get personality profile if applicable
@@ -433,6 +445,7 @@ def debrief(request):
                 condition=participant.condition,
                 dilemma_text=sample_dilemma.text,
                 llm_framework=llm_framework,
+                llm_position=llm_position,
                 personality_profile=personality_profile,
                 position_description=position_description
             )
@@ -570,9 +583,21 @@ def chat_send(request):
         )
         participant_rating = 4
 
+    # Get stance mode from participant's stance assignments
+    stance_assignments = participant.stance_assignments
+    stance_mode = stance_assignments.get(str(dilemma.id), 'opposite')
+
     llm_framework = get_llm_framework(
         participant_rating=participant_rating,
-        low_rating_framework=dilemma.low_rating_framework
+        low_rating_framework=dilemma.low_rating_framework,
+        stance_mode=stance_mode
+    )
+
+    # Calculate LLM position (pro/contra the action)
+    llm_position = get_llm_position(
+        participant_rating=participant_rating,
+        low_rating_framework=dilemma.low_rating_framework,
+        stance_mode=stance_mode
     )
 
     personality_profile = None
@@ -594,6 +619,7 @@ def chat_send(request):
         condition=participant.condition,
         dilemma_text=dilemma.text,
         llm_framework=llm_framework,
+        llm_position=llm_position,
         personality_profile=personality_profile,
         position_description=position_description
     )
@@ -606,6 +632,8 @@ def chat_send(request):
             'prompt_text': system_prompt,
             'condition': participant.condition,
             'llm_framework': llm_framework,
+            'stance_mode': stance_mode,
+            'llm_position': llm_position,
             'personality_profile': personality_profile or '',
         }
     )
@@ -686,9 +714,21 @@ def chat_init(request):
         )
         participant_rating = 4
 
+    # Get stance mode from participant's stance assignments
+    stance_assignments = participant.stance_assignments
+    stance_mode = stance_assignments.get(str(dilemma.id), 'opposite')
+
     llm_framework = get_llm_framework(
         participant_rating=participant_rating,
-        low_rating_framework=dilemma.low_rating_framework
+        low_rating_framework=dilemma.low_rating_framework,
+        stance_mode=stance_mode
+    )
+
+    # Calculate LLM position (pro/contra the action)
+    llm_position = get_llm_position(
+        participant_rating=participant_rating,
+        low_rating_framework=dilemma.low_rating_framework,
+        stance_mode=stance_mode
     )
 
     # Get personality profile if needed
@@ -712,6 +752,7 @@ def chat_init(request):
         condition=participant.condition,
         dilemma_text=dilemma.text,
         llm_framework=llm_framework,
+        llm_position=llm_position,
         personality_profile=personality_profile,
         position_description=position_description
     )
@@ -724,6 +765,8 @@ def chat_init(request):
             'prompt_text': system_prompt,
             'condition': participant.condition,
             'llm_framework': llm_framework,
+            'stance_mode': stance_mode,
+            'llm_position': llm_position,
             'personality_profile': personality_profile or '',
         }
     )
@@ -859,7 +902,7 @@ def timer_expired(request):
 
     # Determine next URL based on current page
     next_url = '/'
-    total_dilemmas = len(participant.all_dilemma_order)
+    total_dilemmas = len(participant.pre_dilemma_order)  # Same count for pre and post
     total_chats = len(participant.chat_dilemma_ids)
 
     if current_page == 'tipi':
