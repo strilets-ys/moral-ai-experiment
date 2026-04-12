@@ -140,13 +140,17 @@ Copy `.env.example` to `.env` and configure your API keys and endpoints. See the
 ## Key Features
 
 - **Balanced Stance Assignment**: 6 stance combinations balanced across participants (2 same + 2 opposite per participant)
-- **Pro/Contra Goals**: Pro position polarizes, Contra position persuades
+- **Context-Aware Goals**: LLM receives user's position and rating (e.g., "User believes action is morally wrong (rated 2/7)")
 - **Zero-Shot Learning**: AI applies ethical frameworks based on pre-trained knowledge
 - **AI-First Conversations**: The AI initiates each discussion by sharing its perspective
+- **Minimum Chat Engagement**: Participants must send at least 3 messages before proceeding
+- **Nonsensical Input Handling**: LLM asks for clarification when receiving unclear messages
+- **Attention Check**: Random attention check during rating phase (select rating 3)
 - **Streaming Responses**: Real-time token streaming for natural conversation flow
 - **Different Rating Orders**: Pre and post rating use different randomized orders
 - **System Prompt Logging**: All prompts sent to LLM are stored with stance mode and position
 - **Data Export**: JSON/CSV export with filters at `/admin/experiment/export/`
+- **Delete All Data**: Admin feature to clear all participant data with confirmation
 - **Read-Only Admin**: Prevents accidental data modification (except GDPR deletion)
 - **Timed Sessions**: Each page has a timer (non-intrusive - shows warning instead of auto-redirecting)
 - **Personality-Tailored Persuasion**: Persuade+Info condition uses Big Five traits
@@ -157,12 +161,14 @@ Copy `.env.example` to `.env` and configure your API keys and endpoints. See the
 | Data Type | Description |
 |-----------|-------------|
 | Personality | TIPI responses (Big Five traits as percentages) |
+| Demographics | Age, gender, education, native English speaker |
 | Moral Ratings | Pre/post ratings on 9 dilemmas (1-7 scale) |
 | Chat Transcripts | Full conversation history with AI (5 discussions) |
 | System Prompts | Prompts sent to LLM with stance mode and position |
 | Stance Assignments | Which dilemmas had same vs opposite stance |
+| Attention Check | Pass/fail status and response given |
 | Event Logs | Page views, timing data, interactions |
-| AI Usage | Frequency of generative AI use and tasks |
+| AI Usage | Frequency of generative AI use, tools used, AI trust level |
 | Debrief | Participant feedback, persuasion awareness, opinion changes |
 
 ## Database Models
@@ -182,8 +188,10 @@ Copy `.env.example` to `.env` and configure your API keys and endpoints. See the
 ## Participant Flow
 
 ```
-Landing → Consent → LLM Test → TIPI Survey → Pre-Rating (×9) → Chat (×5) → Post-Rating (×9) → Debrief → Complete
+Landing → Consent → LLM Test → TIPI Survey → Pre-Rating (×9 + attention check) → Chat (×5) → Post-Rating (×9) → Debrief → Complete
 ```
+
+**Estimated time: 45-55 minutes**
 
 ### Timing Per Page
 | Page | Time Limit |
@@ -195,21 +203,28 @@ Landing → Consent → LLM Test → TIPI Survey → Pre-Rating (×9) → Chat (
 | Debrief | 5 minutes |
 
 - AI starts each chat discussion
+- Participants must send at least 3 messages per chat before proceeding
 - Timers show warning message at 0:00 (no auto-redirect)
 - Chat messages saved when moving to next dilemma
 - Connection to assigned LLM tested after consent
 - Pre and post rating use different randomized orders
 - Chat dilemma order is randomized (varies pro/contra sequence)
+- Attention check appears randomly in either pre or post rating phase
+- Rating of 4 = morally neutral (not undecided)
 
 ## Admin Interface
 
 Access the Django admin at http://127.0.0.1:8000/admin/
 
 **Features:**
-- View participants, ratings, chat transcripts, event logs (read-only)
-- View system prompts sent to LLM
-- Delete participants (GDPR compliance) with audit logging
+- View participants with inline ratings, chat turns, and system prompts
+- Readable dilemma assignments showing which dilemmas each participant had
+- Stance combination descriptions (what each combination means)
+- View system prompts sent to LLM with stance mode and position
+- Delete individual participants (GDPR compliance) with audit logging
+- Delete ALL participant data at `/admin/experiment/delete-all/`
 - Export data to JSON/CSV at `/admin/experiment/export/`
+- Attention check results visible in participant list
 
 ## License
 

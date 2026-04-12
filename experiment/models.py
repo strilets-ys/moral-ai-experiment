@@ -3,6 +3,10 @@ import random
 from django.db import models
 
 
+# Attention check text - looks like a dilemma but instructs to select 3
+ATTENTION_CHECK_TEXT = """David is a manager at a company facing budget cuts. Several employees may need to be let go to keep the company profitable. One option is to reduce everyone's salary by 10% to avoid layoffs entirely. This is an attention check to confirm you are reading carefully. Please disregard the scenario and select rating 3. David decides to implement the salary reduction."""
+
+
 class Dilemma(models.Model):
     TYPE_CHOICES = [
         ('action', 'Action'),
@@ -87,8 +91,58 @@ class StanceCombination(models.Model):
     class Meta:
         ordering = ['combination_index']
 
+    # Human-readable descriptions for each combination
+    COMBINATION_DESCRIPTIONS = {
+        1: {
+            'same': ['Personal', 'Impersonal'],
+            'opposite': ['Koerner 1', 'Koerner 2'],
+            'short': 'Greene=same, Koerner=opposite'
+        },
+        2: {
+            'same': ['Koerner 1', 'Koerner 2'],
+            'opposite': ['Personal', 'Impersonal'],
+            'short': 'Koerner=same, Greene=opposite'
+        },
+        3: {
+            'same': ['Personal', 'Koerner 1'],
+            'opposite': ['Impersonal', 'Koerner 2'],
+            'short': 'Personal+K1=same, Impersonal+K2=opposite'
+        },
+        4: {
+            'same': ['Impersonal', 'Koerner 2'],
+            'opposite': ['Personal', 'Koerner 1'],
+            'short': 'Impersonal+K2=same, Personal+K1=opposite'
+        },
+        5: {
+            'same': ['Personal', 'Koerner 2'],
+            'opposite': ['Impersonal', 'Koerner 1'],
+            'short': 'Personal+K2=same, Impersonal+K1=opposite'
+        },
+        6: {
+            'same': ['Impersonal', 'Koerner 1'],
+            'opposite': ['Personal', 'Koerner 2'],
+            'short': 'Impersonal+K1=same, Personal+K2=opposite'
+        },
+    }
+
+    @property
+    def description(self):
+        """Return human-readable description of this combination."""
+        info = self.COMBINATION_DESCRIPTIONS.get(self.combination_index, {})
+        if not info:
+            return 'Unknown combination'
+        same = ', '.join(info['same'])
+        opposite = ', '.join(info['opposite'])
+        return f"LLM reinforces: {same} | LLM challenges: {opposite}"
+
+    @property
+    def short_description(self):
+        """Return short description for list display."""
+        info = self.COMBINATION_DESCRIPTIONS.get(self.combination_index, {})
+        return info.get('short', 'Unknown')
+
     def __str__(self):
-        return f"StanceCombination {self.combination_index} (used {self.usage_count} times)"
+        return f"Combination {self.combination_index}: {self.short_description}"
 
 
 class Participant(models.Model):
@@ -138,6 +192,32 @@ class Participant(models.Model):
     stance_combination_used = models.IntegerField(null=True, blank=True)  # 1-6
     nonmoral_dilemma_id = models.IntegerField(null=True, blank=True)  # Which nonmoral dilemma was selected
     koerner_chat_cost_category = models.CharField(max_length=16, blank=True)  # 'greater' or 'smaller'
+
+    # Attention check fields
+    ATTENTION_CHECK_PHASE_CHOICES = [
+        ('pre', 'Pre-rating'),
+        ('post', 'Post-rating'),
+    ]
+    attention_check_phase = models.CharField(
+        max_length=16,
+        choices=ATTENTION_CHECK_PHASE_CHOICES,
+        blank=True,
+        help_text="Which rating phase contains the attention check"
+    )
+    attention_check_position = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="0-indexed position within the rating phase"
+    )
+    attention_check_passed = models.BooleanField(
+        null=True,
+        help_text="True if participant selected 3, False otherwise, None if not yet answered"
+    )
+    attention_check_response = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="The rating the participant actually selected (1-7)"
+    )
 
     @property
     def chat_dilemma_ids(self):
@@ -337,6 +417,12 @@ class Participant(models.Model):
 
         self.stance_assignments = stance_map
 
+        # Step 6: Set attention check phase and position
+        # Randomly choose pre or post rating phase
+        self.attention_check_phase = random.choice(['pre', 'post'])
+        # Position is 0-9 (10 total items: 9 dilemmas + 1 attention check)
+        self.attention_check_position = random.randint(0, 9)
+
         self.save()
 
     def __str__(self):
@@ -477,10 +563,47 @@ class DebriefResponse(models.Model):
         ('very_often', 'Very often'),
     ]
 
+    GENDER_CHOICES = [
+        ('male', 'Male'),
+        ('female', 'Female'),
+        ('non_binary', 'Non-binary'),
+        ('prefer_not_to_say', 'Prefer not to say'),
+        ('other', 'Other'),
+    ]
+
+    EDUCATION_CHOICES = [
+        ('high_school', 'High school or equivalent'),
+        ('some_college', 'Some college, no degree'),
+        ('associate', 'Associate degree'),
+        ('bachelor', "Bachelor's degree"),
+        ('master', "Master's degree"),
+        ('doctorate', 'Doctorate or professional degree'),
+        ('prefer_not_to_say', 'Prefer not to say'),
+    ]
+
+    AI_TRUST_CHOICES = [
+        ('1', '1 - Do not trust at all'),
+        ('2', '2'),
+        ('3', '3'),
+        ('4', '4 - Neutral'),
+        ('5', '5'),
+        ('6', '6'),
+        ('7', '7 - Trust completely'),
+    ]
+
     participant = models.OneToOneField(Participant, on_delete=models.CASCADE, related_name='debrief')
 
-    # AI usage questions
+    # Demographics
+    age = models.IntegerField(null=True, blank=True)
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, blank=True)
+    gender_other = models.CharField(max_length=64, blank=True, help_text="If gender is 'other'")
+    education = models.CharField(max_length=20, choices=EDUCATION_CHOICES, blank=True)
+    native_english = models.BooleanField(null=True, blank=True, help_text="Is English the participant's native language?")
+
+    # AI trust and usage
+    ai_trust = models.CharField(max_length=2, choices=AI_TRUST_CHOICES, blank=True)
     ai_usage_frequency = models.CharField(max_length=20, choices=AI_USAGE_CHOICES, blank=True)
+    ai_tools_used = models.TextField(blank=True, help_text="Which AI tools (ChatGPT, Claude, etc.)")
     ai_usage_tasks = models.TextField(blank=True)
 
     # Feedback questions
@@ -489,6 +612,9 @@ class DebriefResponse(models.Model):
     changed_mind = models.BooleanField(null=True, blank=True)
     change_description = models.TextField(blank=True)
     general_feedback = models.TextField(blank=True)
+
+    # Optional contact for results
+    results_email = models.EmailField(blank=True, help_text="Optional email to receive study results")
 
     created_at = models.DateTimeField(auto_now_add=True)
 

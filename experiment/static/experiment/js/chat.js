@@ -35,6 +35,8 @@
 
     let isStreaming = false;
     let chatHistory = [];  // Track all messages locally
+    let userMessageCount = 0;  // Track number of user messages sent
+    const MIN_USER_MESSAGES = 3;  // Minimum required user messages before proceeding
 
     function createMessageElement(sender, text) {
         const messageDiv = document.createElement('div');
@@ -56,6 +58,31 @@
 
     function scrollToBottom() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function updateNextButtonState() {
+        const nextBtn = document.getElementById('next-btn');
+        const turnCounter = document.getElementById('turn-counter');
+
+        if (!nextBtn) return;
+
+        const remaining = MIN_USER_MESSAGES - userMessageCount;
+
+        if (remaining > 0) {
+            nextBtn.disabled = true;
+            nextBtn.classList.add('btn-disabled');
+            if (turnCounter) {
+                turnCounter.textContent = `Please send at least ${remaining} more message${remaining > 1 ? 's' : ''} before continuing.`;
+                turnCounter.style.display = 'block';
+            }
+        } else {
+            nextBtn.disabled = false;
+            nextBtn.classList.remove('btn-disabled');
+            if (turnCounter) {
+                turnCounter.textContent = 'You may now continue when ready.';
+                turnCounter.style.display = 'block';
+            }
+        }
     }
 
     function removePlaceholder() {
@@ -101,6 +128,9 @@
         chatMessages.appendChild(userMessage);
         scrollToBottom();
         chatHistory.push({ sender: 'user', text: message, timestamp: new Date().toISOString() });
+
+        // Increment user message count
+        userMessageCount++;
 
         // Create AI message placeholder
         const aiMessage = createMessageElement('ai', '');
@@ -157,6 +187,8 @@
                                 // Add AI response to history
                                 chatHistory.push({ sender: 'ai', text: fullResponse, timestamp: new Date().toISOString() });
                                 logEvent('response_received', { response_length: fullResponse.length });
+                                // Update button state after AI response
+                                updateNextButtonState();
                             }
 
                             if (data.error) {
@@ -257,6 +289,13 @@
 
     // Log page load
     logEvent('chat_page_loaded', { dilemma_id: dilemmaId });
+
+    // Count existing user messages from chat history rendered on page
+    const existingUserMessages = chatMessages.querySelectorAll('.message-user');
+    userMessageCount = existingUserMessages.length;
+
+    // Initialize next button state
+    updateNextButtonState();
 
     // Request initial AI message if no chat history exists
     async function requestInitialMessage() {

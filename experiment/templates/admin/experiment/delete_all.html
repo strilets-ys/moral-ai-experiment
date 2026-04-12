@@ -1,0 +1,98 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:experiment_participant_changelist' %}">Participants</a>
+    &rsaquo; Delete All Data
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="module" style="padding: 20px; margin-bottom: 20px; background-color: #ffeaea; border: 2px solid #dc3545;">
+    <h2 style="color: #dc3545;">Warning: Irreversible Action</h2>
+    <p style="font-size: 16px;">
+        You are about to delete <strong>ALL</strong> participant data from the database.
+        This action <strong>cannot be undone</strong>.
+    </p>
+</div>
+
+<div class="module" style="padding: 20px; margin-bottom: 20px;">
+    <h2>Data to be Deleted</h2>
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr style="border-bottom: 1px solid #ccc;">
+            <td style="padding: 10px;"><strong>Participants</strong></td>
+            <td style="padding: 10px; text-align: right;"><strong>{{ participant_count }}</strong></td>
+        </tr>
+        <tr style="border-bottom: 1px solid #ccc;">
+            <td style="padding: 10px;">TIPI Responses</td>
+            <td style="padding: 10px; text-align: right;">{{ tipi_count }}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #ccc;">
+            <td style="padding: 10px;">Ratings</td>
+            <td style="padding: 10px; text-align: right;">{{ rating_count }}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #ccc;">
+            <td style="padding: 10px;">Chat Turns</td>
+            <td style="padding: 10px; text-align: right;">{{ chat_turn_count }}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #ccc;">
+            <td style="padding: 10px;">Event Logs</td>
+            <td style="padding: 10px; text-align: right;">{{ event_log_count }}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #ccc;">
+            <td style="padding: 10px;">Debrief Responses</td>
+            <td style="padding: 10px; text-align: right;">{{ debrief_count }}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #ccc;">
+            <td style="padding: 10px;">System Prompt Logs</td>
+            <td style="padding: 10px; text-align: right;">{{ system_prompt_count }}</td>
+        </tr>
+    </table>
+    <p style="margin-top: 15px; color: #666;">
+        <em>Note: Stance combination counters will be reset to 0.</em>
+    </p>
+</div>
+
+{% if participant_count > 0 %}
+<form method="post" action="" class="module" style="padding: 20px;">
+    {% csrf_token %}
+
+    <fieldset class="module aligned">
+        <h2>Confirm Deletion</h2>
+        <p style="margin-bottom: 15px;">
+            To confirm deletion, type <strong>DELETE ALL</strong> in the box below:
+        </p>
+
+        <div class="form-row">
+            <div style="margin-bottom: 15px;">
+                <input type="text" name="confirm" id="confirm"
+                       placeholder="Type DELETE ALL to confirm"
+                       style="padding: 10px; width: 300px; font-size: 14px;"
+                       autocomplete="off">
+            </div>
+        </div>
+    </fieldset>
+
+    <div class="submit-row" style="margin-top: 20px;">
+        <input type="submit" value="Delete All Data"
+               style="padding: 10px 20px; font-size: 14px; background-color: #dc3545; color: white; border: none; cursor: pointer;">
+        <a href="{% url 'admin:experiment_participant_changelist' %}"
+           style="margin-left: 15px; padding: 10px 20px; font-size: 14px; background-color: #6c757d; color: white; text-decoration: none; display: inline-block;">
+            Cancel
+        </a>
+    </div>
+</form>
+{% else %}
+<div class="module" style="padding: 20px;">
+    <p>There is no participant data to delete.</p>
+    <a href="{% url 'admin:experiment_participant_changelist' %}"
+       style="margin-top: 15px; padding: 10px 20px; font-size: 14px; background-color: #6c757d; color: white; text-decoration: none; display: inline-block;">
+        Back to Participants
+    </a>
+</div>
+{% endif %}
+{% endblock %}

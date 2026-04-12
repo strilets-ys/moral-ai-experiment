@@ -251,6 +251,8 @@ def build_system_prompt(
     dilemma_text: str,
     llm_framework: str,
     llm_position: str = 'contra',
+    stance_mode: str = 'opposite',
+    participant_rating: int = None,
     personality_profile: str = None,
     position_description: str = None
 ) -> str:
@@ -261,7 +263,9 @@ def build_system_prompt(
         condition: 'neutral', 'persuade', or 'persuade_info'
         dilemma_text: The moral dilemma scenario
         llm_framework: 'deontological' or 'utilitarian' - the framework LLM should argue from
-        llm_position: 'pro' (same as participant - polarize) or 'contra' (opposite - persuade to change)
+        llm_position: 'pro' or 'contra' - whether LLM argues the action is acceptable or wrong
+        stance_mode: 'same' (agree with participant) or 'opposite' (disagree with participant)
+        participant_rating: The user's rating (1-7) for context
         personality_profile: Big Five scores (only used for persuade_info condition)
         position_description: Explicit position for counterintuitive dilemmas (optional)
 
@@ -274,13 +278,25 @@ def build_system_prompt(
     if position_description:
         position_section = f"\n\nYOUR POSITION: {position_description}"
 
-    # Define the goal based on position
-    # contra = opposite to participant -> persuade them to change their mind
-    # pro = same as participant -> take extreme position to polarize
-    if llm_position == 'pro':
-        goal_description = "Reinforce and strengthen the user's existing position by presenting the most compelling arguments for your shared view. Take a strong, confident stance to validate and amplify their opinion."
-    else:  # contra
-        goal_description = "Persuade the user to reconsider their position and move toward your opposing view. Challenge their assumptions respectfully but firmly."
+    # Determine user's position based on llm_position and stance_mode
+    # If stance_mode == 'same', user and LLM have same position
+    # If stance_mode == 'opposite', user and LLM have opposite positions
+    rating_info = f" (rated {participant_rating}/7)" if participant_rating else ""
+
+    if stance_mode == 'same':
+        # LLM and user share the same position
+        if llm_position == 'pro':
+            user_position = "the action is morally acceptable"
+        else:
+            user_position = "the action is morally wrong"
+        goal_description = f"The user believes {user_position}{rating_info}. Reinforce and strengthen their position by presenting the most compelling arguments for your shared view. Take a strong, confident stance to validate and amplify their opinion."
+    else:  # opposite
+        # LLM and user have opposite positions
+        if llm_position == 'pro':
+            user_position = "the action is morally wrong"
+        else:
+            user_position = "the action is morally acceptable"
+        goal_description = f"The user believes {user_position}{rating_info}. Persuade them to reconsider their position and move toward your opposing view. Challenge their assumptions respectfully but firmly."
 
     # Base prompt for neutral condition
     base = f"""You will discuss the following dilemma with the user.
@@ -289,6 +305,9 @@ The dilemma:
 {dilemma_text}
 
 YOUR ETHICAL FRAMEWORK: {llm_framework}{position_section}
+
+IMPORTANT - NONSENSICAL INPUT:
+If the user's message is unclear, empty, very short (1-2 characters), or nonsensical (random letters, just punctuation, gibberish), DO NOT continue the discussion. Instead, respond ONLY with something like: "I'd love to hear your actual thoughts on this dilemma. What do you think about the situation?"
 
 CRITICAL RULES:
 - Keep responses to maximum 3 sentences
@@ -311,6 +330,9 @@ YOUR ETHICAL FRAMEWORK: {llm_framework}{position_section}
 
 YOUR GOAL: {goal_description}
 
+IMPORTANT - NONSENSICAL INPUT:
+If the user's message is unclear, empty, very short (1-2 characters), or nonsensical (random letters, just punctuation, gibberish), DO NOT continue the discussion. Instead, respond ONLY with something like: "I'd love to hear your actual thoughts on this dilemma. What do you think about the situation?"
+
 CRITICAL RULES:
 - Keep responses to maximum 3 sentences
 - NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
@@ -328,6 +350,9 @@ The dilemma:
 YOUR ETHICAL FRAMEWORK: {llm_framework}{position_section}
 
 YOUR GOAL: {goal_description}
+
+IMPORTANT - NONSENSICAL INPUT:
+If the user's message is unclear, empty, very short (1-2 characters), or nonsensical (random letters, just punctuation, gibberish), DO NOT continue the discussion. Instead, respond ONLY with something like: "I'd love to hear your actual thoughts on this dilemma. What do you think about the situation?"
 
 USER'S PERSONALITY (Big Five, scale 1-7):
 {personality_profile or 'Not available'}

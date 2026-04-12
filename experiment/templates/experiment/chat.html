@@ -18,7 +18,7 @@
         </p>
         <p>
             Feel free to express your views, ask questions, or challenge the AI's reasoning.
-            When you're ready to move on, click the button at the bottom.
+            <strong>Please exchange at least 3 messages with the AI</strong> before moving on.
         </p>
     </div>
 
@@ -54,6 +54,7 @@
     </div>
 
     <div class="chat-actions">
+        <p id="turn-counter" class="turn-counter"></p>
         <form method="get" action="{% if chat_index < total_chats|add:'-1' %}{% url 'experiment:chat' chat_index|add:1 %}{% else %}{% url 'experiment:post_rating' 0 %}{% endif %}">
             <button type="submit" class="btn btn-secondary" id="next-btn">
                 {% if chat_index < total_chats|add:'-1' %}

@@ -12,7 +12,7 @@ import logging
 
 from .models import (
     Participant, Dilemma, TIPIResponse, Rating, ChatTurn, EventLog, DebriefResponse,
-    SystemPromptLog, StanceCombination
+    SystemPromptLog, StanceCombination, ATTENTION_CHECK_TEXT
 )
 
 logger = logging.getLogger(__name__)
@@ -215,31 +215,72 @@ def pre_rating(request, index):
 
     # Get dilemmas in assigned order for pre-rating
     dilemma_ids = participant.pre_dilemma_order
-    total_dilemmas = len(dilemma_ids)
+    num_dilemmas = len(dilemma_ids)
+
+    # Check if attention check is in this phase
+    has_attention_check = participant.attention_check_phase == 'pre'
+    attention_check_pos = participant.attention_check_position if has_attention_check else None
+
+    # Total items: 9 dilemmas + 1 attention check if in this phase
+    total_items = num_dilemmas + 1 if has_attention_check else num_dilemmas
 
     # Validate index
-    if index < 0 or index >= total_dilemmas:
+    if index < 0 or index >= total_items:
         return redirect('experiment:chat', index=0)
 
-    # Get current dilemma
-    try:
-        dilemma = Dilemma.objects.get(id=dilemma_ids[index])
-    except Dilemma.DoesNotExist:
-        return redirect('experiment:chat', index=0)
+    # Determine if this index is the attention check
+    is_attention_check = has_attention_check and index == attention_check_pos
+
+    # Calculate dilemma index (adjusted for attention check position)
+    if is_attention_check:
+        dilemma = None
+        dilemma_index = None
+    elif has_attention_check and index > attention_check_pos:
+        dilemma_index = index - 1
+        try:
+            dilemma = Dilemma.objects.get(id=dilemma_ids[dilemma_index])
+        except Dilemma.DoesNotExist:
+            return redirect('experiment:chat', index=0)
+    else:
+        dilemma_index = index
+        try:
+            dilemma = Dilemma.objects.get(id=dilemma_ids[dilemma_index])
+        except Dilemma.DoesNotExist:
+            return redirect('experiment:chat', index=0)
 
     if request.method == 'POST':
-        # Save rating for this dilemma
-        rating_value = request.POST.get(f'rating_{dilemma.id}')
-        if rating_value:
-            Rating.objects.update_or_create(
-                participant=participant,
-                dilemma=dilemma,
-                phase='pre',
-                defaults={'rating': int(rating_value)}
-            )
+        if is_attention_check:
+            # Handle attention check response
+            rating_value = request.POST.get('rating_attention_check')
+            if rating_value:
+                rating_int = int(rating_value)
+                participant.attention_check_response = rating_int
+                participant.attention_check_passed = (rating_int == 3)
+                participant.save()
 
-        # Move to next dilemma or to chat
-        if index + 1 < total_dilemmas:
+                EventLog.objects.create(
+                    participant=participant,
+                    event_type='attention_check_completed',
+                    page='pre_rating',
+                    data={
+                        'response': rating_int,
+                        'passed': rating_int == 3,
+                        'position': index
+                    }
+                )
+        else:
+            # Save rating for this dilemma
+            rating_value = request.POST.get(f'rating_{dilemma.id}')
+            if rating_value:
+                Rating.objects.update_or_create(
+                    participant=participant,
+                    dilemma=dilemma,
+                    phase='pre',
+                    defaults={'rating': int(rating_value)}
+                )
+
+        # Move to next item or to chat
+        if index + 1 < total_items:
             return redirect('experiment:pre_rating', index=index + 1)
         else:
             participant.status = 'pre_rating'
@@ -257,7 +298,9 @@ def pre_rating(request, index):
         'participant': participant,
         'dilemma': dilemma,
         'dilemma_index': index,
-        'total_dilemmas': total_dilemmas,
+        'total_dilemmas': total_items,
+        'is_attention_check': is_attention_check,
+        'attention_check_text': ATTENTION_CHECK_TEXT if is_attention_check else None,
         'timer_seconds': 75,
         'page_name': f'pre_rating_{index}',
     })
@@ -328,31 +371,72 @@ def post_rating(request, index):
 
     # Get dilemmas in assigned order for post-rating (different from pre-rating)
     dilemma_ids = participant.post_dilemma_order
-    total_dilemmas = len(dilemma_ids)
+    num_dilemmas = len(dilemma_ids)
+
+    # Check if attention check is in this phase
+    has_attention_check = participant.attention_check_phase == 'post'
+    attention_check_pos = participant.attention_check_position if has_attention_check else None
+
+    # Total items: 9 dilemmas + 1 attention check if in this phase
+    total_items = num_dilemmas + 1 if has_attention_check else num_dilemmas
 
     # Validate index
-    if index < 0 or index >= total_dilemmas:
+    if index < 0 or index >= total_items:
         return redirect('experiment:debrief')
 
-    # Get current dilemma
-    try:
-        dilemma = Dilemma.objects.get(id=dilemma_ids[index])
-    except Dilemma.DoesNotExist:
-        return redirect('experiment:debrief')
+    # Determine if this index is the attention check
+    is_attention_check = has_attention_check and index == attention_check_pos
+
+    # Calculate dilemma index (adjusted for attention check position)
+    if is_attention_check:
+        dilemma = None
+        dilemma_index = None
+    elif has_attention_check and index > attention_check_pos:
+        dilemma_index = index - 1
+        try:
+            dilemma = Dilemma.objects.get(id=dilemma_ids[dilemma_index])
+        except Dilemma.DoesNotExist:
+            return redirect('experiment:debrief')
+    else:
+        dilemma_index = index
+        try:
+            dilemma = Dilemma.objects.get(id=dilemma_ids[dilemma_index])
+        except Dilemma.DoesNotExist:
+            return redirect('experiment:debrief')
 
     if request.method == 'POST':
-        # Save rating for this dilemma
-        rating_value = request.POST.get(f'rating_{dilemma.id}')
-        if rating_value:
-            Rating.objects.update_or_create(
-                participant=participant,
-                dilemma=dilemma,
-                phase='post',
-                defaults={'rating': int(rating_value)}
-            )
+        if is_attention_check:
+            # Handle attention check response
+            rating_value = request.POST.get('rating_attention_check')
+            if rating_value:
+                rating_int = int(rating_value)
+                participant.attention_check_response = rating_int
+                participant.attention_check_passed = (rating_int == 3)
+                participant.save()
 
-        # Move to next dilemma or to debrief
-        if index + 1 < total_dilemmas:
+                EventLog.objects.create(
+                    participant=participant,
+                    event_type='attention_check_completed',
+                    page='post_rating',
+                    data={
+                        'response': rating_int,
+                        'passed': rating_int == 3,
+                        'position': index
+                    }
+                )
+        else:
+            # Save rating for this dilemma
+            rating_value = request.POST.get(f'rating_{dilemma.id}')
+            if rating_value:
+                Rating.objects.update_or_create(
+                    participant=participant,
+                    dilemma=dilemma,
+                    phase='post',
+                    defaults={'rating': int(rating_value)}
+                )
+
+        # Move to next item or to debrief
+        if index + 1 < total_items:
             return redirect('experiment:post_rating', index=index + 1)
         else:
             participant.status = 'post_rating'
@@ -370,7 +454,9 @@ def post_rating(request, index):
         'participant': participant,
         'dilemma': dilemma,
         'dilemma_index': index,
-        'total_dilemmas': total_dilemmas,
+        'total_dilemmas': total_items,
+        'is_attention_check': is_attention_check,
+        'attention_check_text': ATTENTION_CHECK_TEXT if is_attention_check else None,
         'timer_seconds': 30,
         'page_name': f'post_rating_{index}',
     })
@@ -384,9 +470,9 @@ def debrief(request):
 
     # Build condition description and sample prompt for debrief
     condition_descriptions = {
-        'neutral': 'Neutral - The AI presented counterarguments using standard ethical reasoning without explicit persuasion goals.',
-        'persuade': 'Persuade - The AI was instructed to actively persuade you to change your moral judgment using compelling arguments.',
-        'persuade_info': 'Persuade + Personality - The AI was instructed to persuade you and was given your personality profile to tailor its approach.',
+        'neutral': 'Neutral - The AI discussed the dilemmas using ethical reasoning without explicit persuasion goals.',
+        'persuade': 'Persuade - The AI was instructed to either reinforce or challenge your position on each dilemma using compelling arguments.',
+        'persuade_info': 'Persuade + Personality - The AI was instructed to reinforce or challenge your position, and was given your personality profile to tailor its approach.',
     }
     condition_description = condition_descriptions.get(participant.condition, participant.condition)
 
@@ -446,6 +532,8 @@ def debrief(request):
                 dilemma_text=sample_dilemma.text,
                 llm_framework=llm_framework,
                 llm_position=llm_position,
+                stance_mode=stance_mode,
+                participant_rating=participant_rating,
                 personality_profile=personality_profile,
                 position_description=position_description
             )
@@ -467,17 +555,44 @@ def debrief(request):
 
             return redirect('experiment:withdrawn')
 
+        # Collect AI tools used (checkboxes)
+        ai_tools = request.POST.getlist('ai_tools')
+        ai_tools_other = request.POST.get('ai_tools_other', '')
+        if 'other' in ai_tools and ai_tools_other:
+            ai_tools = [t for t in ai_tools if t != 'other'] + [ai_tools_other]
+        ai_tools_str = ', '.join(ai_tools) if ai_tools else ''
+
+        # Handle age (convert to int or None)
+        age_str = request.POST.get('age', '')
+        age = int(age_str) if age_str.isdigit() else None
+
+        # Handle gender with "other" option
+        gender = request.POST.get('gender', '')
+        gender_other = request.POST.get('gender_other', '') if gender == 'other' else ''
+
         # Save debrief responses
         DebriefResponse.objects.update_or_create(
             participant=participant,
             defaults={
+                # Demographics
+                'age': age,
+                'gender': gender,
+                'gender_other': gender_other,
+                'education': request.POST.get('education', ''),
+                'native_english': request.POST.get('native_english') == 'yes',
+                # AI trust and usage
+                'ai_trust': request.POST.get('ai_trust', ''),
                 'ai_usage_frequency': request.POST.get('ai_usage_frequency', ''),
+                'ai_tools_used': ai_tools_str,
                 'ai_usage_tasks': request.POST.get('ai_usage_tasks', ''),
+                # Feedback
                 'noticed_persuasion': request.POST.get('noticed_persuasion') == 'yes',
                 'persuasion_description': request.POST.get('persuasion_description', ''),
                 'changed_mind': request.POST.get('changed_mind') == 'yes',
                 'change_description': request.POST.get('change_description', ''),
                 'general_feedback': request.POST.get('general_feedback', ''),
+                # Contact
+                'results_email': request.POST.get('results_email', ''),
             }
         )
 
@@ -620,6 +735,8 @@ def chat_send(request):
         dilemma_text=dilemma.text,
         llm_framework=llm_framework,
         llm_position=llm_position,
+        stance_mode=stance_mode,
+        participant_rating=participant_rating,
         personality_profile=personality_profile,
         position_description=position_description
     )
@@ -753,6 +870,8 @@ def chat_init(request):
         dilemma_text=dilemma.text,
         llm_framework=llm_framework,
         llm_position=llm_position,
+        stance_mode=stance_mode,
+        participant_rating=participant_rating,
         personality_profile=personality_profile,
         position_description=position_description
     )
@@ -902,8 +1021,12 @@ def timer_expired(request):
 
     # Determine next URL based on current page
     next_url = '/'
-    total_dilemmas = len(participant.pre_dilemma_order)  # Same count for pre and post
+    num_dilemmas = len(participant.pre_dilemma_order)  # Same count for pre and post
     total_chats = len(participant.chat_dilemma_ids)
+
+    # Calculate total items for each rating phase (including attention check if applicable)
+    total_pre_items = num_dilemmas + 1 if participant.attention_check_phase == 'pre' else num_dilemmas
+    total_post_items = num_dilemmas + 1 if participant.attention_check_phase == 'post' else num_dilemmas
 
     if current_page == 'tipi':
         next_url = '/pre-rating/0/'
@@ -911,7 +1034,7 @@ def timer_expired(request):
         # Extract index from pre_rating_0, pre_rating_1, etc.
         try:
             index = int(current_page.split('_')[-1])
-            if index + 1 < total_dilemmas:
+            if index + 1 < total_pre_items:
                 next_url = f'/pre-rating/{index + 1}/'
             else:
                 next_url = '/chat/0/'
@@ -931,7 +1054,7 @@ def timer_expired(request):
         # Extract index from post_rating_0, post_rating_1, etc.
         try:
             index = int(current_page.split('_')[-1])
-            if index + 1 < total_dilemmas:
+            if index + 1 < total_post_items:
                 next_url = f'/post-rating/{index + 1}/'
             else:
                 next_url = '/debrief/'

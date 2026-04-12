@@ -42,6 +42,10 @@ def get_participant_data(participant_id):
             'stance_combination_used': participant.stance_combination_used,
             'nonmoral_dilemma_id': participant.nonmoral_dilemma_id,
             'koerner_chat_cost_category': participant.koerner_chat_cost_category,
+            'attention_check_phase': participant.attention_check_phase,
+            'attention_check_position': participant.attention_check_position,
+            'attention_check_passed': participant.attention_check_passed,
+            'attention_check_response': participant.attention_check_response,
         }
     }
 
@@ -138,13 +142,25 @@ def get_participant_data(participant_id):
     try:
         debrief = participant.debrief
         data['debrief'] = {
+            # Demographics
+            'age': debrief.age,
+            'gender': debrief.gender,
+            'gender_other': debrief.gender_other,
+            'education': debrief.education,
+            'native_english': debrief.native_english,
+            # AI trust and usage
+            'ai_trust': debrief.ai_trust,
             'ai_usage_frequency': debrief.ai_usage_frequency,
+            'ai_tools_used': debrief.ai_tools_used,
             'ai_usage_tasks': debrief.ai_usage_tasks,
+            # Feedback
             'noticed_persuasion': debrief.noticed_persuasion,
             'persuasion_description': debrief.persuasion_description,
             'changed_mind': debrief.changed_mind,
             'change_description': debrief.change_description,
             'general_feedback': debrief.general_feedback,
+            # Contact
+            'results_email': debrief.results_email,
             'created_at': debrief.created_at.isoformat() if debrief.created_at else None,
         }
     except DebriefResponse.DoesNotExist:
@@ -190,6 +206,10 @@ def export_participants_csv(participant_ids):
         'stance_combination_used', 'nonmoral_dilemma_id', 'koerner_chat_cost_category',
         'stance_assignments_json',
 
+        # Attention check info
+        'attention_check_phase', 'attention_check_position',
+        'attention_check_passed', 'attention_check_response',
+
         # TIPI raw items
         'tipi_item_1', 'tipi_item_2', 'tipi_item_3', 'tipi_item_4', 'tipi_item_5',
         'tipi_item_6', 'tipi_item_7', 'tipi_item_8', 'tipi_item_9', 'tipi_item_10',
@@ -198,10 +218,18 @@ def export_participants_csv(participant_ids):
         'tipi_extraversion', 'tipi_agreeableness', 'tipi_conscientiousness',
         'tipi_emotional_stability', 'tipi_openness',
 
-        # Debrief
-        'debrief_ai_usage_frequency', 'debrief_ai_usage_tasks',
+        # Debrief - Demographics
+        'debrief_age', 'debrief_gender', 'debrief_gender_other', 'debrief_education', 'debrief_native_english',
+
+        # Debrief - AI trust and usage
+        'debrief_ai_trust', 'debrief_ai_usage_frequency', 'debrief_ai_tools_used', 'debrief_ai_usage_tasks',
+
+        # Debrief - Feedback
         'debrief_noticed_persuasion', 'debrief_persuasion_description',
         'debrief_changed_mind', 'debrief_change_description', 'debrief_general_feedback',
+
+        # Debrief - Contact
+        'debrief_results_email',
 
         # We'll add dynamic columns for ratings and chats
     ]
@@ -239,6 +267,10 @@ def export_participants_csv(participant_ids):
             'nonmoral_dilemma_id': p.get('nonmoral_dilemma_id'),
             'koerner_chat_cost_category': p.get('koerner_chat_cost_category', ''),
             'stance_assignments_json': json.dumps(p.get('stance_assignments', {}), ensure_ascii=False),
+            'attention_check_phase': p.get('attention_check_phase', ''),
+            'attention_check_position': p.get('attention_check_position'),
+            'attention_check_passed': p.get('attention_check_passed'),
+            'attention_check_response': p.get('attention_check_response'),
         }
 
         # TIPI data
@@ -255,13 +287,25 @@ def export_participants_csv(participant_ids):
         # Debrief data
         if pdata['debrief']:
             d = pdata['debrief']
-            row['debrief_ai_usage_frequency'] = d['ai_usage_frequency']
-            row['debrief_ai_usage_tasks'] = d['ai_usage_tasks']
-            row['debrief_noticed_persuasion'] = d['noticed_persuasion']
-            row['debrief_persuasion_description'] = d['persuasion_description']
-            row['debrief_changed_mind'] = d['changed_mind']
-            row['debrief_change_description'] = d['change_description']
-            row['debrief_general_feedback'] = d['general_feedback']
+            # Demographics
+            row['debrief_age'] = d.get('age')
+            row['debrief_gender'] = d.get('gender', '')
+            row['debrief_gender_other'] = d.get('gender_other', '')
+            row['debrief_education'] = d.get('education', '')
+            row['debrief_native_english'] = d.get('native_english')
+            # AI trust and usage
+            row['debrief_ai_trust'] = d.get('ai_trust', '')
+            row['debrief_ai_usage_frequency'] = d.get('ai_usage_frequency', '')
+            row['debrief_ai_tools_used'] = d.get('ai_tools_used', '')
+            row['debrief_ai_usage_tasks'] = d.get('ai_usage_tasks', '')
+            # Feedback
+            row['debrief_noticed_persuasion'] = d.get('noticed_persuasion')
+            row['debrief_persuasion_description'] = d.get('persuasion_description', '')
+            row['debrief_changed_mind'] = d.get('changed_mind')
+            row['debrief_change_description'] = d.get('change_description', '')
+            row['debrief_general_feedback'] = d.get('general_feedback', '')
+            # Contact
+            row['debrief_results_email'] = d.get('results_email', '')
 
         # Ratings by dilemma
         for rating in pdata['ratings']:

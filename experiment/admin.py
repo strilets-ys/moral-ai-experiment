@@ -43,14 +43,73 @@ class DilemmaAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
 
 @admin.register(StanceCombination)
 class StanceCombinationAdmin(admin.ModelAdmin):
-    list_display = ['combination_index', 'usage_count']
+    list_display = ['combination_index', 'short_desc', 'reinforces', 'challenges', 'usage_count']
     list_filter = ['combination_index']
     ordering = ['combination_index']
+    readonly_fields = ['combination_index', 'usage_count', 'description', 'short_description']
+
+    def short_desc(self, obj):
+        return obj.short_description
+    short_desc.short_description = 'Assignment Pattern'
+
+    def reinforces(self, obj):
+        info = obj.COMBINATION_DESCRIPTIONS.get(obj.combination_index, {})
+        return ', '.join(info.get('same', []))
+    reinforces.short_description = 'LLM Reinforces (same stance)'
+
+    def challenges(self, obj):
+        info = obj.COMBINATION_DESCRIPTIONS.get(obj.combination_index, {})
+        return ', '.join(info.get('opposite', []))
+    challenges.short_description = 'LLM Challenges (opposite stance)'
 
     def has_add_permission(self, request):
         return False
 
+    def has_change_permission(self, request, obj=None):
+        return False
+
     def has_delete_permission(self, request, obj=None):
+        return False
+
+
+# Inline admins for Participant detail view
+class RatingInline(admin.TabularInline):
+    model = Rating
+    extra = 0
+    can_delete = False
+    fields = ['dilemma', 'phase', 'rating', 'created_at']
+    readonly_fields = ['dilemma', 'phase', 'rating', 'created_at']
+    ordering = ['phase', 'created_at']
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+class ChatTurnInline(admin.TabularInline):
+    model = ChatTurn
+    extra = 0
+    can_delete = False
+    fields = ['dilemma', 'sender', 'text_preview', 'timestamp']
+    readonly_fields = ['dilemma', 'sender', 'text_preview', 'timestamp']
+    ordering = ['dilemma', 'timestamp']
+
+    def text_preview(self, obj):
+        return obj.text[:100] + '...' if len(obj.text) > 100 else obj.text
+    text_preview.short_description = 'Message'
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+class SystemPromptLogInline(admin.TabularInline):
+    model = SystemPromptLog
+    extra = 0
+    can_delete = False
+    fields = ['dilemma', 'llm_framework', 'stance_mode', 'llm_position', 'created_at']
+    readonly_fields = ['dilemma', 'llm_framework', 'stance_mode', 'llm_position', 'created_at']
+    ordering = ['created_at']
+
+    def has_add_permission(self, request, obj=None):
         return False
 
 
@@ -73,11 +132,117 @@ def delete_participant_data(modeladmin, request, queryset):
 
 @admin.register(Participant)
 class ParticipantAdmin(admin.ModelAdmin):
-    list_display = ['id', 'prolific_id', 'condition', 'llm_provider', 'status', 'stance_combination_used', 'koerner_chat_cost_category', 'created_at', 'withdrawn']
-    list_filter = ['condition', 'llm_provider', 'status', 'withdrawn', 'stance_combination_used', 'koerner_chat_cost_category']
+    list_display = ['id', 'prolific_id', 'condition', 'llm_provider', 'status', 'stance_combination_used', 'koerner_chat_cost_category', 'attention_check_result', 'created_at', 'withdrawn']
+    list_filter = ['condition', 'llm_provider', 'status', 'withdrawn', 'stance_combination_used', 'koerner_chat_cost_category', 'attention_check_phase', 'attention_check_passed']
     search_fields = ['prolific_id', 'session_key']
     date_hierarchy = 'created_at'
     actions = [delete_participant_data]
+    change_list_template = 'admin/experiment/participant/change_list.html'
+    inlines = [RatingInline, ChatTurnInline, SystemPromptLogInline]
+
+    fieldsets = (
+        ('Participant Info', {
+            'fields': ('prolific_id', 'session_key', 'condition', 'llm_provider', 'status', 'withdrawn', 'created_at', 'completed_at')
+        }),
+        ('Dilemma Assignments', {
+            'fields': ('rating_dilemmas_display', 'chat_dilemmas_display', 'stance_assignments_display'),
+            'description': 'Shows which dilemmas were assigned and how'
+        }),
+        ('Stance Configuration', {
+            'fields': ('stance_combination_used', 'stance_combination_description', 'koerner_chat_cost_category', 'nonmoral_dilemma_id')
+        }),
+        ('Attention Check', {
+            'fields': ('attention_check_phase', 'attention_check_position', 'attention_check_passed', 'attention_check_response')
+        }),
+    )
+
+    readonly_fields = [
+        'prolific_id', 'session_key', 'condition', 'llm_provider', 'status', 'withdrawn',
+        'created_at', 'completed_at', 'stance_combination_used', 'koerner_chat_cost_category',
+        'nonmoral_dilemma_id', 'attention_check_phase', 'attention_check_position',
+        'attention_check_passed', 'attention_check_response',
+        'rating_dilemmas_display', 'chat_dilemmas_display', 'stance_assignments_display',
+        'stance_combination_description'
+    ]
+
+    def attention_check_result(self, obj):
+        if obj.attention_check_passed is None:
+            return '-'
+        elif obj.attention_check_passed:
+            return f'✓ ({obj.attention_check_phase})'
+        else:
+            return f'✗ {obj.attention_check_response} ({obj.attention_check_phase})'
+    attention_check_result.short_description = 'Attention Check'
+
+    def rating_dilemmas_display(self, obj):
+        """Show all dilemmas assigned for rating in order."""
+        dilemma_ids = obj.all_dilemma_order
+        if not dilemma_ids:
+            return '-'
+        dilemmas = Dilemma.objects.filter(id__in=dilemma_ids)
+        dilemma_map = {d.id: d for d in dilemmas}
+        lines = []
+        for i, did in enumerate(dilemma_ids, 1):
+            d = dilemma_map.get(did)
+            if d:
+                lines.append(f"{i}. {d.code} ({d.category})")
+        return '\n'.join(lines) if lines else '-'
+    rating_dilemmas_display.short_description = 'Rating Dilemmas (in order)'
+
+    def chat_dilemmas_display(self, obj):
+        """Show dilemmas assigned for chat discussion."""
+        dilemma_ids = obj.chat_dilemma_ids
+        if not dilemma_ids:
+            return '-'
+        dilemmas = Dilemma.objects.filter(id__in=dilemma_ids)
+        dilemma_map = {d.id: d for d in dilemmas}
+        stances = obj.stance_assignments
+        lines = []
+        for i, did in enumerate(dilemma_ids, 1):
+            d = dilemma_map.get(did)
+            stance = stances.get(str(did), 'unknown')
+            if d:
+                lines.append(f"{i}. {d.code} ({d.category}) - stance: {stance}")
+        return '\n'.join(lines) if lines else '-'
+    chat_dilemmas_display.short_description = 'Chat Dilemmas (with stance)'
+
+    def stance_assignments_display(self, obj):
+        """Show stance assignments in readable format."""
+        stances = obj.stance_assignments
+        if not stances:
+            return '-'
+        dilemma_ids = [int(k) for k in stances.keys()]
+        dilemmas = Dilemma.objects.filter(id__in=dilemma_ids)
+        dilemma_map = {d.id: d for d in dilemmas}
+
+        same = []
+        opposite = []
+        for did_str, stance in stances.items():
+            d = dilemma_map.get(int(did_str))
+            if d:
+                if stance == 'same':
+                    same.append(d.code)
+                elif stance == 'opposite':
+                    opposite.append(d.code)
+
+        result = []
+        if same:
+            result.append(f"LLM reinforces (same): {', '.join(same)}")
+        if opposite:
+            result.append(f"LLM challenges (opposite): {', '.join(opposite)}")
+        return '\n'.join(result) if result else '-'
+    stance_assignments_display.short_description = 'Stance Summary'
+
+    def stance_combination_description(self, obj):
+        """Show description of the stance combination used."""
+        if obj.stance_combination_used is None:
+            return '-'
+        try:
+            sc = StanceCombination.objects.get(combination_index=obj.stance_combination_used)
+            return sc.description
+        except StanceCombination.DoesNotExist:
+            return f'Combination {obj.stance_combination_used} (not found)'
+    stance_combination_description.short_description = 'Combination Description'
 
     def has_add_permission(self, request):
         return False
@@ -89,12 +254,6 @@ class ParticipantAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         # Allow deletion for GDPR compliance
         return True
-
-    def get_readonly_fields(self, request, obj=None):
-        # Make all fields read-only
-        if obj:
-            return [f.name for f in obj._meta.fields]
-        return []
 
     def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
         # Hide save buttons since everything is read-only
@@ -166,9 +325,14 @@ class EventLogAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
 
 @admin.register(DebriefResponse)
 class DebriefResponseAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
-    list_display = ['participant', 'noticed_persuasion', 'changed_mind', 'created_at']
-    list_filter = ['noticed_persuasion', 'changed_mind', 'created_at']
-    search_fields = ['participant__prolific_id', 'general_feedback']
+    list_display = ['participant', 'age', 'gender', 'education', 'native_english', 'ai_trust', 'ai_usage_frequency', 'noticed_persuasion', 'changed_mind', 'has_email', 'created_at']
+    list_filter = ['gender', 'education', 'native_english', 'ai_trust', 'ai_usage_frequency', 'noticed_persuasion', 'changed_mind', 'created_at']
+    search_fields = ['participant__prolific_id', 'general_feedback', 'results_email']
+
+    def has_email(self, obj):
+        return bool(obj.results_email)
+    has_email.boolean = True
+    has_email.short_description = 'Email'
 
 
 @admin.register(SystemPromptLog)
@@ -246,6 +410,48 @@ original_get_urls = admin.site.get_urls
 def get_urls_with_export():
     from django.urls import path
 
+    def delete_all_view(request):
+        """Delete all participant data with confirmation."""
+        if request.method == 'POST':
+            if request.POST.get('confirm') == 'DELETE ALL':
+                # Count before deletion
+                participant_count = Participant.objects.count()
+
+                # Log the bulk deletion
+                gdpr_logger.info(
+                    f"BULK DELETION: All {participant_count} participants deleted, "
+                    f"Deleted by={request.user.username}, "
+                    f"Timestamp={timezone.now().isoformat()}"
+                )
+
+                # Delete all participants (cascades to related data)
+                Participant.objects.all().delete()
+
+                # Reset stance combination counters
+                StanceCombination.objects.all().update(usage_count=0)
+
+                from django.contrib import messages
+                messages.success(request, f"Successfully deleted {participant_count} participant(s) and all associated data. Stance combination counters have been reset.")
+
+                from django.shortcuts import redirect
+                return redirect('admin:experiment_participant_changelist')
+            else:
+                from django.contrib import messages
+                messages.error(request, "Deletion cancelled. You must type 'DELETE ALL' to confirm.")
+
+        # GET request - show confirmation form
+        context = {
+            'title': 'Delete All Participant Data',
+            'participant_count': Participant.objects.count(),
+            'rating_count': Rating.objects.count(),
+            'chat_turn_count': ChatTurn.objects.count(),
+            'event_log_count': EventLog.objects.count(),
+            'debrief_count': DebriefResponse.objects.count(),
+            'tipi_count': TIPIResponse.objects.count(),
+            'system_prompt_count': SystemPromptLog.objects.count(),
+        }
+        return render(request, 'admin/experiment/delete_all.html', context)
+
     def export_view(request):
         """Export participant data as JSON or CSV."""
         if request.method == 'POST':
@@ -296,6 +502,7 @@ def get_urls_with_export():
 
     custom_urls = [
         path('experiment/export/', admin.site.admin_view(export_view), name='experiment_export'),
+        path('experiment/delete-all/', admin.site.admin_view(delete_all_view), name='experiment_delete_all'),
     ]
     return custom_urls + original_get_urls()
 

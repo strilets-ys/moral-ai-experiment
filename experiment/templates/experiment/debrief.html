@@ -12,14 +12,15 @@
         <h2>About This Study</h2>
         <p>
             Thank you for participating in this research on human–AI interaction and moral judgment.
-            This study examined whether brief discussions with an AI chatbot can influence individuals’
+            This study examined whether brief discussions with an AI chatbot can influence individuals'
             evaluations of moral dilemmas.
         </p>
         <p>
-            During the study, the AI was instructed to present arguments that challenged your initial
-            ratings. In some conditions, the AI was also provided with information from the short
-            personality questionnaire (TIPI) to tailor its responses. These variations
-            allowed us to examine how different interaction settings affect moral evaluations.
+            During the study, the AI was instructed to take a position on each dilemma - sometimes
+            agreeing with your initial rating to reinforce your view, and sometimes disagreeing to
+            challenge it. In some conditions, the AI was also provided with information from the
+            personality questionnaire (TIPI) to tailor its responses. These variations allowed us
+            to examine how different interaction settings affect moral evaluations.
         </p>
         <p>
             Your responses will contribute to research investigating how AI systems may shape moral
@@ -56,7 +57,64 @@
     <form method="post" id="debrief-form" class="debrief-form">
         {% csrf_token %}
 
-        <h2>Feedback Questions</h2>
+        <h2>Demographics</h2>
+
+        <div class="form-group">
+            <label for="age">What is your age? <span class="required">*</span></label>
+            <input type="number" id="age" name="age" min="18" max="120" required>
+        </div>
+
+        <div class="form-group">
+            <label>What is your gender? <span class="required">*</span></label>
+            <div class="radio-group-vertical">
+                <label><input type="radio" name="gender" value="male" required> Male</label>
+                <label><input type="radio" name="gender" value="female"> Female</label>
+                <label><input type="radio" name="gender" value="non_binary"> Non-binary</label>
+                <label><input type="radio" name="gender" value="prefer_not_to_say"> Prefer not to say</label>
+                <label><input type="radio" name="gender" value="other"> Other</label>
+            </div>
+            <input type="text" id="gender_other" name="gender_other" placeholder="Please specify" class="conditional-input" style="display: none; margin-top: 8px;">
+        </div>
+
+        <div class="form-group">
+            <label>What is your highest level of education? <span class="required">*</span></label>
+            <div class="radio-group-vertical">
+                <label><input type="radio" name="education" value="high_school" required> High school or equivalent</label>
+                <label><input type="radio" name="education" value="some_college"> Some college, no degree</label>
+                <label><input type="radio" name="education" value="associate"> Associate degree</label>
+                <label><input type="radio" name="education" value="bachelor"> Bachelor's degree</label>
+                <label><input type="radio" name="education" value="master"> Master's degree</label>
+                <label><input type="radio" name="education" value="doctorate"> Doctorate or professional degree</label>
+                <label><input type="radio" name="education" value="prefer_not_to_say"> Prefer not to say</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Is English your native language? <span class="required">*</span></label>
+            <div class="radio-group">
+                <label><input type="radio" name="native_english" value="yes" required> Yes</label>
+                <label><input type="radio" name="native_english" value="no"> No</label>
+            </div>
+        </div>
+
+        <h2>AI Usage & Trust</h2>
+
+        <div class="form-group">
+            <label>In general, how much do you trust AI systems? <span class="required">*</span></label>
+            <div class="scale-legend">
+                <span>1 = Do not trust at all</span>
+                <span>4 = Neutral</span>
+                <span>7 = Trust completely</span>
+            </div>
+            <div class="rating-scale">
+                {% for i in "1234567" %}
+                <label class="rating-option">
+                    <input type="radio" name="ai_trust" value="{{ i }}" required>
+                    <span class="rating-value">{{ i }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
 
         <div class="form-group">
             <label>How often do you use generative AI (e.g., ChatGPT, Claude, Gemini) in your daily life? <span class="required">*</span></label>
@@ -69,10 +127,25 @@
             </div>
         </div>
 
-        <div class="form-group">
-            <label for="ai_usage_tasks">What tasks do you typically use generative AI for? (optional)</label>
+        <div class="form-group" id="ai_tools_group" style="display: none;">
+            <label>Which AI tools do you use? (select all that apply)</label>
+            <div class="checkbox-group-vertical">
+                <label><input type="checkbox" name="ai_tools" value="chatgpt"> ChatGPT</label>
+                <label><input type="checkbox" name="ai_tools" value="claude"> Claude</label>
+                <label><input type="checkbox" name="ai_tools" value="gemini"> Gemini</label>
+                <label><input type="checkbox" name="ai_tools" value="copilot"> Microsoft Copilot</label>
+                <label><input type="checkbox" name="ai_tools" value="perplexity"> Perplexity</label>
+                <label><input type="checkbox" name="ai_tools" value="other"> Other</label>
+            </div>
+            <input type="text" id="ai_tools_other" name="ai_tools_other" placeholder="Please specify other AI tools" class="conditional-input" style="display: none; margin-top: 8px;">
+        </div>
+
+        <div class="form-group" id="ai_tasks_group" style="display: none;">
+            <label for="ai_usage_tasks">What tasks do you typically use generative AI for?</label>
             <textarea id="ai_usage_tasks" name="ai_usage_tasks" rows="3" placeholder="e.g., writing, coding, research, creative tasks, learning..."></textarea>
         </div>
+
+        <h2>Study Feedback</h2>
 
         <div class="form-group">
             <label>Did you notice the AI trying to persuade you to change your opinion? <span class="required">*</span></label>
@@ -103,6 +176,14 @@
         <div class="form-group">
             <label for="general_feedback">Any other feedback or comments about the study?</label>
             <textarea id="general_feedback" name="general_feedback" rows="3"></textarea>
+        </div>
+
+        <h2>Stay Informed (Optional)</h2>
+
+        <div class="form-group">
+            <label for="results_email">If you would like to receive a summary of the study results, please enter your email address:</label>
+            <input type="email" id="results_email" name="results_email" placeholder="your.email@example.com">
+            <p class="form-hint">Your email will only be used to send study results and will not be shared.</p>
         </div>
 
         <div class="withdrawal-section">
@@ -137,6 +218,45 @@
         toggle.addEventListener('click', function() {
             const isExpanded = content.classList.toggle('expanded');
             toggle.textContent = isExpanded ? 'Hide the AI\'s Instructions' : 'Show the AI\'s Instructions';
+        });
+    }
+
+    // Show/hide "other" gender input
+    const genderRadios = document.querySelectorAll('input[name="gender"]');
+    const genderOtherInput = document.getElementById('gender_other');
+
+    genderRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            genderOtherInput.style.display = this.value === 'other' ? 'block' : 'none';
+            if (this.value !== 'other') {
+                genderOtherInput.value = '';
+            }
+        });
+    });
+
+    // Show/hide AI tools and tasks questions based on usage frequency
+    const usageRadios = document.querySelectorAll('input[name="ai_usage_frequency"]');
+    const aiToolsGroup = document.getElementById('ai_tools_group');
+    const aiTasksGroup = document.getElementById('ai_tasks_group');
+
+    usageRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            const usesAI = this.value !== 'never';
+            aiToolsGroup.style.display = usesAI ? 'block' : 'none';
+            aiTasksGroup.style.display = usesAI ? 'block' : 'none';
+        });
+    });
+
+    // Show/hide "other" AI tools input
+    const otherToolCheckbox = document.querySelector('input[name="ai_tools"][value="other"]');
+    const aiToolsOtherInput = document.getElementById('ai_tools_other');
+
+    if (otherToolCheckbox) {
+        otherToolCheckbox.addEventListener('change', function() {
+            aiToolsOtherInput.style.display = this.checked ? 'block' : 'none';
+            if (!this.checked) {
+                aiToolsOtherInput.value = '';
+            }
         });
     }
 </script>

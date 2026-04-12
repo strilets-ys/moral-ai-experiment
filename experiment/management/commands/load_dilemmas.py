@@ -66,7 +66,7 @@ GREENE_DILEMMAS = [
         "category": "nonmoral",
         "dilemma_type": "",
         "researcher": "G",
-        "text": "Tanya needs to travel from New York to Boston in order to attend a meeting that starts at 2:00 PM. She can take either the train or the bus. The train will get her there just in time for her meeting no matter what. The bus is scheduled to arrive an hour before her meeting, but the bus is occasionally several hours late because of traffic. It would be nice to have an extra hour before the meeting, but Tanya cannot afford to be late. Tanya decides to take the train instead of the bus in order to ensure she is not being late for her meeting.”",
+        "text": "Tanya needs to travel from New York to Boston in order to attend a meeting that starts at 2:00 PM. She can take either the train or the bus. The train will get her there just in time for her meeting no matter what. The bus is scheduled to arrive an hour before her meeting, but the bus is occasionally several hours late because of traffic. It would be nice to have an extra hour before the meeting, but Tanya cannot afford to be late. Tanya decides to take the train instead of the bus in order to ensure she is not being late for her meeting.",
         "subject": "Tanya’s",
         "low_rating_framework": "deontological",
     },

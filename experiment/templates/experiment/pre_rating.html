@@ -22,6 +22,9 @@
         <p>
             There are no right or wrong answers - we are interested in your personal moral judgment.
         </p>
+        <p>
+            <strong>Note:</strong> A rating of 4 means the action is morally neutral (neither wrong nor acceptable), not that you are undecided.
+        </p>
     </div>
 
     <form method="post" id="rating-form" class="rating-form">
@@ -29,11 +32,28 @@
 
         <div class="scale-legend">
             <span>1 = Completely Wrong</span>
-            <span>4 = Neutral</span>
+            <span>4 = Morally Neutral</span>
             <span>7 = Completely Acceptable</span>
         </div>
 
         <div class="dilemma-item">
+            {% if is_attention_check %}
+            <div class="dilemma-text">{{ attention_check_text|linebreaks }}</div>
+
+            <div class="rating-question">
+                <p><strong>How morally acceptable is this action?</strong></p>
+                <div class="rating-scale rating-scale-labeled">
+                    <span class="scale-label-left">Completely Wrong</span>
+                    {% for i in "1234567" %}
+                    <label class="rating-option">
+                        <input type="radio" name="rating_attention_check" value="{{ i }}" required>
+                        <span class="rating-value">{{ i }}</span>
+                    </label>
+                    {% endfor %}
+                    <span class="scale-label-right">Completely Acceptable</span>
+                </div>
+            </div>
+            {% else %}
             <div class="dilemma-text">{{ dilemma.text }}</div>
 
             <div class="rating-question">
@@ -49,6 +69,7 @@
                     <span class="scale-label-right">Completely Acceptable</span>
                 </div>
             </div>
+            {% endif %}
         </div>
 
         <div class="form-actions">

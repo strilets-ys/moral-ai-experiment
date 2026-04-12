@@ -152,6 +152,8 @@ body {
 }
 
 input[type="text"],
+input[type="number"],
+input[type="email"],
 textarea {
     width: 100%;
     padding: 12px;
@@ -159,12 +161,24 @@ textarea {
     border-radius: 8px;
     font-size: 1rem;
     transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+input[type="number"] {
+    max-width: 120px;
+}
+
+input[type="email"] {
+    max-width: 400px;
 }
 
 input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
 textarea:focus {
     border-color: #3498db;
     outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
 textarea {
@@ -206,6 +220,25 @@ textarea {
 
 .btn-secondary:hover {
     background: #d5dbdb;
+}
+
+.btn-disabled,
+.btn-disabled:hover {
+    background: #bdc3c7;
+    color: #7f8c8d;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Turn counter for chat */
+.turn-counter {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
 }
 
 .btn-large {
@@ -587,6 +620,51 @@ textarea {
 .radio-group-vertical input[type="radio"] {
     width: 18px;
     height: 18px;
+}
+
+/* Checkbox group (similar to radio group) */
+.checkbox-group-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.checkbox-group-vertical label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+.checkbox-group-vertical input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+/* Form hints and conditional inputs */
+.form-hint {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    margin-top: 6px;
+    font-style: italic;
+}
+
+.conditional-input {
+    margin-top: 8px;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 100%;
+    max-width: 300px;
+    font-size: 0.95rem;
+}
+
+.conditional-input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
 }
 
 .required {

@@ -118,11 +118,14 @@ If the LLM connection test fails after consent, participants see `/connection-er
 Access at: http://127.0.0.1:8000/admin/
 
 **Features:**
-- View participants and their assigned conditions (read-only)
-- View ratings, chat transcripts, event logs (read-only)
+- View participants with inline ratings, chat turns, and system prompts
+- Readable dilemma assignments showing which dilemmas each participant had
+- Stance combination descriptions (what each combination means)
 - View system prompts sent to LLM (read-only)
-- Delete participants (GDPR compliance) with audit logging
+- Delete individual participants (GDPR compliance) with audit logging
+- Delete ALL participant data at `/admin/experiment/delete-all/`
 - Export data to JSON/CSV at `/admin/experiment/export/`
+- Attention check results visible in participant list
 
 **Note:** Admin is read-only except for participant deletion to prevent accidental data modification.
 
@@ -265,7 +268,22 @@ Per participant:
 
 ## Recent Changes
 
-### Dilemma Restructuring (Latest)
+### Latest Updates
+- **Attention check**: Random attention check during pre or post rating (must select rating 3)
+- **Minimum chat engagement**: Participants must send at least 3 messages before proceeding
+- **Context-aware LLM goals**: System prompt now includes user's position and rating (e.g., "User believes action is morally wrong (rated 2/7)")
+- **Nonsensical input handling**: LLM asks for clarification when receiving unclear messages
+- **Demographics expanded**: Age, gender, education, native English speaker
+- **AI trust question**: 1-7 scale rating of general AI trust
+- **AI tools used**: Checkboxes for specific AI tools (ChatGPT, Claude, etc.)
+- **Delete all data**: Admin feature to clear all participant data with confirmation
+- **Improved admin**: Inline displays for ratings, chats, system prompts per participant
+- **Stance combination descriptions**: Human-readable descriptions in admin
+- **Updated time estimate**: 45-55 minutes
+- **Morally neutral clarification**: Rating of 4 explicitly labeled as "morally neutral" not "undecided"
+- **Removed study purpose from consent**: To avoid task demand effects
+
+### Dilemma Restructuring
 - **22 dilemmas total**: 6 Greene (4 moral + 2 nonmoral) + 16 Koerner (4 base × 4 variations)
 - **9 rated, 5 discussed**: Participants rate 9 dilemmas and discuss 5 with AI
 - **Stance assignment system**: 6 balanced combinations (2 same + 2 opposite stance per participant)
@@ -283,9 +301,10 @@ Per participant:
 ### Admin & Data Export
 - **Read-only admin**: Prevents accidental data modification
 - **GDPR deletion**: Participant deletion with audit logging
+- **Delete all data**: Bulk deletion with confirmation at `/admin/experiment/delete-all/`
 - **Export interface**: JSON/CSV export with filters at `/admin/experiment/export/`
 - **Database flexibility**: Supports PostgreSQL via `DATABASE_URL` environment variable
-- **StanceCombination admin**: View and manage stance combination balancing
+- **StanceCombination admin**: View and manage stance combination balancing with descriptions
 
 ### UI/UX Improvements
 - **One dilemma at a time**: Rating pages now show individual dilemmas
@@ -294,6 +313,7 @@ Per participant:
 - **Wider layout**: Container width increased to 1400px for better readability
 - **Instruction boxes**: Clear instructions added to every page of the study
 - **Collapsible AI instructions**: Debrief page shows AI prompt in collapsible section
+- **Improved form styling**: Better styling for number and email inputs
 
 ### Balanced Assignment
 - **Stance combinations**: 6 combinations balanced across participants
@@ -301,7 +321,10 @@ Per participant:
 - **Condition/LLM assignment**: Balanced using participant counts per combination
 
 ### Data Collection
-- **AI usage questions**: Added frequency and tasks questions to debrief (frequency is mandatory)
+- **Demographics**: Age, gender, education, native English speaker
+- **AI trust**: 1-7 scale trust rating
+- **AI usage questions**: Frequency, which tools used, tasks
+- **Attention check**: Pass/fail status and response recorded
 - **Mandatory debrief fields**: Radio button questions in debrief are now required
 
 ### Templates

@@ -1,0 +1,12 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools-items %}
+{{ block.super }}
+<li>
+    <a href="{% url 'admin:experiment_export' %}" class="viewlink">Export Data</a>
+</li>
+<li>
+    <a href="{% url 'admin:experiment_delete_all' %}" style="color: #dc3545;">Delete All Data</a>
+</li>
+{% endblock %}

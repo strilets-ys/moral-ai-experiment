@@ -94,6 +94,19 @@
 </form>
 
 <div class="module" style="padding: 20px; margin-top: 20px;">
+    <h2>Data Management</h2>
+    <p>
+        <a href="{% url 'admin:experiment_delete_all' %}"
+           style="padding: 10px 20px; font-size: 14px; background-color: #dc3545; color: white; text-decoration: none; display: inline-block;">
+            Delete All Participant Data
+        </a>
+    </p>
+    <p style="margin-top: 10px; color: #666;">
+        <em>This will permanently delete all participant data and reset stance combination counters.</em>
+    </p>
+</div>
+
+<div class="module" style="padding: 20px; margin-top: 20px;">
     <h2>Export Contents</h2>
     <p>The export will include:</p>
     <ul style="margin-left: 20px; line-height: 1.8;">
