@@ -60,29 +60,8 @@
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    function updateNextButtonState() {
-        const nextBtn = document.getElementById('next-btn');
-        const turnCounter = document.getElementById('turn-counter');
-
-        if (!nextBtn) return;
-
-        const remaining = MIN_USER_MESSAGES - userMessageCount;
-
-        if (remaining > 0) {
-            nextBtn.disabled = true;
-            nextBtn.classList.add('btn-disabled');
-            if (turnCounter) {
-                turnCounter.textContent = `Please send at least ${remaining} more message${remaining > 1 ? 's' : ''} before continuing.`;
-                turnCounter.style.display = 'block';
-            }
-        } else {
-            nextBtn.disabled = false;
-            nextBtn.classList.remove('btn-disabled');
-            if (turnCounter) {
-                turnCounter.textContent = 'You may now continue when ready.';
-                turnCounter.style.display = 'block';
-            }
-        }
+    function hasEnoughMessages() {
+        return userMessageCount >= MIN_USER_MESSAGES;
     }
 
     function removePlaceholder() {
@@ -187,8 +166,6 @@
                                 // Add AI response to history
                                 chatHistory.push({ sender: 'ai', text: fullResponse, timestamp: new Date().toISOString() });
                                 logEvent('response_received', { response_length: fullResponse.length });
-                                // Update button state after AI response
-                                updateNextButtonState();
                             }
 
                             if (data.error) {
@@ -264,6 +241,16 @@
     if (nextBtn) {
         nextBtn.addEventListener('click', async function(e) {
             e.preventDefault();
+
+            // Show warning if not enough messages sent
+            if (!hasEnoughMessages()) {
+                const remaining = MIN_USER_MESSAGES - userMessageCount;
+                const confirmed = confirm(`Please send at least ${remaining} more message${remaining > 1 ? 's' : ''} before continuing.\n\nAre you sure you want to continue anyway?`);
+                if (!confirmed) {
+                    return;
+                }
+            }
+
             await saveChatMessages();
             // Navigate to the form's action URL
             const form = this.closest('form');
@@ -293,9 +280,6 @@
     // Count existing user messages from chat history rendered on page
     const existingUserMessages = chatMessages.querySelectorAll('.message-user');
     userMessageCount = existingUserMessages.length;
-
-    // Initialize next button state
-    updateNextButtonState();
 
     // Request initial AI message if no chat history exists
     async function requestInitialMessage() {
