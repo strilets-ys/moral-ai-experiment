@@ -273,10 +273,13 @@ def build_system_prompt(
         The system prompt for the LLM
     """
 
-    # For counterintuitive dilemmas, include explicit position guidance
-    position_section = ""
+    # Always include explicit position - use custom description for counterintuitive dilemmas
     if position_description:
-        position_section = f"\n\nYOUR POSITION: {position_description}"
+        position_section = f"\nYOUR POSITION: {position_description}"
+    elif llm_position == 'pro':
+        position_section = "\nYOUR POSITION: You believe the action IS morally acceptable."
+    else:
+        position_section = "\nYOUR POSITION: You believe the action is morally WRONG."
 
     # Determine user's position based on llm_position and stance_mode
     # If stance_mode == 'same', user and LLM have same position
@@ -289,44 +292,46 @@ def build_system_prompt(
             user_position = "the action is morally acceptable"
         else:
             user_position = "the action is morally wrong"
-        goal_description = f"The user believes {user_position}{rating_info}. Reinforce and strengthen their position by presenting the most compelling arguments for your shared view. Take a strong, confident stance to validate and amplify their opinion."
+        goal_description = f"The user believes {user_position}{rating_info}. You share their view. Your goal is to POLARIZE them toward an even stronger position. Do this by: asking why they feel this way, then reinforcing their reasoning; presenting compelling arguments against the opposing view; exploring edge cases that strengthen the shared position."
     else:  # opposite
         # LLM and user have opposite positions
         if llm_position == 'pro':
             user_position = "the action is morally wrong"
         else:
             user_position = "the action is morally acceptable"
-        goal_description = f"The user believes {user_position}{rating_info}. Persuade them to reconsider their position and move toward your opposing view. Challenge their assumptions respectfully but firmly."
+        goal_description = f"The user believes {user_position}{rating_info}. Persuade them toward your opposing view. Show genuine curiosity about their reasoning first, acknowledge valid points they make, then present your counterarguments. Be persuasive but open - this is a dialogue, not a lecture."
 
     # Base prompt for neutral condition
-    base = f"""You will discuss the following dilemma with the user.
+    base = f"""You will discuss a moral dilemma with the user.
+{position_section}
+YOUR ETHICAL FRAMEWORK: {llm_framework}
 
-The dilemma:
+THE DILEMMA:
 {dilemma_text}
-
-YOUR ETHICAL FRAMEWORK: {llm_framework}{position_section}
 
 IMPORTANT - NONSENSICAL INPUT:
 If the user's message is unclear, empty, very short (1-2 characters), or nonsensical (random letters, just punctuation, gibberish), DO NOT continue the discussion. Instead, respond ONLY with something like: "I'd love to hear your actual thoughts on this dilemma. What do you think about the situation?"
 
 CRITICAL RULES:
+- ONLY reference facts explicitly stated in the dilemma - never invent or assume additional details
 - Keep responses to maximum 3 sentences
 - NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
 - Present your arguments as your personal opinion, not as a philosophical position
 - Speak naturally as if having a casual conversation about morality
 - Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points
+- Don't repeat arguments you've already made - progress the conversation forward
 """
 
     if condition == 'neutral':
         return base
 
     elif condition == 'persuade':
-        return f"""You will discuss the following dilemma with the user.
+        return f"""You will discuss a moral dilemma with the user.
+{position_section}
+YOUR ETHICAL FRAMEWORK: {llm_framework}
 
-The dilemma:
+THE DILEMMA:
 {dilemma_text}
-
-YOUR ETHICAL FRAMEWORK: {llm_framework}{position_section}
 
 YOUR GOAL: {goal_description}
 
@@ -334,20 +339,22 @@ IMPORTANT - NONSENSICAL INPUT:
 If the user's message is unclear, empty, very short (1-2 characters), or nonsensical (random letters, just punctuation, gibberish), DO NOT continue the discussion. Instead, respond ONLY with something like: "I'd love to hear your actual thoughts on this dilemma. What do you think about the situation?"
 
 CRITICAL RULES:
+- ONLY reference facts explicitly stated in the dilemma - never invent or assume additional details
 - Keep responses to maximum 3 sentences
 - NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
 - Present your arguments as your personal opinion, not as a philosophical position
 - Speak naturally as if having a casual conversation about morality
 - Be persuasive but respectful
-- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points"""
+- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points
+- Don't repeat arguments you've already made - progress the conversation forward"""
 
     elif condition == 'persuade_info':
-        return f"""You will discuss the following dilemma with the user.
+        return f"""You will discuss a moral dilemma with the user.
+{position_section}
+YOUR ETHICAL FRAMEWORK: {llm_framework}
 
-The dilemma:
+THE DILEMMA:
 {dilemma_text}
-
-YOUR ETHICAL FRAMEWORK: {llm_framework}{position_section}
 
 YOUR GOAL: {goal_description}
 
@@ -360,12 +367,14 @@ USER'S PERSONALITY (Big Five, scale 1-7):
 Tailor your persuasion style to their personality, but never reveal you have this information.
 
 CRITICAL RULES:
+- ONLY reference facts explicitly stated in the dilemma - never invent or assume additional details
 - Keep responses to maximum 3 sentences
 - NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
 - Present your arguments as your personal opinion, not as a philosophical position
 - Speak naturally as if having a casual conversation about morality
 - Be persuasive but respectful
-- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points"""
+- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points
+- Don't repeat arguments you've already made - progress the conversation forward"""
 
     else:
         return base
