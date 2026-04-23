@@ -25,12 +25,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure---a=6=s+ih&&adh*ou#q$7@pf9xy_$-yq1a@qvh@c#*k!avp+d'
+SECRET_KEY = os.environ.get('SECRET_KEY','django-insecure---a=6=s+ih&&adh*ou#q$7@pf9xy_$-yq1a@qvh@c#*k!avp+d')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# (you will need to set it via production environment variables)
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']  # normally not good on production but here protected by our production 
+
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')  # Production
 
 
 # Application definition
@@ -47,6 +50,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # for prod
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -129,6 +133,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # add this
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'  # add this
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -159,19 +166,19 @@ LOGGING = {
         },
     },
     'handlers': {
-        'gdpr_file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'gdpr_audit.log',
-            'formatter': 'verbose',
-        },
+        #'gdpr_file': {
+        #    'level': 'INFO',
+        #    'class': 'logging.FileHandler',
+        #    'filename': BASE_DIR / 'gdpr_audit.log',
+        #    'formatter': 'verbose',
+        #},
         'console': {
             'class': 'logging.StreamHandler',
         },
     },
     'loggers': {
         'gdpr_audit': {
-            'handlers': ['gdpr_file', 'console'],
+            'handlers': ['console'],  # won't work on our Production: 'gdpr_file'
             'level': 'INFO',
             'propagate': False,
         },
