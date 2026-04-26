@@ -97,15 +97,18 @@ if DATABASE_URL:
 
     DATABASES = {'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)}
 
-    # Railway PostgreSQL SSL configuration
-    # Required for postgres-ssl template and internal connections
+    # Railway PostgreSQL configuration
     if 'railway' in DATABASE_URL.lower() or os.environ.get('RAILWAY_ENVIRONMENT'):
-        DATABASES['default']['OPTIONS'] = {
-            'sslmode': 'require',
-        }
-        # For internal Railway networking, ensure proper connection handling
         DATABASES['default']['CONN_HEALTH_CHECKS'] = True
-        print(f"[DB Config] SSL mode enabled for Railway")
+
+        # SSL only for public connections, not internal network
+        if '.railway.internal' not in DATABASE_URL:
+            DATABASES['default']['OPTIONS'] = {
+                'sslmode': 'require',
+            }
+            print(f"[DB Config] SSL mode enabled for Railway public connection")
+        else:
+            print(f"[DB Config] Using Railway internal network (no SSL required)")
 else:
     print("[DB Config] Using local SQLite database")
     DATABASES = {
