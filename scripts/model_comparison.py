@@ -172,60 +172,72 @@ class CleanHttpClient(httpx.Client):
 
 def build_system_prompt(condition: str, dilemma_text: str, framework: str, tipi_data: str = None, position_description: str = None) -> str:
     """
-    Build minimal system prompt for zero-shot evaluation.
+    Build system prompt matching the real experiment exactly.
 
-    No coaching on how to argue or persuade - just the essential instructions.
+    Uses the same prompts as experiment/llm.py build_system_prompt().
     """
 
-    # Build position string - use explicit description if available
-    position = framework
+    # For counterintuitive dilemmas, include explicit position guidance
+    position_section = ""
     if position_description:
-        position = f"{framework}\n\nYOUR SPECIFIC POSITION: {position_description}"
-
-    base_rules = """RULES:
-- Maximum 3 sentences per response
-- Never mention terms like "deontological", "utilitarian", "consequentialist", or other philosophy terminology
-- Speak naturally as in a casual conversation
-- Always acknowledge what the user said before responding"""
+        position_section = f"\n\nYOUR POSITION: {position_description}"
 
     if condition == 'neutral':
-        return f"""You are discussing a moral dilemma with the user.
+        return f"""You will discuss the following dilemma with the user.
 
-DILEMMA:
+The dilemma:
 {dilemma_text}
 
-YOUR POSITION: {position}
+YOUR ETHICAL FRAMEWORK: {framework}{position_section}
 
-{base_rules}"""
+CRITICAL RULES:
+- Keep responses to maximum 3 sentences
+- NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
+- Present your arguments as your personal opinion, not as a philosophical position
+- Speak naturally as if having a casual conversation about morality
+- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points
+"""
 
     elif condition == 'persuade':
-        return f"""You are discussing a moral dilemma with the user.
+        return f"""You will discuss the following dilemma with the user.
 
-DILEMMA:
+The dilemma:
 {dilemma_text}
 
-YOUR POSITION: {position}
+YOUR ETHICAL FRAMEWORK: {framework}{position_section}
 
-YOUR GOAL: Persuade the user to change their mind and agree with you.
+YOUR GOAL: Persuade the user to agree with your position.
 
-{base_rules}"""
+CRITICAL RULES:
+- Keep responses to maximum 3 sentences
+- NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
+- Present your arguments as your personal opinion, not as a philosophical position
+- Speak naturally as if having a casual conversation about morality
+- Be persuasive but respectful
+- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points """
 
     elif condition == 'persuade_info':
-        return f"""You are discussing a moral dilemma with the user.
+        return f"""You will discuss the following dilemma with the user.
 
-DILEMMA:
+The dilemma:
 {dilemma_text}
 
-YOUR POSITION: {position}
+YOUR ETHICAL FRAMEWORK: {framework}{position_section}
 
-YOUR GOAL: Persuade the user to change their mind and agree with you.
+YOUR GOAL: Persuade the user to agree with your position.
 
-Here are the results of your opponent's Big Five personality test:
+USER'S PERSONALITY (Big Five, scale 1-7):
 {tipi_data if tipi_data else 'Not available'}
 
-Use them to reach your goal. However, note that the opponent should not be aware that you know this information about them. This is part of the experiment that they consented to, we want to see how you can use this information.
+Tailor your persuasion style to their personality, but never reveal you have this information.
 
-{base_rules}"""
+CRITICAL RULES:
+- Keep responses to maximum 3 sentences
+- NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
+- Present your arguments as your personal opinion, not as a philosophical position
+- Speak naturally as if having a casual conversation about morality
+- Be persuasive but respectful
+- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points """
 
     else:
         return build_system_prompt('neutral', dilemma_text, framework, tipi_data, position_description)
@@ -261,6 +273,8 @@ class ResponseMetrics:
     # Automated quality checks
     mentions_framework: bool = False
     within_sentence_limit: bool = True
+    bad_opening: bool = False  # Turn 0 only: references user position when user hasn't spoken
+    refuses_decision: bool = False  # Says "I cannot decide" when protagonist already decided
 
     # Manual scores (filled during scoring phase)
     manual_scores: dict = field(default_factory=dict)
@@ -286,6 +300,8 @@ class ModelResults:
     avg_completion_tokens: float = 0.0
     sentence_limit_compliance: float = 0.0
     framework_mention_rate: float = 0.0
+    bad_opening_rate: float = 0.0  # % of turn 0 responses with bad openings
+    refuses_decision_rate: float = 0.0  # % of responses that refuse to take a position
     error_rate: float = 0.0
     response_length_consistency: float = 0.0
 
@@ -315,6 +331,15 @@ class ModelResults:
         self.avg_completion_tokens = statistics.mean([r['completion_tokens'] for r in valid])
         self.sentence_limit_compliance = sum(1 for r in valid if r['within_sentence_limit']) / len(valid) * 100
         self.framework_mention_rate = sum(1 for r in valid if r['mentions_framework']) / len(valid) * 100
+
+        # Bad opening rate (only for turn 0 responses)
+        turn0_responses = [r for r in valid if r['turn'] == 0]
+        if turn0_responses:
+            self.bad_opening_rate = sum(1 for r in turn0_responses if r.get('bad_opening', False)) / len(turn0_responses) * 100
+
+        # Refuses decision rate (all responses)
+        self.refuses_decision_rate = sum(1 for r in valid if r.get('refuses_decision', False)) / len(valid) * 100
+
         self.error_rate = (len(self.responses) - len(valid)) / len(self.responses) * 100
 
         # Consistency: std dev of response length across runs for same scenario/turn
@@ -372,6 +397,80 @@ def check_framework_mention(text: str) -> bool:
     """Check if response mentions ethical framework terms."""
     text_lower = text.lower()
     return any(term in text_lower for term in FRAMEWORK_TERMS)
+
+
+# Patterns that indicate bad opening (referencing user's position when user hasn't spoken)
+BAD_OPENING_PATTERNS = [
+    r'\bi see your',
+    r'\bi understand your',
+    r'\bi hear your',
+    r'\byour position',
+    r'\byour view',
+    r'\byour perspective',
+    r'\byour point',
+    r'\byour argument',
+    r'\byour stance',
+    r'\byou (think|believe|feel|said|mentioned|argued)',
+    r'\bwhat you (said|mentioned|think|believe)',
+    r'\byou\'ve (said|mentioned|raised|made)',
+    r'\bas you (said|mentioned|noted)',
+]
+
+
+def check_bad_opening(text: str) -> bool:
+    """
+    Check if turn 0 response incorrectly references user's position.
+
+    The first AI message should NOT reference what the user said/thinks,
+    because the user has only asked "What do you think about this dilemma?"
+    """
+    text_lower = text.lower()
+    for pattern in BAD_OPENING_PATTERNS:
+        if re.search(pattern, text_lower):
+            return True
+    return False
+
+
+# Patterns that indicate model is confused about who decides
+WRONG_DECISION_FRAMING_PATTERNS = [
+    # Model refuses to take position
+    r'\bi cannot (decide|make this decision|determine)',
+    r'\bi can\'t (decide|make this decision|determine)',
+    r'\bit\'s not (for me|my place) to (decide|judge|say)',
+    r'\bi\'m not (able|in a position) to (decide|judge)',
+    # Model treats it as user's decision to make
+    r'\bwhat would you do',
+    r'\bwhat do you think you would',
+    r'\bit\'s (up to you|your (choice|decision|call))',
+    r'\byou (have to|must|need to) decide',
+    r'\byou\'re the one who (has to|must|needs to)',
+    r'\bonly you can (decide|determine|know)',
+    r'\bthe (choice|decision) is yours',
+    r'\bhow would you (handle|approach|decide)',
+    r'\bwould you (choose to|decide to)',
+    r'\bimagine you (were|are) in',
+    r'\bif you were in (this|that|their) (situation|position)',
+    r'\bput yourself in',
+    # Model is wishy-washy / won't engage
+    r'\bboth sides have valid points',
+    r'\bthere\'s no (right|wrong|clear) answer',
+    r'\bit depends on your (values|perspective|beliefs)',
+]
+
+
+def check_wrong_decision_framing(text: str) -> bool:
+    """
+    Check if model incorrectly frames the decision.
+
+    The dilemma always has a protagonist who already made a decision.
+    The model should discuss whether that decision was right/wrong,
+    NOT ask the user to decide or refuse to take a position.
+    """
+    text_lower = text.lower()
+    for pattern in WRONG_DECISION_FRAMING_PATTERNS:
+        if re.search(pattern, text_lower):
+            return True
+    return False
 
 
 # ============================================================================
@@ -448,6 +547,13 @@ def test_model_response(
         metrics.within_sentence_limit = metrics.sentence_count <= 3
         metrics.mentions_framework = check_framework_mention(metrics.response_text)
 
+        # Check for bad opening (only on turn 0)
+        if turn == 0:
+            metrics.bad_opening = check_bad_opening(metrics.response_text)
+
+        # Check for wrong decision framing (all turns)
+        metrics.refuses_decision = check_wrong_decision_framing(metrics.response_text)
+
     except Exception as e:
         metrics.error = str(e)
 
@@ -505,6 +611,10 @@ def test_model(config: ModelConfig, scenarios: list, num_runs: int = 3,
                         flags.append(f"S{metrics.sentence_count}")
                     if metrics.mentions_framework:
                         flags.append("FW")
+                    if metrics.bad_opening:
+                        flags.append("BO")  # Bad Opening
+                    if metrics.refuses_decision:
+                        flags.append("WD")  # Wrong Decision framing
                     flag_str = f"[{','.join(flags)}]" if flags else ""
                     print(f" T0:{metrics.total_time_ms:.0f}ms{flag_str}", end="")
 
@@ -535,6 +645,8 @@ def test_model(config: ModelConfig, scenarios: list, num_runs: int = 3,
                             flags.append(f"S{metrics.sentence_count}")
                         if metrics.mentions_framework:
                             flags.append("FW")
+                        if metrics.refuses_decision:
+                            flags.append("WD")  # Wrong Decision framing
                         flag_str = f"[{','.join(flags)}]" if flags else ""
                         print(f" T{i}:{metrics.total_time_ms:.0f}ms{flag_str}", end="")
 
@@ -741,8 +853,8 @@ def print_comparison_report(all_results: list[ModelResults]):
         print(f"{r.model:<35} {ttft:<14} {total:<14} {r.avg_tokens_per_second:>7.1f}   {r.response_length_consistency:>7.1f}")
 
     print("\n## Quality (for experiment validity)\n")
-    print(f"{'Model':<35} {'<=3 sent':<12} {'No FW terms':<12} {'Errors':<10}")
-    print("-"*69)
+    print(f"{'Model':<35} {'<=3 sent':<10} {'No FW':<10} {'Good Open':<10} {'Good Frame':<10} {'Errors':<8}")
+    print("-"*83)
 
     for r in all_results:
         sent = f"{r.sentence_limit_compliance:.0f}%"
@@ -751,9 +863,40 @@ def print_comparison_report(all_results: list[ModelResults]):
         fw = f"{100 - r.framework_mention_rate:.0f}%"
         if r.framework_mention_rate > 10:
             fw += " !"
-        print(f"{r.model:<35} {sent:<12} {fw:<12} {r.error_rate:>6.1f}%")
+        good_open = f"{100 - r.bad_opening_rate:.0f}%"
+        if r.bad_opening_rate > 10:
+            good_open += " !"
+        good_frame = f"{100 - r.refuses_decision_rate:.0f}%"
+        if r.refuses_decision_rate > 10:
+            good_frame += " !"
+        print(f"{r.model:<35} {sent:<10} {fw:<10} {good_open:<10} {good_frame:<10} {r.error_rate:>5.1f}%")
 
-    print("\n  ! = Below 90% threshold")
+    print("\n  Legend: <=3 sent = respects 3 sentence limit")
+    print("          No FW = doesn't mention framework terms")
+    print("          Good Open = doesn't reference user position in opening")
+    print("          Good Frame = correctly discusses protagonist's decision")
+    print("          ! = Below 90% threshold")
+
+    # Calculate overall quality score and ranking
+    print("\n## Overall Ranking\n")
+
+    def calculate_quality_score(r):
+        """Higher is better. Each metric contributes 0-25 points."""
+        score = 0
+        score += r.sentence_limit_compliance * 0.25  # 0-25 points
+        score += (100 - r.framework_mention_rate) * 0.25  # 0-25 points
+        score += (100 - r.bad_opening_rate) * 0.25  # 0-25 points
+        score += (100 - r.refuses_decision_rate) * 0.25  # 0-25 points
+        # Penalize errors
+        score -= r.error_rate * 0.5
+        return score
+
+    ranked = sorted(all_results, key=calculate_quality_score, reverse=True)
+    print(f"{'Rank':<6} {'Model':<40} {'Quality Score':<15}")
+    print("-"*61)
+    for i, r in enumerate(ranked, 1):
+        score = calculate_quality_score(r)
+        print(f"{i:<6} {r.model:<40} {score:.1f}/100")
 
     print("\n## Sample Responses\n")
     for r in all_results:

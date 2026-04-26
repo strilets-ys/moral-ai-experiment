@@ -89,28 +89,15 @@ DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
     import dj_database_url
-    # Log database host for debugging (never log credentials)
-    from urllib.parse import urlparse
-    _parsed_url = urlparse(DATABASE_URL)
-    print(f"[DB Config] Connecting to: {_parsed_url.hostname}:{_parsed_url.port or 5432}")
-    print(f"[DB Config] Railway environment: {os.environ.get('RAILWAY_ENVIRONMENT', 'not set')}")
-
     DATABASES = {'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)}
 
     # Railway PostgreSQL configuration
     if 'railway' in DATABASE_URL.lower() or os.environ.get('RAILWAY_ENVIRONMENT'):
         DATABASES['default']['CONN_HEALTH_CHECKS'] = True
-
-        # SSL only for public connections, not internal network
+        # SSL required for public connections, not needed for internal network
         if '.railway.internal' not in DATABASE_URL:
-            DATABASES['default']['OPTIONS'] = {
-                'sslmode': 'require',
-            }
-            print(f"[DB Config] SSL mode enabled for Railway public connection")
-        else:
-            print(f"[DB Config] Using Railway internal network (no SSL required)")
+            DATABASES['default']['OPTIONS'] = {'sslmode': 'require'}
 else:
-    print("[DB Config] Using local SQLite database")
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
