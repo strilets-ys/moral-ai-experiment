@@ -32,6 +32,7 @@
 
     const totalSeconds = parseInt(timerElement.dataset.seconds, 10);
     const pageName = timerElement.dataset.page || window.pageName || 'unknown';
+    const enforceWait = timerElement.dataset.enforceWait === 'True';  // Only enforce in production
     let remainingSeconds = totalSeconds;
     let timerInterval;
 
@@ -79,6 +80,19 @@
         if (warningMessage) {
             warningMessage.style.display = 'block';
         }
+
+        // Enable navigation - set global flag and dispatch event
+        window.timerExpired = true;
+        window.dispatchEvent(new CustomEvent('timerExpired'));
+
+        // Enable all navigation buttons that were waiting for timer
+        const buttons = document.querySelectorAll('[data-wait-for-timer="true"]');
+        buttons.forEach(btn => {
+            btn.disabled = false;
+            if (btn.dataset.originalText) {
+                btn.textContent = btn.dataset.originalText;
+            }
+        });
     }
 
     function tick() {
@@ -96,6 +110,26 @@
         timerInterval = setInterval(tick, 1000);
         logEvent('timer_started', { total_seconds: totalSeconds });
     }
+
+    // Disable navigation buttons until timer expires (production only)
+    function disableNavigationUntilExpired() {
+        if (!enforceWait) return;  // Skip in development/testing
+
+        // Find submit/next buttons
+        const buttons = document.querySelectorAll('button[type="submit"], #next-btn, .btn-primary');
+        buttons.forEach(btn => {
+            // Don't disable send button in chat
+            if (btn.id === 'send-btn') return;
+
+            btn.disabled = true;
+            btn.dataset.waitForTimer = 'true';
+            btn.dataset.originalText = btn.textContent;
+            btn.textContent = 'Take time to consider your answer...';
+        });
+    }
+
+    // Initialize: disable navigation until timer expires
+    disableNavigationUntilExpired();
 
     // Start the timer when the page loads
     startTimer();

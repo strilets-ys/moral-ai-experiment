@@ -48,28 +48,6 @@ GREENE_DILEMMAS = [
         "subject": "Oliver's",
         "low_rating_framework": "deontological",
     },
-    # Nonmoral 1
-    {
-        "code": "Shower",
-        "author": "greene",
-        "category": "nonmoral",
-        "dilemma_type": "",
-        "researcher": "G",
-        "text": "Aiden is planning to attend a luncheon this afternoon, and before he goes he will need to take a shower. Aiden has some yard work that he would like to do before then, and doing this yard will cause him to perspire a fair amount. If Aiden showers before he does his yard work he will have to take another shower before the luncheon. At the present time he could enjoy taking a shower. At the same time, Aiden has a very strong commitment to lowering his water bill and to showering no more than once a day. Aiden decides to shower before doing his yard work in order to enjoy a shower now.",
-        "subject": "Aiden’s",
-        "low_rating_framework": "deontological",
-    },
-    # Nonmoral 2
-    {
-        "code": "Train or Bus",
-        "author": "greene",
-        "category": "nonmoral",
-        "dilemma_type": "",
-        "researcher": "G",
-        "text": "Tanya needs to travel from New York to Boston in order to attend a meeting that starts at 2:00 PM. She can take either the train or the bus. The train will get her there just in time for her meeting no matter what. The bus is scheduled to arrive an hour before her meeting, but the bus is occasionally several hours late because of traffic. It would be nice to have an extra hour before the meeting, but Tanya cannot afford to be late. Tanya decides to take the train instead of the bus in order to ensure she is not being late for her meeting.",
-        "subject": "Tanya’s",
-        "low_rating_framework": "deontological",
-    },
 ]
 
 # Koerner base dilemmas and their variations

@@ -242,6 +242,11 @@
         nextBtn.addEventListener('click', async function(e) {
             e.preventDefault();
 
+            // Block if timer hasn't expired yet (timer.js handles the button state)
+            if (nextBtn.dataset.waitForTimer === 'true' && !window.timerExpired) {
+                return;
+            }
+
             // Show warning if not enough messages sent
             if (!hasEnoughMessages()) {
                 const remaining = MIN_USER_MESSAGES - userMessageCount;
