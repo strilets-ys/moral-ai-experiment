@@ -12,7 +12,7 @@ import logging
 
 from .models import (
     Participant, Dilemma, TIPIResponse, Rating, ChatTurn, EventLog, DebriefResponse,
-    SystemPromptLog, StanceCombination, ATTENTION_CHECK_TEXT
+    SystemPromptLog, StanceCombination, DemographicsResponse, ATTENTION_CHECK_TEXT
 )
 
 logger = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ def landing(request):
             request.session.create()
 
         # Random condition assignment
-        condition = random.choice(['neutral', 'persuade', 'persuade_info'])
+        condition = random.choice(['neutral', 'persuade', 'persuade_demo', 'persuade_info'])
 
         # LLM provider assignment (using qwen/vLLM for now)
         # TODO: Add back random assignment when other providers are configured
@@ -92,6 +92,8 @@ def redirect_to_current_stage(participant):
     if status == 'started':
         return redirect('experiment:consent')
     elif status == 'consent':
+        return redirect('experiment:demographics')
+    elif status == 'demographics':
         return redirect('experiment:tipi')
     elif status == 'tipi':
         return redirect('experiment:pre_rating', index=0)
@@ -119,17 +121,18 @@ def consent(request):
 
     if request.method == 'POST':
         if request.POST.get('consent') == 'agree':
-            # Test LLM connection before proceeding
-            success, error_message = test_llm_connection(participant.llm_provider)
+            # Test LLM connection before proceeding (skip in DEBUG mode)
+            if not settings.DEBUG:
+                success, error_message = test_llm_connection(participant.llm_provider)
 
-            if not success:
-                EventLog.objects.create(
-                    participant=participant,
-                    event_type='llm_connection_failed',
-                    page='consent',
-                    data={'provider': participant.llm_provider, 'error': error_message}
-                )
-                return redirect('experiment:connection_error')
+                if not success:
+                    EventLog.objects.create(
+                        participant=participant,
+                        event_type='llm_connection_failed',
+                        page='consent',
+                        data={'provider': participant.llm_provider, 'error': error_message}
+                    )
+                    return redirect('experiment:connection_error')
 
             participant.status = 'consent'
             participant.save()
@@ -140,7 +143,7 @@ def consent(request):
                 page='consent'
             )
 
-            return redirect('experiment:tipi')
+            return redirect('experiment:demographics')
         else:
             # Did not consent - withdraw
             participant.status = 'withdrawn'
@@ -150,6 +153,52 @@ def consent(request):
 
     return render(request, 'experiment/consent.html', {
         'participant': participant,
+    })
+
+
+def demographics(request):
+    """Demographics form (collected before TIPI)."""
+    participant = get_or_create_participant(request)
+    if not participant:
+        return redirect('experiment:landing')
+
+    if request.method == 'POST':
+        # Handle age
+        age_str = request.POST.get('age', '')
+        age = int(age_str) if age_str.isdigit() else None
+
+        # Handle gender with "other" option
+        gender = request.POST.get('gender', '')
+        gender_other = request.POST.get('gender_other', '') if gender == 'other' else ''
+
+        # Create DemographicsResponse
+        DemographicsResponse.objects.update_or_create(
+            participant=participant,
+            defaults={
+                'age': age,
+                'gender': gender,
+                'gender_other': gender_other,
+                'education': request.POST.get('education', ''),
+                'native_english': request.POST.get('native_english') == 'yes',
+            }
+        )
+
+        participant.status = 'demographics'
+        participant.save()
+
+        EventLog.objects.create(
+            participant=participant,
+            event_type='demographics_completed',
+            page='demographics',
+            data={'age': age, 'gender': gender, 'education': request.POST.get('education', '')}
+        )
+
+        return redirect('experiment:tipi')
+
+    return render(request, 'experiment/demographics.html', {
+        'participant': participant,
+        'timer_seconds': 120,  # 2 minutes
+        'page_name': 'demographics',
     })
 
 
@@ -472,7 +521,8 @@ def debrief(request):
     condition_descriptions = {
         'neutral': 'Neutral - The AI discussed the dilemmas using ethical reasoning without explicit persuasion goals.',
         'persuade': 'Persuade - The AI was instructed to either reinforce or challenge your position on each dilemma using compelling arguments.',
-        'persuade_info': 'Persuade + Personality - The AI was instructed to reinforce or challenge your position, and was given your personality profile to tailor its approach.',
+        'persuade_demo': 'Persuade + Demographics - The AI was instructed to reinforce or challenge your position, and was given your demographic information (age, gender, education) to tailor its approach.',
+        'persuade_info': 'Persuade + Demographics + Personality - The AI was instructed to reinforce or challenge your position, and was given both your demographic information and personality profile to tailor its approach.',
     }
     condition_description = condition_descriptions.get(participant.condition, participant.condition)
 
@@ -511,6 +561,14 @@ def debrief(request):
                 stance_mode=stance_mode
             )
 
+            # Get demographics if applicable
+            demographics_info = None
+            if participant.condition in ['persuade_demo', 'persuade_info']:
+                try:
+                    demographics_info = participant.demographics.get_demographics_summary()
+                except DemographicsResponse.DoesNotExist:
+                    pass
+
             # Get personality profile if applicable
             personality_profile = None
             if participant.condition == 'persuade_info':
@@ -535,6 +593,7 @@ def debrief(request):
                 stance_mode=stance_mode,
                 participant_rating=participant_rating,
                 personality_profile=personality_profile,
+                demographics_info=demographics_info,
                 position_description=position_description
             )
         except Dilemma.DoesNotExist:
@@ -562,26 +621,20 @@ def debrief(request):
             ai_tools = [t for t in ai_tools if t != 'other'] + [ai_tools_other]
         ai_tools_str = ', '.join(ai_tools) if ai_tools else ''
 
-        # Handle age (convert to int or None)
-        age_str = request.POST.get('age', '')
-        age = int(age_str) if age_str.isdigit() else None
-
-        # Handle gender with "other" option
-        gender = request.POST.get('gender', '')
-        gender_other = request.POST.get('gender_other', '') if gender == 'other' else ''
+        # Handle S-TIAS scores (convert to int or None)
+        def get_int_or_none(field_name):
+            val = request.POST.get(field_name, '')
+            return int(val) if val.isdigit() else None
 
         # Save debrief responses
         DebriefResponse.objects.update_or_create(
             participant=participant,
             defaults={
-                # Demographics
-                'age': age,
-                'gender': gender,
-                'gender_other': gender_other,
-                'education': request.POST.get('education', ''),
-                'native_english': request.POST.get('native_english') == 'yes',
-                # AI trust and usage
-                'ai_trust': request.POST.get('ai_trust', ''),
+                # S-TIAS Trust Scale
+                'stias_confident': get_int_or_none('stias_confident'),
+                'stias_reliable': get_int_or_none('stias_reliable'),
+                'stias_trust': get_int_or_none('stias_trust'),
+                # AI usage
                 'ai_usage_frequency': request.POST.get('ai_usage_frequency', ''),
                 'ai_tools_used': ai_tools_str,
                 'ai_usage_tasks': request.POST.get('ai_usage_tasks', ''),
@@ -715,6 +768,15 @@ def chat_send(request):
         stance_mode=stance_mode
     )
 
+    # Get demographics if applicable
+    demographics_info = None
+    if participant.condition in ['persuade_demo', 'persuade_info']:
+        try:
+            demographics_info = participant.demographics.get_demographics_summary()
+        except DemographicsResponse.DoesNotExist:
+            logger.warning(f"Missing demographics for participant={participant.id} in {participant.condition} condition")
+
+    # Get personality profile if applicable
     personality_profile = None
     if participant.condition == 'persuade_info':
         try:
@@ -738,6 +800,7 @@ def chat_send(request):
         stance_mode=stance_mode,
         participant_rating=participant_rating,
         personality_profile=personality_profile,
+        demographics_info=demographics_info,
         position_description=position_description
     )
 
@@ -848,6 +911,14 @@ def chat_init(request):
         stance_mode=stance_mode
     )
 
+    # Get demographics if applicable
+    demographics_info = None
+    if participant.condition in ['persuade_demo', 'persuade_info']:
+        try:
+            demographics_info = participant.demographics.get_demographics_summary()
+        except DemographicsResponse.DoesNotExist:
+            logger.warning(f"Missing demographics for participant={participant.id} in {participant.condition} condition")
+
     # Get personality profile if needed
     personality_profile = None
     if participant.condition == 'persuade_info':
@@ -873,6 +944,7 @@ def chat_init(request):
         stance_mode=stance_mode,
         participant_rating=participant_rating,
         personality_profile=personality_profile,
+        demographics_info=demographics_info,
         position_description=position_description
     )
 
@@ -1028,7 +1100,9 @@ def timer_expired(request):
     total_pre_items = num_dilemmas + 1 if participant.attention_check_phase == 'pre' else num_dilemmas
     total_post_items = num_dilemmas + 1 if participant.attention_check_phase == 'post' else num_dilemmas
 
-    if current_page == 'tipi':
+    if current_page == 'demographics':
+        next_url = '/tipi/'
+    elif current_page == 'tipi':
         next_url = '/pre-rating/0/'
     elif current_page.startswith('pre_rating_'):
         # Extract index from pre_rating_0, pre_rating_1, etc.

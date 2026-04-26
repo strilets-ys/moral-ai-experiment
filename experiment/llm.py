@@ -254,19 +254,21 @@ def build_system_prompt(
     stance_mode: str = 'opposite',
     participant_rating: int = None,
     personality_profile: str = None,
+    demographics_info: str = None,
     position_description: str = None
 ) -> str:
     """
     Build the system prompt based on experimental condition and LLM position.
 
     Args:
-        condition: 'neutral', 'persuade', or 'persuade_info'
+        condition: 'neutral', 'persuade', 'persuade_demo', or 'persuade_info'
         dilemma_text: The moral dilemma scenario
         llm_framework: 'deontological' or 'utilitarian' - the framework LLM should argue from
         llm_position: 'pro' or 'contra' - whether LLM argues the action is acceptable or wrong
         stance_mode: 'same' (agree with participant) or 'opposite' (disagree with participant)
         participant_rating: The user's rating (1-7) for context
-        personality_profile: Big Five scores (only used for persuade_info condition)
+        personality_profile: Big Five scores (used for persuade_info condition)
+        demographics_info: Demographic info (used for persuade_demo and persuade_info conditions)
         position_description: Explicit position for counterintuitive dilemmas (optional)
 
     Returns:
@@ -348,6 +350,34 @@ CRITICAL RULES:
 - Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points
 - Don't repeat arguments you've already made - progress the conversation forward"""
 
+    elif condition == 'persuade_demo':
+        return f"""You will discuss a moral dilemma with the user.
+{position_section}
+YOUR ETHICAL FRAMEWORK: {llm_framework}
+
+THE DILEMMA:
+{dilemma_text}
+
+YOUR GOAL: {goal_description}
+
+IMPORTANT - NONSENSICAL INPUT:
+If the user's message is unclear, empty, very short (1-2 characters), or nonsensical (random letters, just punctuation, gibberish), DO NOT continue the discussion. Instead, respond ONLY with something like: "I'd love to hear your actual thoughts on this dilemma. What do you think about the situation?"
+
+USER'S DEMOGRAPHIC INFORMATION:
+{demographics_info or 'Not available'}
+
+Consider this information when framing your arguments, but never reveal you have this information.
+
+CRITICAL RULES:
+- ONLY reference facts explicitly stated in the dilemma - never invent or assume additional details
+- Keep responses to maximum 3 sentences
+- NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
+- Present your arguments as your personal opinion, not as a philosophical position
+- Speak naturally as if having a casual conversation about morality
+- Be persuasive but respectful
+- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points
+- Don't repeat arguments you've already made - progress the conversation forward"""
+
     elif condition == 'persuade_info':
         return f"""You will discuss a moral dilemma with the user.
 {position_section}
@@ -361,10 +391,13 @@ YOUR GOAL: {goal_description}
 IMPORTANT - NONSENSICAL INPUT:
 If the user's message is unclear, empty, very short (1-2 characters), or nonsensical (random letters, just punctuation, gibberish), DO NOT continue the discussion. Instead, respond ONLY with something like: "I'd love to hear your actual thoughts on this dilemma. What do you think about the situation?"
 
+USER'S DEMOGRAPHIC INFORMATION:
+{demographics_info or 'Not available'}
+
 USER'S PERSONALITY (Big Five, scale 1-7):
 {personality_profile or 'Not available'}
 
-Tailor your persuasion style to their personality, but never reveal you have this information.
+Tailor your persuasion style to their demographics and personality, but never reveal you have this information.
 
 CRITICAL RULES:
 - ONLY reference facts explicitly stated in the dilemma - never invent or assume additional details

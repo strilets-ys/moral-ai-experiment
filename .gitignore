@@ -72,3 +72,12 @@ htmlcov/
 
 # Personal documentation (not for repo)
 WORKFLOW_DOCUMENTATION.md
+
+# Test results and exports (generated files)
+dilemma_test_results.*
+retest_results.*
+problematic_dilemmas_report.md
+llm_test_prompts.txt
+experiment_export_*.csv
+experiment_export_*.json
+results/model_comparison/

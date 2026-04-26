@@ -149,12 +149,14 @@ class Participant(models.Model):
     CONDITION_CHOICES = [
         ('neutral', 'Neutral'),
         ('persuade', 'Persuade'),
-        ('persuade_info', 'Persuade + Info'),
+        ('persuade_demo', 'Persuade + Demographics'),
+        ('persuade_info', 'Persuade + Demographics + Personality'),
     ]
 
     STATUS_CHOICES = [
         ('started', 'Started'),
         ('consent', 'Consented'),
+        ('demographics', 'Demographics Completed'),
         ('tipi', 'TIPI Completed'),
         ('pre_rating', 'Pre-Rating Completed'),
         ('chat', 'Chat In Progress'),
@@ -180,17 +182,16 @@ class Participant(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True)
 
     # JSON fields for storing dilemma orders (stored as JSON strings)
-    _chat_dilemma_ids = models.TextField(default='[]', db_column='chat_dilemma_ids')  # 5 IDs
-    _pre_dilemma_order = models.TextField(default='[]', db_column='pre_dilemma_order')  # 9 IDs for pre-rating
-    _post_dilemma_order = models.TextField(default='[]', db_column='post_dilemma_order')  # 9 IDs for post-rating (different order)
+    _chat_dilemma_ids = models.TextField(default='[]', db_column='chat_dilemma_ids')  # 4 IDs
+    _pre_dilemma_order = models.TextField(default='[]', db_column='pre_dilemma_order')  # 8 IDs for pre-rating
+    _post_dilemma_order = models.TextField(default='[]', db_column='post_dilemma_order')  # 8 IDs for post-rating (different order)
 
-    # Track which chat we're on (0-4)
+    # Track which chat we're on (0-3)
     current_chat_index = models.IntegerField(default=0)
 
     # New fields for stance assignment system
-    _stance_assignments = models.TextField(default='{}', db_column='stance_assignments')  # {dilemma_id: 'same'|'opposite'|'random'}
+    _stance_assignments = models.TextField(default='{}', db_column='stance_assignments')  # {dilemma_id: 'same'|'opposite'}
     stance_combination_used = models.IntegerField(null=True, blank=True)  # 1-6
-    nonmoral_dilemma_id = models.IntegerField(null=True, blank=True)  # Which nonmoral dilemma was selected
     koerner_chat_cost_category = models.CharField(max_length=16, blank=True)  # 'greater' or 'smaller'
 
     # Attention check fields
@@ -258,34 +259,26 @@ class Participant(models.Model):
 
     def assign_dilemmas(self):
         """
-        Assign 9 dilemmas for ratings and 5 for chat with stance assignments.
+        Assign 8 dilemmas for ratings and 4 for chat with stance assignments.
 
-        Rating (9 dilemmas):
+        Rating (8 dilemmas):
         - All 4 Greene moral (2 personal + 2 impersonal)
-        - 1 random from 2 nonmoral
         - 4 Koerner: 1 per variation type, each from different base dilemma
 
-        Chat (5 dilemmas):
+        Chat (4 dilemmas):
         - 1 personal (random action/omission)
         - 1 impersonal (opposite type to personal)
-        - 1 nonmoral (same one rated)
         - 2 Koerner (both from same cost category: BenefitsGreater OR BenefitsSmaller)
 
         Stance Assignment:
         - 4 moral dilemmas: 2+2 split based on combination
-        - 1 nonmoral: Random stance
         """
-        # Step 1: Select Greene dilemmas
+        # Step 1: Select Greene dilemmas (moral only, no nonmoral)
         personal_dilemmas = list(Dilemma.objects.filter(author='greene', category='personal'))
         impersonal_dilemmas = list(Dilemma.objects.filter(author='greene', category='impersonal'))
-        nonmoral_dilemmas = list(Dilemma.objects.filter(author='greene', category='nonmoral'))
 
         # All 4 Greene moral dilemmas for rating
         greene_moral = personal_dilemmas + impersonal_dilemmas
-
-        # Select 1 random nonmoral
-        selected_nonmoral = random.choice(nonmoral_dilemmas)
-        self.nonmoral_dilemma_id = selected_nonmoral.id
 
         # Step 2: Select 4 Koerner dilemmas (1 per variation, each from different base)
         koerner_dilemmas = list(Dilemma.objects.filter(author='koerner'))
@@ -312,8 +305,8 @@ class Participant(models.Model):
             if variation in koerner_by_base[base_code]:
                 selected_koerner.append(koerner_by_base[base_code][variation])
 
-        # Step 3: All 9 dilemmas for rating (shuffled differently for pre and post)
-        all_rating_dilemmas = greene_moral + [selected_nonmoral] + selected_koerner
+        # Step 3: All 8 dilemmas for rating (shuffled differently for pre and post)
+        all_rating_dilemmas = greene_moral + selected_koerner
 
         # Pre-rating order
         pre_order = all_rating_dilemmas.copy()
@@ -330,7 +323,7 @@ class Participant(models.Model):
             attempts += 1
         self.post_dilemma_order = [d.id for d in post_order]
 
-        # Step 4: Select 5 for chat
+        # Step 4: Select 4 for chat
         # Pick personal: random action or omission
         personal_action = [d for d in personal_dilemmas if d.dilemma_type == 'action']
         personal_omission = [d for d in personal_dilemmas if d.dilemma_type == 'omission']
@@ -346,9 +339,6 @@ class Participant(models.Model):
         # Pick impersonal with opposite type
         impersonal_opposite = [d for d in impersonal_dilemmas if d.dilemma_type == opposite_type]
         chat_impersonal = random.choice(impersonal_opposite) if impersonal_opposite else impersonal_dilemmas[0]
-
-        # Nonmoral: same one selected for rating
-        chat_nonmoral = selected_nonmoral
 
         # Select cost category for Koerner chat dilemmas
         cost_category = random.choice(['greater', 'smaller'])
@@ -370,8 +360,8 @@ class Participant(models.Model):
 
         chat_koerner = koerner_chat_candidates[:2]
 
-        # Assemble chat dilemmas and shuffle to randomize pro/contra order
-        chat_dilemmas = [chat_personal, chat_impersonal, chat_nonmoral] + chat_koerner
+        # Assemble chat dilemmas (4 total) and shuffle to randomize order
+        chat_dilemmas = [chat_personal, chat_impersonal] + chat_koerner
         random.shuffle(chat_dilemmas)
         self.chat_dilemma_ids = [d.id for d in chat_dilemmas]
 
@@ -403,11 +393,10 @@ class Participant(models.Model):
 
         combo = STANCE_COMBINATIONS[combination_index]
 
-        # Map dilemma IDs to stance modes
+        # Map dilemma IDs to stance modes (4 dilemmas total)
         stance_map = {
             str(chat_personal.id): combo['personal'],
             str(chat_impersonal.id): combo['impersonal'],
-            str(chat_nonmoral.id): random.choice(['same', 'opposite']),  # Random for nonmoral
         }
 
         if len(chat_koerner) >= 1:
@@ -420,8 +409,8 @@ class Participant(models.Model):
         # Step 6: Set attention check phase and position
         # Randomly choose pre or post rating phase
         self.attention_check_phase = random.choice(['pre', 'post'])
-        # Position is 0-9 (10 total items: 9 dilemmas + 1 attention check)
-        self.attention_check_position = random.randint(0, 9)
+        # Position is 0-8 (9 total items: 8 dilemmas + 1 attention check)
+        self.attention_check_position = random.randint(0, 8)
 
         self.save()
 
@@ -500,6 +489,51 @@ class TIPIResponse(models.Model):
         return f"TIPI for {self.participant}"
 
 
+class DemographicsResponse(models.Model):
+    """Demographics collected early in the experiment flow (before TIPI)."""
+    GENDER_CHOICES = [
+        ('male', 'Male'),
+        ('female', 'Female'),
+        ('non_binary', 'Non-binary'),
+        ('prefer_not_to_say', 'Prefer not to say'),
+        ('other', 'Other'),
+    ]
+
+    EDUCATION_CHOICES = [
+        ('high_school', 'High school or equivalent'),
+        ('some_college', 'Some college, no degree'),
+        ('associate', 'Associate degree'),
+        ('bachelor', "Bachelor's degree"),
+        ('master', "Master's degree"),
+        ('doctorate', 'Doctorate or professional degree'),
+        ('prefer_not_to_say', 'Prefer not to say'),
+    ]
+
+    participant = models.OneToOneField(Participant, on_delete=models.CASCADE, related_name='demographics')
+    age = models.IntegerField()
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES)
+    gender_other = models.CharField(max_length=64, blank=True, help_text="If gender is 'other'")
+    education = models.CharField(max_length=20, choices=EDUCATION_CHOICES)
+    native_english = models.BooleanField(help_text="Is English the participant's native language?")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def get_demographics_summary(self):
+        """Return a string summary of demographics for LLM prompts."""
+        gender_display = self.gender.replace('_', ' ').title()
+        if self.gender == 'other' and self.gender_other:
+            gender_display = self.gender_other
+        education_display = dict(self.EDUCATION_CHOICES).get(self.education, self.education)
+        return (
+            f"Age: {self.age}, "
+            f"Gender: {gender_display}, "
+            f"Education: {education_display}, "
+            f"Native English speaker: {'Yes' if self.native_english else 'No'}"
+        )
+
+    def __str__(self):
+        return f"Demographics for {self.participant}"
+
+
 class Rating(models.Model):
     PHASE_CHOICES = [
         ('pre', 'Pre-Chat'),
@@ -554,7 +588,7 @@ class EventLog(models.Model):
 
 
 class DebriefResponse(models.Model):
-    """Debrief form responses."""
+    """Debrief form responses (demographics collected separately earlier in flow)."""
     AI_USAGE_CHOICES = [
         ('never', 'Never'),
         ('rarely', 'Rarely'),
@@ -563,45 +597,26 @@ class DebriefResponse(models.Model):
         ('very_often', 'Very often'),
     ]
 
-    GENDER_CHOICES = [
-        ('male', 'Male'),
-        ('female', 'Female'),
-        ('non_binary', 'Non-binary'),
-        ('prefer_not_to_say', 'Prefer not to say'),
-        ('other', 'Other'),
-    ]
-
-    EDUCATION_CHOICES = [
-        ('high_school', 'High school or equivalent'),
-        ('some_college', 'Some college, no degree'),
-        ('associate', 'Associate degree'),
-        ('bachelor', "Bachelor's degree"),
-        ('master', "Master's degree"),
-        ('doctorate', 'Doctorate or professional degree'),
-        ('prefer_not_to_say', 'Prefer not to say'),
-    ]
-
-    AI_TRUST_CHOICES = [
-        ('1', '1 - Do not trust at all'),
-        ('2', '2'),
-        ('3', '3'),
-        ('4', '4 - Neutral'),
-        ('5', '5'),
-        ('6', '6'),
-        ('7', '7 - Trust completely'),
-    ]
-
     participant = models.OneToOneField(Participant, on_delete=models.CASCADE, related_name='debrief')
 
-    # Demographics
-    age = models.IntegerField(null=True, blank=True)
-    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, blank=True)
-    gender_other = models.CharField(max_length=64, blank=True, help_text="If gender is 'other'")
-    education = models.CharField(max_length=20, choices=EDUCATION_CHOICES, blank=True)
-    native_english = models.BooleanField(null=True, blank=True, help_text="Is English the participant's native language?")
+    # S-TIAS Trust Scale (3 items, 1-7 scale)
+    # "I am confident in the AI assistant"
+    stias_confident = models.IntegerField(
+        null=True, blank=True,
+        help_text="I am confident in the AI assistant (1-7)"
+    )
+    # "The AI assistant is reliable"
+    stias_reliable = models.IntegerField(
+        null=True, blank=True,
+        help_text="The AI assistant is reliable (1-7)"
+    )
+    # "I can trust the AI assistant"
+    stias_trust = models.IntegerField(
+        null=True, blank=True,
+        help_text="I can trust the AI assistant (1-7)"
+    )
 
-    # AI trust and usage
-    ai_trust = models.CharField(max_length=2, choices=AI_TRUST_CHOICES, blank=True)
+    # AI usage
     ai_usage_frequency = models.CharField(max_length=20, choices=AI_USAGE_CHOICES, blank=True)
     ai_tools_used = models.TextField(blank=True, help_text="Which AI tools (ChatGPT, Claude, etc.)")
     ai_usage_tasks = models.TextField(blank=True)
@@ -617,6 +632,15 @@ class DebriefResponse(models.Model):
     results_email = models.EmailField(blank=True, help_text="Optional email to receive study results")
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def stias_average(self):
+        """Compute average S-TIAS score (3-item mean)."""
+        scores = [self.stias_confident, self.stias_reliable, self.stias_trust]
+        valid_scores = [s for s in scores if s is not None]
+        if not valid_scores:
+            return None
+        return sum(valid_scores) / len(valid_scores)
 
     def __str__(self):
         return f"Debrief for {self.participant}"

@@ -4,10 +4,11 @@ from django.urls import path
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
+from django.utils.html import format_html, escape
 
 from .models import (
     Dilemma, Participant, TIPIResponse, Rating, ChatTurn, EventLog,
-    DebriefResponse, SystemPromptLog, StanceCombination
+    DebriefResponse, SystemPromptLog, StanceCombination, DemographicsResponse
 )
 from .export import export_participants_json, export_participants_csv
 
@@ -138,31 +139,42 @@ class ParticipantAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
     actions = [delete_participant_data]
     change_list_template = 'admin/experiment/participant/change_list.html'
-    inlines = [RatingInline, ChatTurnInline, SystemPromptLogInline]
+    inlines = [SystemPromptLogInline]  # Rating and Chat now shown in custom displays above
 
     fieldsets = (
         ('Participant Info', {
             'fields': ('prolific_id', 'session_key', 'condition', 'llm_provider', 'status', 'withdrawn', 'created_at', 'completed_at')
         }),
+        ('Rating Comparison', {
+            'fields': ('rating_comparison_display',),
+            'description': 'Pre and post ratings for each dilemma with change indicators'
+        }),
+        ('Chat Transcripts', {
+            'fields': ('chat_transcripts_display',),
+            'description': 'Full chat conversations grouped by dilemma'
+        }),
         ('Dilemma Assignments', {
             'fields': ('rating_dilemmas_display', 'chat_dilemmas_display', 'stance_assignments_display'),
-            'description': 'Shows which dilemmas were assigned and how'
+            'description': 'Shows which dilemmas were assigned and how',
+            'classes': ('collapse',)
         }),
         ('Stance Configuration', {
-            'fields': ('stance_combination_used', 'stance_combination_description', 'koerner_chat_cost_category', 'nonmoral_dilemma_id')
+            'fields': ('stance_combination_used', 'stance_combination_description', 'koerner_chat_cost_category'),
+            'classes': ('collapse',)
         }),
         ('Attention Check', {
-            'fields': ('attention_check_phase', 'attention_check_position', 'attention_check_passed', 'attention_check_response')
+            'fields': ('attention_check_phase', 'attention_check_position', 'attention_check_passed', 'attention_check_response'),
+            'classes': ('collapse',)
         }),
     )
 
     readonly_fields = [
         'prolific_id', 'session_key', 'condition', 'llm_provider', 'status', 'withdrawn',
         'created_at', 'completed_at', 'stance_combination_used', 'koerner_chat_cost_category',
-        'nonmoral_dilemma_id', 'attention_check_phase', 'attention_check_position',
+        'attention_check_phase', 'attention_check_position',
         'attention_check_passed', 'attention_check_response',
         'rating_dilemmas_display', 'chat_dilemmas_display', 'stance_assignments_display',
-        'stance_combination_description'
+        'stance_combination_description', 'rating_comparison_display', 'chat_transcripts_display'
     ]
 
     def attention_check_result(self, obj):
@@ -244,6 +256,169 @@ class ParticipantAdmin(admin.ModelAdmin):
             return f'Combination {obj.stance_combination_used} (not found)'
     stance_combination_description.short_description = 'Combination Description'
 
+    def rating_comparison_display(self, obj):
+        """Show pre and post ratings side by side for each dilemma."""
+        ratings = Rating.objects.filter(participant=obj).select_related('dilemma')
+
+        # Build dict of ratings by dilemma
+        pre_ratings = {}
+        post_ratings = {}
+        for r in ratings:
+            if r.phase == 'pre':
+                pre_ratings[r.dilemma_id] = r.rating
+            else:
+                post_ratings[r.dilemma_id] = r.rating
+
+        # Get all dilemmas for this participant
+        all_dilemma_ids = obj.all_dilemma_order or []
+        if not all_dilemma_ids:
+            return '-'
+
+        dilemmas = Dilemma.objects.filter(id__in=all_dilemma_ids)
+        dilemma_map = {d.id: d for d in dilemmas}
+        chat_dilemma_ids = set(obj.chat_dilemma_ids or [])
+        stances = obj.stance_assignments or {}
+
+        html = ['<table style="border-collapse: collapse; width: 100%;">']
+        html.append('<thead><tr style="background: #f0f0f0;">')
+        html.append('<th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Dilemma</th>')
+        html.append('<th style="padding: 8px; border: 1px solid #ddd; text-align: center; width: 80px;">Pre</th>')
+        html.append('<th style="padding: 8px; border: 1px solid #ddd; text-align: center; width: 80px;">Post</th>')
+        html.append('<th style="padding: 8px; border: 1px solid #ddd; text-align: center; width: 80px;">Change</th>')
+        html.append('<th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Chat Info</th>')
+        html.append('</tr></thead><tbody>')
+
+        for did in all_dilemma_ids:
+            d = dilemma_map.get(did)
+            if not d:
+                continue
+
+            pre = pre_ratings.get(did)
+            post = post_ratings.get(did)
+            is_chat = did in chat_dilemma_ids
+            stance = stances.get(str(did), '')
+
+            # Calculate change
+            if pre is not None and post is not None:
+                change = post - pre
+                if change > 0:
+                    change_str = f'<span style="color: green;">+{change}</span>'
+                elif change < 0:
+                    change_str = f'<span style="color: red;">{change}</span>'
+                else:
+                    change_str = '<span style="color: gray;">0</span>'
+            else:
+                change_str = '-'
+
+            # Chat info
+            if is_chat:
+                stance_label = 'reinforce' if stance == 'same' else 'challenge'
+                chat_info = f'<span style="background: #e3f2fd; padding: 2px 6px; border-radius: 3px;">Chat ({stance_label})</span>'
+            else:
+                chat_info = '<span style="color: #999;">No chat</span>'
+
+            html.append(f'<tr>')
+            html.append(f'<td style="padding: 8px; border: 1px solid #ddd;"><strong>{escape(d.code)}</strong> <span style="color: #666;">({d.category})</span></td>')
+            html.append(f'<td style="padding: 8px; border: 1px solid #ddd; text-align: center;">{pre if pre is not None else "-"}</td>')
+            html.append(f'<td style="padding: 8px; border: 1px solid #ddd; text-align: center;">{post if post is not None else "-"}</td>')
+            html.append(f'<td style="padding: 8px; border: 1px solid #ddd; text-align: center;">{change_str}</td>')
+            html.append(f'<td style="padding: 8px; border: 1px solid #ddd;">{chat_info}</td>')
+            html.append('</tr>')
+
+        html.append('</tbody></table>')
+        return format_html(''.join(html))
+    rating_comparison_display.short_description = 'Rating Comparison (Pre vs Post)'
+
+    def chat_transcripts_display(self, obj):
+        """Show full chat transcripts grouped by dilemma."""
+        chat_turns = ChatTurn.objects.filter(participant=obj).select_related('dilemma').order_by('dilemma_id', 'timestamp')
+
+        if not chat_turns.exists():
+            return '-'
+
+        # Group by dilemma
+        turns_by_dilemma = {}
+        for turn in chat_turns:
+            if turn.dilemma_id not in turns_by_dilemma:
+                turns_by_dilemma[turn.dilemma_id] = []
+            turns_by_dilemma[turn.dilemma_id].append(turn)
+
+        # Get dilemma info
+        dilemma_ids = list(turns_by_dilemma.keys())
+        dilemmas = Dilemma.objects.filter(id__in=dilemma_ids)
+        dilemma_map = {d.id: d for d in dilemmas}
+
+        # Get stance info and ratings
+        stances = obj.stance_assignments or {}
+        pre_ratings = {r.dilemma_id: r.rating for r in Rating.objects.filter(participant=obj, phase='pre')}
+        post_ratings = {r.dilemma_id: r.rating for r in Rating.objects.filter(participant=obj, phase='post')}
+
+        # Get system prompts
+        prompts = SystemPromptLog.objects.filter(participant=obj)
+        prompt_map = {p.dilemma_id: p for p in prompts}
+
+        html = []
+
+        for did in obj.chat_dilemma_ids or []:
+            if did not in turns_by_dilemma:
+                continue
+
+            d = dilemma_map.get(did)
+            turns = turns_by_dilemma[did]
+            stance = stances.get(str(did), 'unknown')
+            prompt_log = prompt_map.get(did)
+
+            pre = pre_ratings.get(did, '-')
+            post = post_ratings.get(did, '-')
+            if pre != '-' and post != '-':
+                change = post - pre
+                change_str = f'+{change}' if change > 0 else str(change)
+            else:
+                change_str = '-'
+
+            # Dilemma header
+            html.append(f'<div style="margin-bottom: 24px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">')
+            html.append(f'<div style="background: #f5f5f5; padding: 12px; border-bottom: 1px solid #ddd;">')
+            html.append(f'<h3 style="margin: 0 0 8px 0; color: #333;">{escape(d.code if d else "Unknown")} <span style="font-weight: normal; color: #666;">({d.category if d else "-"})</span></h3>')
+
+            # Stance and rating info
+            stance_color = '#4caf50' if stance == 'same' else '#f44336'
+            stance_label = 'Reinforce' if stance == 'same' else 'Challenge'
+            html.append(f'<div style="display: flex; gap: 16px; font-size: 13px;">')
+            html.append(f'<span><strong>Stance:</strong> <span style="color: {stance_color};">{stance_label}</span></span>')
+            html.append(f'<span><strong>Pre:</strong> {pre}</span>')
+            html.append(f'<span><strong>Post:</strong> {post}</span>')
+            html.append(f'<span><strong>Change:</strong> {change_str}</span>')
+            if prompt_log:
+                html.append(f'<span><strong>Framework:</strong> {prompt_log.llm_framework}</span>')
+                html.append(f'<span><strong>Position:</strong> {prompt_log.llm_position}</span>')
+            html.append('</div>')
+            html.append('</div>')
+
+            # Chat messages
+            html.append('<div style="padding: 12px;">')
+            for turn in turns:
+                if turn.sender == 'user':
+                    bg_color = '#e3f2fd'
+                    align = 'flex-end'
+                    label = 'User'
+                else:
+                    bg_color = '#f5f5f5'
+                    align = 'flex-start'
+                    label = 'AI'
+
+                timestamp = turn.timestamp.strftime('%H:%M:%S') if turn.timestamp else ''
+                html.append(f'<div style="display: flex; justify-content: {align}; margin-bottom: 8px;">')
+                html.append(f'<div style="max-width: 80%; background: {bg_color}; padding: 10px 14px; border-radius: 12px;">')
+                html.append(f'<div style="font-size: 11px; color: #666; margin-bottom: 4px;"><strong>{label}</strong> &middot; {timestamp}</div>')
+                html.append(f'<div style="white-space: pre-wrap; word-break: break-word;">{escape(turn.text)}</div>')
+                html.append('</div></div>')
+
+            html.append('</div></div>')
+
+        return format_html(''.join(html)) if html else '-'
+    chat_transcripts_display.short_description = 'Chat Transcripts'
+
     def has_add_permission(self, request):
         return False
 
@@ -287,6 +462,13 @@ class TIPIResponseAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
         return f'{obj.openness:.1f}'
 
 
+@admin.register(DemographicsResponse)
+class DemographicsResponseAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
+    list_display = ['participant', 'age', 'gender', 'education', 'native_english', 'created_at']
+    list_filter = ['gender', 'education', 'native_english', 'created_at']
+    search_fields = ['participant__prolific_id']
+
+
 @admin.register(Rating)
 class RatingAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     list_display = ['participant', 'dilemma', 'phase', 'rating', 'created_at']
@@ -325,9 +507,14 @@ class EventLogAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
 
 @admin.register(DebriefResponse)
 class DebriefResponseAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
-    list_display = ['participant', 'age', 'gender', 'education', 'native_english', 'ai_trust', 'ai_usage_frequency', 'noticed_persuasion', 'changed_mind', 'has_email', 'created_at']
-    list_filter = ['gender', 'education', 'native_english', 'ai_trust', 'ai_usage_frequency', 'noticed_persuasion', 'changed_mind', 'created_at']
+    list_display = ['participant', 'stias_confident', 'stias_reliable', 'stias_trust', 'stias_avg', 'ai_usage_frequency', 'noticed_persuasion', 'changed_mind', 'has_email', 'created_at']
+    list_filter = ['ai_usage_frequency', 'noticed_persuasion', 'changed_mind', 'created_at']
     search_fields = ['participant__prolific_id', 'general_feedback', 'results_email']
+
+    def stias_avg(self, obj):
+        avg = obj.stias_average
+        return f'{avg:.2f}' if avg else '-'
+    stias_avg.short_description = 'S-TIAS Avg'
 
     def has_email(self, obj):
         return bool(obj.results_email)
@@ -447,6 +634,7 @@ def get_urls_with_export():
             'chat_turn_count': ChatTurn.objects.count(),
             'event_log_count': EventLog.objects.count(),
             'debrief_count': DebriefResponse.objects.count(),
+            'demographics_count': DemographicsResponse.objects.count(),
             'tipi_count': TIPIResponse.objects.count(),
             'system_prompt_count': SystemPromptLog.objects.count(),
         }

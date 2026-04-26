@@ -7,6 +7,7 @@ urlpatterns = [
     # Page routes
     path('', views.landing, name='landing'),
     path('consent/', views.consent, name='consent'),
+    path('demographics/', views.demographics, name='demographics'),
     path('tipi/', views.tipi, name='tipi'),
     path('pre-rating/<int:index>/', views.pre_rating, name='pre_rating'),
     path('chat/<int:index>/', views.chat, name='chat'),

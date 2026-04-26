@@ -9,7 +9,7 @@ from datetime import datetime
 
 from .models import (
     Participant, Dilemma, TIPIResponse, Rating, ChatTurn,
-    EventLog, DebriefResponse, SystemPromptLog
+    EventLog, DebriefResponse, SystemPromptLog, DemographicsResponse
 )
 
 
@@ -40,7 +40,6 @@ def get_participant_data(participant_id):
             'current_chat_index': participant.current_chat_index,
             'stance_assignments': participant.stance_assignments,
             'stance_combination_used': participant.stance_combination_used,
-            'nonmoral_dilemma_id': participant.nonmoral_dilemma_id,
             'koerner_chat_cost_category': participant.koerner_chat_cost_category,
             'attention_check_phase': participant.attention_check_phase,
             'attention_check_position': participant.attention_check_position,
@@ -77,6 +76,20 @@ def get_participant_data(participant_id):
         }
     except TIPIResponse.DoesNotExist:
         data['tipi'] = None
+
+    # Demographics (collected early in flow)
+    try:
+        demo = participant.demographics
+        data['demographics'] = {
+            'age': demo.age,
+            'gender': demo.gender,
+            'gender_other': demo.gender_other,
+            'education': demo.education,
+            'native_english': demo.native_english,
+            'created_at': demo.created_at.isoformat() if demo.created_at else None,
+        }
+    except DemographicsResponse.DoesNotExist:
+        data['demographics'] = None
 
     # Ratings (pre and post)
     ratings = Rating.objects.filter(participant=participant).select_related('dilemma')
@@ -142,14 +155,12 @@ def get_participant_data(participant_id):
     try:
         debrief = participant.debrief
         data['debrief'] = {
-            # Demographics
-            'age': debrief.age,
-            'gender': debrief.gender,
-            'gender_other': debrief.gender_other,
-            'education': debrief.education,
-            'native_english': debrief.native_english,
-            # AI trust and usage
-            'ai_trust': debrief.ai_trust,
+            # S-TIAS Trust Scale
+            'stias_confident': debrief.stias_confident,
+            'stias_reliable': debrief.stias_reliable,
+            'stias_trust': debrief.stias_trust,
+            'stias_average': debrief.stias_average,
+            # AI usage
             'ai_usage_frequency': debrief.ai_usage_frequency,
             'ai_tools_used': debrief.ai_tools_used,
             'ai_usage_tasks': debrief.ai_usage_tasks,
@@ -203,12 +214,16 @@ def export_participants_csv(participant_ids):
         'status', 'withdrawn', 'created_at', 'completed_at',
 
         # Stance assignment info
-        'stance_combination_used', 'nonmoral_dilemma_id', 'koerner_chat_cost_category',
+        'stance_combination_used', 'koerner_chat_cost_category',
         'stance_assignments_json',
 
         # Attention check info
         'attention_check_phase', 'attention_check_position',
         'attention_check_passed', 'attention_check_response',
+
+        # Demographics (collected early in flow)
+        'demographics_age', 'demographics_gender', 'demographics_gender_other',
+        'demographics_education', 'demographics_native_english',
 
         # TIPI raw items
         'tipi_item_1', 'tipi_item_2', 'tipi_item_3', 'tipi_item_4', 'tipi_item_5',
@@ -218,11 +233,11 @@ def export_participants_csv(participant_ids):
         'tipi_extraversion', 'tipi_agreeableness', 'tipi_conscientiousness',
         'tipi_emotional_stability', 'tipi_openness',
 
-        # Debrief - Demographics
-        'debrief_age', 'debrief_gender', 'debrief_gender_other', 'debrief_education', 'debrief_native_english',
+        # Debrief - S-TIAS Trust Scale
+        'debrief_stias_confident', 'debrief_stias_reliable', 'debrief_stias_trust', 'debrief_stias_average',
 
-        # Debrief - AI trust and usage
-        'debrief_ai_trust', 'debrief_ai_usage_frequency', 'debrief_ai_tools_used', 'debrief_ai_usage_tasks',
+        # Debrief - AI usage
+        'debrief_ai_usage_frequency', 'debrief_ai_tools_used', 'debrief_ai_usage_tasks',
 
         # Debrief - Feedback
         'debrief_noticed_persuasion', 'debrief_persuasion_description',
@@ -264,7 +279,6 @@ def export_participants_csv(participant_ids):
             'created_at': p['created_at'],
             'completed_at': p['completed_at'],
             'stance_combination_used': p.get('stance_combination_used'),
-            'nonmoral_dilemma_id': p.get('nonmoral_dilemma_id'),
             'koerner_chat_cost_category': p.get('koerner_chat_cost_category', ''),
             'stance_assignments_json': json.dumps(p.get('stance_assignments', {}), ensure_ascii=False),
             'attention_check_phase': p.get('attention_check_phase', ''),
@@ -272,6 +286,15 @@ def export_participants_csv(participant_ids):
             'attention_check_passed': p.get('attention_check_passed'),
             'attention_check_response': p.get('attention_check_response'),
         }
+
+        # Demographics data (collected early in flow)
+        if pdata.get('demographics'):
+            demo = pdata['demographics']
+            row['demographics_age'] = demo.get('age')
+            row['demographics_gender'] = demo.get('gender', '')
+            row['demographics_gender_other'] = demo.get('gender_other', '')
+            row['demographics_education'] = demo.get('education', '')
+            row['demographics_native_english'] = demo.get('native_english')
 
         # TIPI data
         if pdata['tipi']:
@@ -287,14 +310,12 @@ def export_participants_csv(participant_ids):
         # Debrief data
         if pdata['debrief']:
             d = pdata['debrief']
-            # Demographics
-            row['debrief_age'] = d.get('age')
-            row['debrief_gender'] = d.get('gender', '')
-            row['debrief_gender_other'] = d.get('gender_other', '')
-            row['debrief_education'] = d.get('education', '')
-            row['debrief_native_english'] = d.get('native_english')
-            # AI trust and usage
-            row['debrief_ai_trust'] = d.get('ai_trust', '')
+            # S-TIAS Trust Scale
+            row['debrief_stias_confident'] = d.get('stias_confident')
+            row['debrief_stias_reliable'] = d.get('stias_reliable')
+            row['debrief_stias_trust'] = d.get('stias_trust')
+            row['debrief_stias_average'] = d.get('stias_average')
+            # AI usage
             row['debrief_ai_usage_frequency'] = d.get('ai_usage_frequency', '')
             row['debrief_ai_tools_used'] = d.get('ai_tools_used', '')
             row['debrief_ai_usage_tasks'] = d.get('ai_usage_tasks', '')
