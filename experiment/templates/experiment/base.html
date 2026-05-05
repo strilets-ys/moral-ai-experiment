@@ -12,7 +12,7 @@
     <div class="container">
         {% if timer_seconds %}
         <div id="timer-container" class="timer-container">
-            <div id="timer" class="timer" data-seconds="{{ timer_seconds }}" data-page="{{ page_name }}" data-enforce-wait="{{ not debug }}">
+            <div id="timer" class="timer" data-seconds="{{ timer_seconds }}" data-page="{{ page_name }}" data-enforce-wait="{% if timer_enforce_wait is False %}False{% else %}{{ is_production }}{% endif %}">
                 <span id="timer-display">--:--</span>
             </div>
             <div id="timer-warning-message" class="timer-warning-message">

@@ -197,8 +197,6 @@ def demographics(request):
 
     return render(request, 'experiment/demographics.html', {
         'participant': participant,
-        'timer_seconds': 120,  # 2 minutes
-        'page_name': 'demographics',
     })
 
 
@@ -252,6 +250,7 @@ def tipi(request):
         'participant': participant,
         'tipi_items': tipi_items,
         'timer_seconds': 120,  # 2 minutes
+        'timer_enforce_wait': False,  # Timer is informational only
         'page_name': 'tipi',
     })
 
@@ -665,6 +664,7 @@ def debrief(request):
         'condition_description': condition_description,
         'sample_prompt': sample_prompt,
         'timer_seconds': 300,  # 5 minutes
+        'timer_enforce_wait': False,  # Timer is informational only
         'page_name': 'debrief',
     })
 
