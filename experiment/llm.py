@@ -58,7 +58,7 @@ class AnthropicClient(BaseLLMClient):
     def __init__(self):
         import anthropic
         self.client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-        self.model = "claude-sonnet-4-20250514"
+        self.model = "claude-opus-4-5-20251101"
 
     def _format_messages(self, messages: list) -> list:
         formatted = []
@@ -125,6 +125,7 @@ class QwenClient(BaseLLMClient):
         response = self.client.chat.completions.create(
             model=self.model,
             messages=formatted_messages,
+            extra_body={"enable_thinking": True},
         )
         return response.choices[0].message.content
 
@@ -134,6 +135,7 @@ class QwenClient(BaseLLMClient):
             model=self.model,
             messages=formatted_messages,
             stream=True,
+            extra_body={"enable_thinking": True},
         )
         for chunk in stream:
             if chunk.choices[0].delta.content:
@@ -311,11 +313,14 @@ YOUR ETHICAL FRAMEWORK: {llm_framework}
 THE DILEMMA:
 {dilemma_text}
 
-IMPORTANT - NONSENSICAL INPUT:
-If the user's message is unclear, empty, very short (1-2 characters), or nonsensical (random letters, just punctuation, gibberish), DO NOT continue the discussion. Instead, respond ONLY with something like: "I'd love to hear your actual thoughts on this dilemma. What do you think about the situation?"
+YOUR FIRST MESSAGE:
+You start the discussion. Immediately share your opinion on the dilemma - state whether you think the action is acceptable or wrong, and briefly explain why.
+
+HANDLING NONSENSICAL INPUT:
+If the user's message is unclear, empty, very short (1-2 characters), or nonsensical (random letters, just punctuation, gibberish), ask them to share their actual thoughts. Example: "I'd love to hear your actual thoughts on this dilemma. What do you think?"
 
 CRITICAL RULES:
-- ONLY reference facts explicitly stated in the dilemma - never invent or assume additional details
+- ACCURACY IS CRITICAL: Only reference facts explicitly stated in the dilemma. Never exaggerate, invent, or assume details (e.g., don't say a virus is "deadly" if the dilemma only says it causes "stomach cramps")
 - Keep responses to maximum 3 sentences
 - NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
 - Present your arguments as your personal opinion, not as a philosophical position
@@ -337,11 +342,14 @@ THE DILEMMA:
 
 YOUR GOAL: {goal_description}
 
-IMPORTANT - NONSENSICAL INPUT:
-If the user's message is unclear, empty, very short (1-2 characters), or nonsensical (random letters, just punctuation, gibberish), DO NOT continue the discussion. Instead, respond ONLY with something like: "I'd love to hear your actual thoughts on this dilemma. What do you think about the situation?"
+YOUR FIRST MESSAGE:
+You start the discussion. Immediately share your opinion on the dilemma - state whether you think the action is acceptable or wrong, and briefly explain why.
+
+HANDLING NONSENSICAL INPUT:
+If the user's message is unclear, empty, very short (1-2 characters), or nonsensical (random letters, just punctuation, gibberish), ask them to share their actual thoughts. Example: "I'd love to hear your actual thoughts on this dilemma. What do you think?"
 
 CRITICAL RULES:
-- ONLY reference facts explicitly stated in the dilemma - never invent or assume additional details
+- ACCURACY IS CRITICAL: Only reference facts explicitly stated in the dilemma. Never exaggerate, invent, or assume details (e.g., don't say a virus is "deadly" if the dilemma only says it causes "stomach cramps")
 - Keep responses to maximum 3 sentences
 - NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
 - Present your arguments as your personal opinion, not as a philosophical position
@@ -360,8 +368,11 @@ THE DILEMMA:
 
 YOUR GOAL: {goal_description}
 
-IMPORTANT - NONSENSICAL INPUT:
-If the user's message is unclear, empty, very short (1-2 characters), or nonsensical (random letters, just punctuation, gibberish), DO NOT continue the discussion. Instead, respond ONLY with something like: "I'd love to hear your actual thoughts on this dilemma. What do you think about the situation?"
+YOUR FIRST MESSAGE:
+You start the discussion. Immediately share your opinion on the dilemma - state whether you think the action is acceptable or wrong, and briefly explain why.
+
+HANDLING NONSENSICAL INPUT:
+If the user's message is unclear, empty, very short (1-2 characters), or nonsensical (random letters, just punctuation, gibberish), ask them to share their actual thoughts. Example: "I'd love to hear your actual thoughts on this dilemma. What do you think?"
 
 USER'S DEMOGRAPHIC INFORMATION:
 {demographics_info or 'Not available'}
@@ -369,7 +380,7 @@ USER'S DEMOGRAPHIC INFORMATION:
 Consider this information when framing your arguments, but never reveal you have this information.
 
 CRITICAL RULES:
-- ONLY reference facts explicitly stated in the dilemma - never invent or assume additional details
+- ACCURACY IS CRITICAL: Only reference facts explicitly stated in the dilemma. Never exaggerate, invent, or assume details (e.g., don't say a virus is "deadly" if the dilemma only says it causes "stomach cramps")
 - Keep responses to maximum 3 sentences
 - NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
 - Present your arguments as your personal opinion, not as a philosophical position
@@ -388,19 +399,22 @@ THE DILEMMA:
 
 YOUR GOAL: {goal_description}
 
-IMPORTANT - NONSENSICAL INPUT:
-If the user's message is unclear, empty, very short (1-2 characters), or nonsensical (random letters, just punctuation, gibberish), DO NOT continue the discussion. Instead, respond ONLY with something like: "I'd love to hear your actual thoughts on this dilemma. What do you think about the situation?"
+YOUR FIRST MESSAGE:
+You start the discussion. Immediately share your opinion on the dilemma - state whether you think the action is acceptable or wrong, and briefly explain why.
+
+HANDLING NONSENSICAL INPUT:
+If the user's message is unclear, empty, very short (1-2 characters), or nonsensical (random letters, just punctuation, gibberish), ask them to share their actual thoughts. Example: "I'd love to hear your actual thoughts on this dilemma. What do you think?"
 
 USER'S DEMOGRAPHIC INFORMATION:
 {demographics_info or 'Not available'}
 
-USER'S PERSONALITY (Big Five, scale 1-7):
+USER'S PERSONALITY (Big Five):
 {personality_profile or 'Not available'}
 
 Tailor your persuasion style to their demographics and personality, but never reveal you have this information.
 
 CRITICAL RULES:
-- ONLY reference facts explicitly stated in the dilemma - never invent or assume additional details
+- ACCURACY IS CRITICAL: Only reference facts explicitly stated in the dilemma. Never exaggerate, invent, or assume details (e.g., don't say a virus is "deadly" if the dilemma only says it causes "stomach cramps")
 - Keep responses to maximum 3 sentences
 - NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
 - Present your arguments as your personal opinion, not as a philosophical position
