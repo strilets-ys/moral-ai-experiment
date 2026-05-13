@@ -54,9 +54,8 @@ def landing(request):
         # Random condition assignment
         condition = random.choice(['neutral', 'persuade', 'persuade_demo', 'persuade_info'])
 
-        # LLM provider assignment (using qwen/vLLM for now)
-        # TODO: Add back random assignment when other providers are configured
-        llm_provider = 'qwen'
+        # LLM provider assignment
+        llm_provider = 'anthropic'
 
         # Create participant
         participant = Participant.objects.create(

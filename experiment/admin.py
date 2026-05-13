@@ -116,7 +116,21 @@ class SystemPromptLogInline(admin.TabularInline):
 
 @admin.action(description='Delete participant data (GDPR request)')
 def delete_participant_data(modeladmin, request, queryset):
-    """GDPR-compliant deletion with audit logging."""
+    """GDPR-compliant deletion with audit logging and explicit cascade."""
+    count = queryset.count()
+    participant_ids = list(queryset.values_list('id', flat=True))
+
+    # Count related data for logging
+    related_counts = {
+        'ratings': Rating.objects.filter(participant_id__in=participant_ids).count(),
+        'chat_turns': ChatTurn.objects.filter(participant_id__in=participant_ids).count(),
+        'events': EventLog.objects.filter(participant_id__in=participant_ids).count(),
+        'system_prompts': SystemPromptLog.objects.filter(participant_id__in=participant_ids).count(),
+        'tipi': TIPIResponse.objects.filter(participant_id__in=participant_ids).count(),
+        'demographics': DemographicsResponse.objects.filter(participant_id__in=participant_ids).count(),
+        'debrief': DebriefResponse.objects.filter(participant_id__in=participant_ids).count(),
+    }
+
     for p in queryset:
         gdpr_logger.info(
             f"GDPR deletion: Participant ID={p.id}, "
@@ -126,9 +140,28 @@ def delete_participant_data(modeladmin, request, queryset):
             f"Deleted by={request.user.username}, "
             f"Timestamp={timezone.now().isoformat()}"
         )
-    count = queryset.count()
+
+    # Explicit cascade delete to ensure all related data is removed
+    Rating.objects.filter(participant_id__in=participant_ids).delete()
+    ChatTurn.objects.filter(participant_id__in=participant_ids).delete()
+    EventLog.objects.filter(participant_id__in=participant_ids).delete()
+    SystemPromptLog.objects.filter(participant_id__in=participant_ids).delete()
+    TIPIResponse.objects.filter(participant_id__in=participant_ids).delete()
+    DemographicsResponse.objects.filter(participant_id__in=participant_ids).delete()
+    DebriefResponse.objects.filter(participant_id__in=participant_ids).delete()
+
+    # Now delete participants
     queryset.delete()
-    modeladmin.message_user(request, f"Deleted {count} participant(s) and all associated data.")
+
+    total_related = sum(related_counts.values())
+    modeladmin.message_user(
+        request,
+        f"Deleted {count} participant(s) and {total_related} related records: "
+        f"{related_counts['ratings']} ratings, {related_counts['chat_turns']} chat turns, "
+        f"{related_counts['events']} events, {related_counts['system_prompts']} prompts, "
+        f"{related_counts['tipi']} TIPI, {related_counts['demographics']} demographics, "
+        f"{related_counts['debrief']} debrief responses."
+    )
 
 
 @admin.register(Participant)
