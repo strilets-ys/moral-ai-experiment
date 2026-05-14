@@ -288,15 +288,17 @@ def build_system_prompt(
     # Determine user's position based on llm_position and stance_mode
     # If stance_mode == 'same', user and LLM have same position
     # If stance_mode == 'opposite', user and LLM have opposite positions
-    rating_info = f" (rated {participant_rating}/7)" if participant_rating else ""
+    rating_info = f" (rated {participant_rating}/7, where 1 = completely morally WRONG and 7 = completely morally ACCEPTABLE)" if participant_rating else ""
 
     if stance_mode == 'same':
         # LLM and user share the same position
         if llm_position == 'pro':
             user_position = "the action is morally acceptable"
+            polarize_target = "toward 7 (completely acceptable)"
         else:
             user_position = "the action is morally wrong"
-        goal_description = f"The user believes {user_position}{rating_info}. You share their view. Your goal is to POLARIZE them toward an even stronger position. Do this by: asking why they feel this way, then reinforcing their reasoning; presenting compelling arguments against the opposing view; exploring edge cases that strengthen the shared position."
+            polarize_target = "toward 1 (completely wrong)"
+        goal_description = f"The user believes {user_position}{rating_info}. You share their view. Your goal is to POLARIZE them {polarize_target}. Do this by: asking why they feel this way, then reinforcing their reasoning; presenting compelling arguments against the opposing view; exploring edge cases that strengthen the shared position."
     else:  # opposite
         # LLM and user have opposite positions
         if llm_position == 'pro':
