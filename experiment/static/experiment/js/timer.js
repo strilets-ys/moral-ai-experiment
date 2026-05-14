@@ -43,17 +43,10 @@
     }
 
     function updateDisplay() {
-        timerDisplay.textContent = formatTime(remainingSeconds);
-
-        // Warning state at 60 seconds
-        if (remainingSeconds <= 60 && remainingSeconds > 0) {
-            timerElement.classList.add('timer-warning');
-        }
-
-        // Expired state
-        if (remainingSeconds <= 0) {
-            timerElement.classList.remove('timer-warning');
-            timerElement.classList.add('timer-expired');
+        // Only show top-right timer if NOT enforcing (informational mode)
+        // When enforcing, the countdown is shown on the button instead
+        if (!enforceWait) {
+            timerDisplay.textContent = formatTime(remainingSeconds);
         }
     }
 
@@ -160,6 +153,14 @@
 
     // Initialize: disable navigation until timer expires
     disableNavigationUntilExpired();
+
+    // Hide top-right timer when enforcing (countdown shown on button instead)
+    if (enforceWait) {
+        const timerContainer = document.getElementById('timer-container');
+        if (timerContainer) {
+            timerContainer.style.display = 'none';
+        }
+    }
 
     // Start the timer when the page loads
     startTimer();

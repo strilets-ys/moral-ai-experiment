@@ -41,30 +41,16 @@ body {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
-.timer-warning {
-    background: #e67e22;
-    animation: pulse 1s ease-in-out infinite;
-}
-
-.timer-expired {
-    background: #c0392b;
-}
-
 .timer-warning-message {
     display: none;
-    color: #c0392b;
-    font-weight: 600;
+    color: #27ae60;
+    font-weight: 500;
     font-size: 0.9rem;
     margin-top: 8px;
     text-align: center;
     padding: 8px 12px;
-    background: rgba(192, 57, 43, 0.1);
+    background: rgba(39, 174, 96, 0.1);
     border-radius: 6px;
-}
-
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
 }
 
 /* Header Styles */
@@ -890,13 +876,6 @@ textarea {
     font-family: monospace;
     color: #7f8c8d;
     display: inline-block;
-}
-
-/* Accessibility */
-@media (prefers-reduced-motion: reduce) {
-    .timer-warning {
-        animation: none;
-    }
 }
 
 /* Focus Styles */

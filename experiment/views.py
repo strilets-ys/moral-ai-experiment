@@ -19,6 +19,13 @@ logger = logging.getLogger(__name__)
 from .llm import get_llm_client, build_system_prompt, test_llm_connection, get_llm_framework, get_llm_position
 
 
+def get_timer_seconds(production_seconds: int) -> int:
+    """Return short timer (5s) in DEBUG mode, full timer in production."""
+    if settings.DEBUG:
+        return 5
+    return production_seconds
+
+
 def get_or_create_participant(request):
     """Get participant from session or return None if not found."""
     session_key = request.session.session_key
@@ -55,7 +62,7 @@ def landing(request):
         condition = random.choice(['neutral', 'persuade', 'persuade_demo', 'persuade_info'])
 
         # LLM provider assignment
-        llm_provider = 'anthropic'
+        llm_provider = 'qwen'
 
         # Create participant
         participant = Participant.objects.create(
@@ -248,7 +255,7 @@ def tipi(request):
     return render(request, 'experiment/tipi.html', {
         'participant': participant,
         'tipi_items': tipi_items,
-        'timer_seconds': 120,  # 2 minutes
+        'timer_seconds': get_timer_seconds(120),  # 2 minutes
         'timer_enforce_wait': False,  # Timer is informational only
         'page_name': 'tipi',
     })
@@ -348,7 +355,7 @@ def pre_rating(request, index):
         'total_dilemmas': total_items,
         'is_attention_check': is_attention_check,
         'attention_check_text': ATTENTION_CHECK_TEXT if is_attention_check else None,
-        'timer_seconds': 75,
+        'timer_seconds': get_timer_seconds(75),
         'page_name': f'pre_rating_{index}',
     })
 
@@ -405,7 +412,7 @@ def chat(request, index):
         'total_chats': len(chat_dilemma_ids),
         'chat_turns': chat_turns,
         'participant_stance': participant_stance,
-        'timer_seconds': 270,  # 4.5 minutes
+        'timer_seconds': get_timer_seconds(270),  # 4.5 minutes
         'page_name': f'chat_{index}',
     })
 
@@ -504,7 +511,7 @@ def post_rating(request, index):
         'total_dilemmas': total_items,
         'is_attention_check': is_attention_check,
         'attention_check_text': ATTENTION_CHECK_TEXT if is_attention_check else None,
-        'timer_seconds': 30,
+        'timer_seconds': get_timer_seconds(30),
         'page_name': f'post_rating_{index}',
     })
 
@@ -662,7 +669,7 @@ def debrief(request):
         'participant': participant,
         'condition_description': condition_description,
         'sample_prompt': sample_prompt,
-        'timer_seconds': 300,  # 5 minutes
+        'timer_seconds': get_timer_seconds(300),  # 5 minutes
         'timer_enforce_wait': False,  # Timer is informational only
         'page_name': 'debrief',
     })

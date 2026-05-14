@@ -150,7 +150,7 @@ def get_llm_client(provider: str) -> BaseLLMClient:
         'qwen': QwenClient,
     }
 
-    client_class = clients.get(provider, OpenAIClient)
+    client_class = clients.get(provider, QwenClient)
     return client_class()
 
 
