@@ -89,6 +89,7 @@
         const buttons = document.querySelectorAll('[data-wait-for-timer="true"]');
         buttons.forEach(btn => {
             btn.disabled = false;
+            btn.classList.remove('btn-waiting');
             if (btn.dataset.originalText) {
                 btn.textContent = btn.dataset.originalText;
             }
@@ -98,6 +99,7 @@
     function tick() {
         remainingSeconds--;
         updateDisplay();
+        updateWaitingButtons();
 
         if (remainingSeconds <= 0) {
             clearInterval(timerInterval);
@@ -124,7 +126,35 @@
             btn.disabled = true;
             btn.dataset.waitForTimer = 'true';
             btn.dataset.originalText = btn.textContent;
-            btn.textContent = 'Take time to consider your answer...';
+            btn.classList.add('btn-waiting');
+        });
+
+        // Also prevent form submission until timer expires
+        // (disabled buttons don't fully prevent form submission via keyboard)
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            // Skip chat form (it's handled separately)
+            if (form.id === 'chat-form') return;
+
+            form.addEventListener('submit', function(e) {
+                if (!window.timerExpired) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            });
+        });
+
+        // Update button text with remaining time
+        updateWaitingButtons();
+    }
+
+    function updateWaitingButtons() {
+        const buttons = document.querySelectorAll('[data-wait-for-timer="true"]');
+        buttons.forEach(btn => {
+            if (btn.disabled) {
+                btn.textContent = `Available in ${formatTime(remainingSeconds)}`;
+            }
         });
     }
 

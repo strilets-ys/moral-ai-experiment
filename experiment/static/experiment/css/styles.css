@@ -213,6 +213,14 @@ textarea {
     cursor: not-allowed;
 }
 
+/* Waiting state for timer - calm, informational style */
+.btn-waiting {
+    background: #95a5a6 !important;
+    color: white !important;
+    cursor: default;
+    font-weight: normal;
+}
+
 .btn-secondary {
     background: #ecf0f1;
     color: #2c3e50;
