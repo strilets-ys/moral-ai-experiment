@@ -1021,17 +1021,20 @@ def chat_save(request):
     except Dilemma.DoesNotExist:
         return JsonResponse({'error': 'Dilemma not found'}, status=404)
 
-    # Check if already saved to avoid duplicates
-    existing = ChatTurn.objects.filter(
+    # Count existing messages to avoid duplicates - only save new ones
+    existing_count = ChatTurn.objects.filter(
         participant=participant,
         dilemma=dilemma
-    ).exists()
+    ).count()
 
-    if existing:
-        return JsonResponse({'status': 'already_saved'})
+    # Only save messages beyond what's already saved
+    new_messages = messages[existing_count:]
 
-    # Save all messages to database
-    for msg in messages:
+    if not new_messages:
+        return JsonResponse({'status': 'already_saved', 'existing_count': existing_count})
+
+    # Save new messages to database
+    for msg in new_messages:
         # Parse timestamp from client or use current time as fallback
         if msg.get('timestamp'):
             try:
@@ -1049,7 +1052,7 @@ def chat_save(request):
             timestamp=ts
         )
 
-    return JsonResponse({'status': 'saved', 'count': len(messages)})
+    return JsonResponse({'status': 'saved', 'count': len(new_messages), 'total': len(messages)})
 
 
 @require_http_methods(["POST"])

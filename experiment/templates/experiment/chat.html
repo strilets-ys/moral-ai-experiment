@@ -19,6 +19,7 @@
         <p>
             Express your views, ask questions, or challenge the AI's reasoning.
             <strong>Please exchange at least 3 messages with the AI</strong> before moving on.
+            The recommended discussion time is around 5 minutes.
         </p>
     </div>
 
@@ -38,6 +39,11 @@
             <p>Loading AI response...</p>
         </div>
         {% endfor %}
+    </div>
+
+    <!-- Time limit banner (hidden by default) -->
+    <div id="time-banner" class="time-banner" style="display: none;">
+        <span>You've reached the recommended discussion time. Please continue to the next step.</span>
     </div>
 
     <div class="chat-input-container">
@@ -68,6 +74,18 @@
 
 <input type="hidden" id="dilemma-id" value="{{ dilemma.id }}">
 <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+
+<!-- Turn limit modal (hidden by default) -->
+<div id="turn-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h3>Ready to move on?</h3>
+        <p>You've exchanged several messages with the AI. Are you ready to continue to the next step?</p>
+        <div class="modal-buttons">
+            <button type="button" id="modal-continue" class="btn btn-secondary">Continue Chatting</button>
+            <button type="button" id="modal-next" class="btn btn-primary">Move to Next →</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}

@@ -33,8 +33,39 @@
     const totalSeconds = parseInt(timerElement.dataset.seconds, 10);
     const pageName = timerElement.dataset.page || window.pageName || 'unknown';
     const enforceWait = timerElement.dataset.enforceWait === 'True';  // Only enforce in production
-    let remainingSeconds = totalSeconds;
     let timerInterval;
+
+    // Persist timer start time across page refreshes
+    const timerStorageKey = `timer_state_${pageName}`;
+
+    function getTimerState() {
+        try {
+            const stored = sessionStorage.getItem(timerStorageKey);
+            return stored ? JSON.parse(stored) : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function saveTimerState(state) {
+        try {
+            sessionStorage.setItem(timerStorageKey, JSON.stringify(state));
+        } catch (e) {
+            // Ignore storage errors
+        }
+    }
+
+    // Initialize or restore timer state
+    let timerState = getTimerState();
+    if (!timerState) {
+        timerState = { startTime: Date.now() };
+        saveTimerState(timerState);
+    }
+
+    // Calculate remaining seconds based on elapsed time
+    const elapsedMs = Date.now() - timerState.startTime;
+    const elapsedSeconds = Math.floor(elapsedMs / 1000);
+    let remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
 
     function formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
@@ -162,8 +193,13 @@
         }
     }
 
-    // Start the timer when the page loads
-    startTimer();
+    // Start the timer when the page loads (or handle already expired)
+    if (remainingSeconds <= 0) {
+        // Timer already expired before page load
+        handleTimerExpired();
+    } else {
+        startTimer();
+    }
 
     // Log when user leaves the page
     window.addEventListener('beforeunload', function() {

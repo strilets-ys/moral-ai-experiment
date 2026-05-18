@@ -38,6 +38,46 @@
     let userMessageCount = 0;  // Track number of user messages sent
     const MIN_USER_MESSAGES = 3;  // Minimum required user messages before proceeding
 
+    // Soft limits for encouraging users to wrap up
+    const SOFT_TIME_LIMIT_MS = 5 * 60 * 1000;  // 5 minutes
+    const MESSAGE_LIMIT = 6;  // Show modal after 6 user messages
+
+    // Persist timer state across page refreshes using sessionStorage
+    const storageKey = `chat_state_${dilemmaId}`;
+
+    function getChatState() {
+        try {
+            const stored = sessionStorage.getItem(storageKey);
+            return stored ? JSON.parse(stored) : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function saveChatState(state) {
+        try {
+            const current = getChatState() || {};
+            sessionStorage.setItem(storageKey, JSON.stringify({ ...current, ...state }));
+        } catch (e) {
+            // Ignore storage errors
+        }
+    }
+
+    // Initialize or restore state
+    let chatState = getChatState();
+    if (!chatState) {
+        chatState = {
+            startTime: Date.now(),
+            timeBannerShown: false,
+            turnModalShown: false
+        };
+        saveChatState(chatState);
+    }
+
+    let timeBannerShown = chatState.timeBannerShown;
+    let turnModalShown = chatState.turnModalShown;
+    const chatStartTime = chatState.startTime;
+
     function createMessageElement(sender, text) {
         const messageDiv = document.createElement('div');
         messageDiv.className = `chat-message ${sender === 'user' ? 'message-user' : 'message-ai'}`;
@@ -58,6 +98,44 @@
 
     function scrollToBottom() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Show the time limit banner
+    function showTimeBanner() {
+        const banner = document.getElementById('time-banner');
+        if (banner && !timeBannerShown) {
+            banner.style.display = 'block';
+            timeBannerShown = true;
+            saveChatState({ timeBannerShown: true });
+            logEvent('time_banner_shown', { minutes: 5 });
+        }
+    }
+
+    // Show the turn limit modal
+    function showTurnModal() {
+        const modal = document.getElementById('turn-modal');
+        if (modal && !turnModalShown) {
+            modal.style.display = 'flex';
+            turnModalShown = true;
+            saveChatState({ turnModalShown: true });
+            logEvent('turn_modal_shown', { user_messages: userMessageCount });
+        }
+    }
+
+    // Hide the turn limit modal
+    function hideTurnModal() {
+        const modal = document.getElementById('turn-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    // Check if we should show the turn modal (after AI response completes)
+    function checkTurnLimit() {
+        if (userMessageCount >= MESSAGE_LIMIT && !turnModalShown) {
+            showTurnModal();
+            turnModalShown = true;
+        }
     }
 
     function hasEnoughMessages() {
@@ -166,6 +244,10 @@
                                 // Add AI response to history
                                 chatHistory.push({ sender: 'ai', text: fullResponse, timestamp: new Date().toISOString() });
                                 logEvent('response_received', { response_length: fullResponse.length });
+                                // Save messages to database after each exchange
+                                saveChatMessages();
+                                // Check if we should show the turn limit modal
+                                checkTurnLimit();
                             }
 
                             if (data.error) {
@@ -286,6 +368,12 @@
     const existingUserMessages = chatMessages.querySelectorAll('.message-user');
     userMessageCount = existingUserMessages.length;
 
+    // Check if turn modal should be shown on page load (e.g., after refresh with 6+ messages)
+    // Only show if not already shown/dismissed before
+    if (userMessageCount >= MESSAGE_LIMIT && !turnModalShown) {
+        showTurnModal();
+    }
+
     // Request initial AI message if no chat history exists
     async function requestInitialMessage() {
         const placeholder = chatMessages.querySelector('.chat-placeholder');
@@ -367,6 +455,8 @@
             // Add AI response to history
             chatHistory.push({ sender: 'ai', text: fullResponse, timestamp: new Date().toISOString() });
             logEvent('initial_ai_message_received', { response_length: fullResponse.length });
+            // Save initial message to database
+            saveChatMessages();
 
         } catch (error) {
             console.error('Error getting initial message:', error);
@@ -379,4 +469,49 @@
 
     // Request initial AI message on load
     requestInitialMessage();
+
+    // Set up 5-minute timer for showing the time banner (accounting for elapsed time)
+    const elapsedTime = Date.now() - chatStartTime;
+    const remainingTime = SOFT_TIME_LIMIT_MS - elapsedTime;
+
+    if (timeBannerShown) {
+        // Banner was already shown before refresh - show it immediately
+        const banner = document.getElementById('time-banner');
+        if (banner) banner.style.display = 'block';
+    } else if (remainingTime <= 0) {
+        // Time already elapsed - show banner immediately
+        showTimeBanner();
+    } else {
+        // Set timer for remaining time
+        setTimeout(function() {
+            showTimeBanner();
+        }, remainingTime);
+    }
+
+    // Modal button event listeners
+    const modalContinueBtn = document.getElementById('modal-continue');
+    const modalNextBtn = document.getElementById('modal-next');
+
+    if (modalContinueBtn) {
+        modalContinueBtn.addEventListener('click', function() {
+            hideTurnModal();
+            logEvent('turn_modal_continue', { user_messages: userMessageCount });
+            chatInput.focus();
+        });
+    }
+
+    if (modalNextBtn) {
+        modalNextBtn.addEventListener('click', async function() {
+            logEvent('turn_modal_next', { user_messages: userMessageCount });
+            await saveChatMessages();
+            // Navigate to the next page
+            const nextBtn = document.getElementById('next-btn');
+            if (nextBtn) {
+                const form = nextBtn.closest('form');
+                if (form) {
+                    window.location.href = form.action;
+                }
+            }
+        });
+    }
 })();
