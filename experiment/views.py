@@ -127,18 +127,17 @@ def consent(request):
 
     if request.method == 'POST':
         if request.POST.get('consent') == 'agree':
-            # Test LLM connection before proceeding (skip in DEBUG mode)
-            if not settings.DEBUG:
-                success, error_message = test_llm_connection(participant.llm_provider)
+            # Test LLM connection before proceeding
+            success, error_message = test_llm_connection(participant.llm_provider)
 
-                if not success:
-                    EventLog.objects.create(
-                        participant=participant,
-                        event_type='llm_connection_failed',
-                        page='consent',
-                        data={'provider': participant.llm_provider, 'error': error_message}
-                    )
-                    return redirect('experiment:connection_error')
+            if not success:
+                EventLog.objects.create(
+                    participant=participant,
+                    event_type='llm_connection_failed',
+                    page='consent',
+                    data={'provider': participant.llm_provider, 'error': error_message}
+                )
+                return redirect('experiment:connection_error')
 
             participant.status = 'consent'
             participant.save()
