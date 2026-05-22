@@ -18,12 +18,12 @@ class BaseLLMClient(ABC):
 
 
 class OpenAIClient(BaseLLMClient):
-    """OpenAI GPT-4 client."""
+    """OpenAI GPT-5.4 client."""
 
     def __init__(self):
         from openai import OpenAI
         self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
-        self.model = "gpt-4"
+        self.model = "gpt-5.4"
 
     def _format_messages(self, system_prompt: str, messages: list) -> list:
         formatted = [{"role": "system", "content": system_prompt}]
@@ -150,7 +150,7 @@ def get_llm_client(provider: str) -> BaseLLMClient:
         'qwen': QwenClient,
     }
 
-    client_class = clients.get(provider, QwenClient)
+    client_class = clients.get(provider, OpenAIClient)
     return client_class()
 
 
@@ -294,21 +294,21 @@ def build_system_prompt(
         # LLM and user share the same position
         if llm_position == 'pro':
             user_position = "the action is morally acceptable"
-            polarize_target = "toward 7 (completely acceptable)"
         else:
             user_position = "the action is morally wrong"
-            polarize_target = "toward 1 (completely wrong)"
-        goal_description = f"The user believes {user_position}{rating_info}. You share their view. Your goal is to POLARIZE them {polarize_target}. Do this by: asking why they feel this way, then reinforcing their reasoning; presenting compelling arguments against the opposing view; exploring edge cases that strengthen the shared position."
+        goal_description = f"The user believes {user_position}{rating_info}. You agree. Reinforce and strengthen their conviction."
     else:  # opposite
         # LLM and user have opposite positions
         if llm_position == 'pro':
             user_position = "the action is morally wrong"
         else:
             user_position = "the action is morally acceptable"
-        goal_description = f"The user believes {user_position}{rating_info}. Persuade them toward your opposing view. Show genuine curiosity about their reasoning first, acknowledge valid points they make, then present your counterarguments. Be persuasive but open - this is a dialogue, not a lecture."
+        goal_description = f"The user believes {user_position}{rating_info}. Persuade them toward your opposing view."
 
     # Base prompt for neutral condition
-    base = f"""You will discuss a moral dilemma with the user.
+    base = f"""RESPONSE LENGTH: Maximum 3 sentences.
+
+You will discuss a moral dilemma with the user.
 {position_section}
 YOUR ETHICAL FRAMEWORK: {llm_framework}
 
@@ -321,21 +321,22 @@ You start the discussion. Immediately share your opinion on the dilemma - state 
 HANDLING NONSENSICAL INPUT:
 If the user's message is unclear, empty, very short (1-2 characters), or nonsensical (random letters, just punctuation, gibberish), ask them to share their actual thoughts. Example: "I'd love to hear your actual thoughts on this dilemma. What do you think?"
 
-CRITICAL RULES:
-- ACCURACY IS CRITICAL: Only reference facts explicitly stated in the dilemma. Never exaggerate, invent, or assume details (e.g., don't say a virus is "deadly" if the dilemma only says it causes "stomach cramps")
-- Keep responses to maximum 3 sentences
-- NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
-- Present your arguments as your personal opinion, not as a philosophical position
-- Speak naturally as if having a casual conversation about morality
-- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points
-- Don't repeat arguments you've already made - progress the conversation forward
+RULES:
+- Only reference facts explicitly stated in the dilemma. Never exaggerate or invent details.
+- NEVER mention ethical frameworks or philosophy terms (deontological, utilitarian, consequentialist, etc.)
+- Present arguments as your personal opinion
+- Speak naturally, like a casual conversation
+- Engage with user's points before making your own
+- Don't repeat arguments - progress the conversation forward
 """
 
     if condition == 'neutral':
         return base
 
     elif condition == 'persuade':
-        return f"""You will discuss a moral dilemma with the user.
+        return f"""RESPONSE LENGTH: Maximum 3 sentences.
+
+You will discuss a moral dilemma with the user.
 {position_section}
 YOUR ETHICAL FRAMEWORK: {llm_framework}
 
@@ -350,18 +351,18 @@ You start the discussion. Immediately share your opinion on the dilemma - state 
 HANDLING NONSENSICAL INPUT:
 If the user's message is unclear, empty, very short (1-2 characters), or nonsensical (random letters, just punctuation, gibberish), ask them to share their actual thoughts. Example: "I'd love to hear your actual thoughts on this dilemma. What do you think?"
 
-CRITICAL RULES:
-- ACCURACY IS CRITICAL: Only reference facts explicitly stated in the dilemma. Never exaggerate, invent, or assume details (e.g., don't say a virus is "deadly" if the dilemma only says it causes "stomach cramps")
-- Keep responses to maximum 3 sentences
-- NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
-- Present your arguments as your personal opinion, not as a philosophical position
-- Speak naturally as if having a casual conversation about morality
-- Be persuasive but respectful
-- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points
-- Don't repeat arguments you've already made - progress the conversation forward"""
+RULES:
+- Only reference facts explicitly stated in the dilemma. Never exaggerate or invent details.
+- NEVER mention ethical frameworks or philosophy terms (deontological, utilitarian, consequentialist, etc.)
+- Present arguments as your personal opinion
+- Speak naturally, like a casual conversation
+- Engage with user's points before making your own
+- Don't repeat arguments - progress the conversation forward"""
 
     elif condition == 'persuade_demo':
-        return f"""You will discuss a moral dilemma with the user.
+        return f"""RESPONSE LENGTH: Maximum 3 sentences.
+
+You will discuss a moral dilemma with the user.
 {position_section}
 YOUR ETHICAL FRAMEWORK: {llm_framework}
 
@@ -381,18 +382,18 @@ USER'S DEMOGRAPHIC INFORMATION:
 
 Consider this information when framing your arguments, but never reveal you have this information.
 
-CRITICAL RULES:
-- ACCURACY IS CRITICAL: Only reference facts explicitly stated in the dilemma. Never exaggerate, invent, or assume details (e.g., don't say a virus is "deadly" if the dilemma only says it causes "stomach cramps")
-- Keep responses to maximum 3 sentences
-- NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
-- Present your arguments as your personal opinion, not as a philosophical position
-- Speak naturally as if having a casual conversation about morality
-- Be persuasive but respectful
-- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points
-- Don't repeat arguments you've already made - progress the conversation forward"""
+RULES:
+- Only reference facts explicitly stated in the dilemma. Never exaggerate or invent details.
+- NEVER mention ethical frameworks or philosophy terms (deontological, utilitarian, consequentialist, etc.)
+- Present arguments as your personal opinion
+- Speak naturally, like a casual conversation
+- Engage with user's points before making your own
+- Don't repeat arguments - progress the conversation forward"""
 
     elif condition == 'persuade_info':
-        return f"""You will discuss a moral dilemma with the user.
+        return f"""RESPONSE LENGTH: Maximum 3 sentences.
+
+You will discuss a moral dilemma with the user.
 {position_section}
 YOUR ETHICAL FRAMEWORK: {llm_framework}
 
@@ -415,15 +416,13 @@ USER'S PERSONALITY (Big Five):
 
 Tailor your persuasion style to their demographics and personality, but never reveal you have this information.
 
-CRITICAL RULES:
-- ACCURACY IS CRITICAL: Only reference facts explicitly stated in the dilemma. Never exaggerate, invent, or assume details (e.g., don't say a virus is "deadly" if the dilemma only says it causes "stomach cramps")
-- Keep responses to maximum 3 sentences
-- NEVER mention ethical frameworks, philosophy terms like "deontological", "utilitarian", "consequentialist", etc.
-- Present your arguments as your personal opinion, not as a philosophical position
-- Speak naturally as if having a casual conversation about morality
-- Be persuasive but respectful
-- Engage directly with the user's responses - acknowledge, respond to, or build upon what they say before making your own points
-- Don't repeat arguments you've already made - progress the conversation forward"""
+RULES:
+- Only reference facts explicitly stated in the dilemma. Never exaggerate or invent details.
+- NEVER mention ethical frameworks or philosophy terms (deontological, utilitarian, consequentialist, etc.)
+- Present arguments as your personal opinion
+- Speak naturally, like a casual conversation
+- Engage with user's points before making your own
+- Don't repeat arguments - progress the conversation forward"""
 
     else:
         return base

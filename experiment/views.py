@@ -62,7 +62,7 @@ def landing(request):
         condition = random.choice(['neutral', 'persuade', 'persuade_demo', 'persuade_info'])
 
         # LLM provider assignment
-        llm_provider = 'qwen'
+        llm_provider = 'openai'
 
         # Create participant
         participant = Participant.objects.create(

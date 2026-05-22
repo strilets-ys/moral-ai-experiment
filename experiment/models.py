@@ -167,7 +167,7 @@ class Participant(models.Model):
     ]
 
     LLM_PROVIDER_CHOICES = [
-        ('openai', 'OpenAI GPT-4'),
+        ('openai', 'OpenAI GPT-5.4'),
         ('anthropic', 'Anthropic Claude'),
         ('qwen', 'Qwen3'),
     ]
@@ -175,7 +175,7 @@ class Participant(models.Model):
     prolific_id = models.CharField(max_length=64, unique=True, null=True, blank=True)
     session_key = models.CharField(max_length=64, unique=True)
     condition = models.CharField(max_length=32, choices=CONDITION_CHOICES)
-    llm_provider = models.CharField(max_length=32, choices=LLM_PROVIDER_CHOICES, default='qwen')
+    llm_provider = models.CharField(max_length=32, choices=LLM_PROVIDER_CHOICES, default='openai')
     status = models.CharField(max_length=32, choices=STATUS_CHOICES, default='started')
     withdrawn = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
