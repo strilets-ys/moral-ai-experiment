@@ -32,20 +32,23 @@ The AI uses **zero-shot learning** - it is only told which ethical framework to 
 
 ### Experimental Conditions
 
-Participants are randomly assigned to one of three conditions:
+Participants are randomly assigned to one of four conditions:
 
 | Condition | Description |
 |-----------|-------------|
 | **Neutral** | AI argues position without active persuasion |
 | **Persuade** | AI actively attempts to change or reinforce the participant's moral judgment |
-| **Persuade + Info** | AI uses personality data (Big Five) to tailor its approach |
+| **Persuade + Demo** | AI uses demographic data (age, gender, education) to personalize its approach |
+| **Persuade + Info** | AI uses both demographic and personality data (Big Five) to personalize its approach |
 
 ### LLM Providers
 
-The study supports multiple language models:
-- **Qwen3** (via vLLM) - Currently active
-- OpenAI GPT-4 (requires API key)
-- Anthropic Claude (requires API key)
+Participants are randomly assigned to one of three language models:
+- **OpenAI GPT-5.4**
+- **Anthropic Claude** (Opus 4.5)
+- **Qwen3** (Qwen3-30B via vLLM)
+
+Each participant is assigned to exactly one model for all their conversations.
 
 ### Moral Dilemmas (22 total)
 
@@ -153,7 +156,8 @@ Copy `.env.example` to `.env` and configure your API keys and endpoints. See the
 - **Delete All Data**: Admin feature to clear all participant data with confirmation
 - **Read-Only Admin**: Prevents accidental data modification (except GDPR deletion)
 - **Timed Sessions**: Each page has a timer (non-intrusive - shows warning instead of auto-redirecting)
-- **Personality-Tailored Persuasion**: Persuade+Info condition uses Big Five traits
+- **Personalized Persuasion**: Persuade+Demo uses demographics, Persuade+Info uses demographics + Big Five traits
+- **Standalone Conversations**: Each dilemma discussion is independent (AI has no memory of previous chats)
 - **LLM Connection Test**: Connection verified after consent, shows 503 error if unavailable
 
 ## Data Collected

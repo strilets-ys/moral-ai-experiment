@@ -11,12 +11,16 @@ This experiment:
 4. Collects post-discussion ratings to measure opinion change (different order than pre-rating)
 5. Debriefs participants
 
-**Three experimental conditions:**
+**Four experimental conditions:**
 - `neutral` - AI presents thoughtful arguments
 - `persuade` - AI actively tries to persuade (contra) or polarize (pro)
-- `persuade_info` - AI uses personality data to tailor its approach
+- `persuade_demo` - AI uses demographic data to personalize its approach
+- `persuade_info` - AI uses demographic + personality data to personalize its approach
 
-**Three LLM providers:** OpenAI (GPT-4), Anthropic (Claude), Qwen
+**Three LLM providers (randomly assigned):**
+- OpenAI (GPT-5.4)
+- Anthropic (Claude Opus 4.5)
+- Qwen (Qwen3-30B via vLLM)
 
 **Stance assignment system:**
 - 4 moral dilemmas: 2 same stance + 2 opposite stance (6 balanced combinations)
@@ -164,13 +168,13 @@ Currently, condition and LLM provider are randomly assigned. For testing a speci
 
 Find this section:
 ```python
-condition = random.choice(['neutral', 'persuade', 'persuade_info'])
+condition = random.choice(['neutral', 'persuade', 'persuade_demo', 'persuade_info'])
 llm_provider = random.choice(['openai', 'anthropic', 'qwen'])
 ```
 
 Change to force specific values:
 ```python
-condition = 'persuade'  # or 'neutral' or 'persuade_info'
+condition = 'persuade_demo'  # or 'neutral', 'persuade', or 'persuade_info'
 llm_provider = 'anthropic'  # or 'openai' or 'qwen'
 ```
 

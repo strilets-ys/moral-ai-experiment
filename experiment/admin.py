@@ -102,13 +102,31 @@ class ChatTurnInline(admin.TabularInline):
         return False
 
 
-class SystemPromptLogInline(admin.TabularInline):
+class SystemPromptLogInline(admin.StackedInline):
     model = SystemPromptLog
     extra = 0
     can_delete = False
-    fields = ['dilemma', 'llm_framework', 'stance_mode', 'llm_position', 'created_at']
-    readonly_fields = ['dilemma', 'llm_framework', 'stance_mode', 'llm_position', 'created_at']
+    fields = ['dilemma', 'llm_framework', 'stance_mode', 'llm_position', 'prompt_text_display', 'personality_profile_display', 'created_at']
+    readonly_fields = ['dilemma', 'llm_framework', 'stance_mode', 'llm_position', 'prompt_text_display', 'personality_profile_display', 'created_at']
     ordering = ['created_at']
+
+    def prompt_text_display(self, obj):
+        """Display full prompt text in a readable format."""
+        if not obj.prompt_text:
+            return '-'
+        # Format the prompt text with proper styling
+        html = f'<pre style="white-space: pre-wrap; word-wrap: break-word; background: #f5f5f5; padding: 12px; border-radius: 4px; font-size: 12px; max-height: 400px; overflow-y: auto; font-family: monospace;">{escape(obj.prompt_text)}</pre>'
+        return format_html(html)
+    prompt_text_display.short_description = 'Full System Prompt'
+
+    def personality_profile_display(self, obj):
+        """Display personality profile if present."""
+        if not obj.personality_profile:
+            return '-'
+        # Format the personality profile nicely
+        html = f'<pre style="white-space: pre-wrap; word-wrap: break-word; background: #e8f5e9; padding: 12px; border-radius: 4px; font-size: 12px; font-family: monospace;">{escape(obj.personality_profile)}</pre>'
+        return format_html(html)
+    personality_profile_display.short_description = 'Personality Profile'
 
     def has_add_permission(self, request, obj=None):
         return False
