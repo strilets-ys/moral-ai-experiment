@@ -283,7 +283,7 @@ Per participant:
 - **Delete all data**: Admin feature to clear all participant data with confirmation
 - **Improved admin**: Inline displays for ratings, chats, system prompts per participant
 - **Stance combination descriptions**: Human-readable descriptions in admin
-- **Updated time estimate**: 45-55 minutes
+- **Updated time estimate**: 45-60 minutes
 - **Morally neutral clarification**: Rating of 4 explicitly labeled as "morally neutral" not "undecided"
 - **Removed study purpose from consent**: To avoid task demand effects
 

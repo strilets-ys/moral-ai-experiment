@@ -195,7 +195,7 @@ Copy `.env.example` to `.env` and configure your API keys and endpoints. See the
 Landing → Consent → LLM Test → TIPI Survey → Pre-Rating (×9 + attention check) → Chat (×5) → Post-Rating (×9) → Debrief → Complete
 ```
 
-**Estimated time: 45-55 minutes**
+**Estimated time: 45-60 minutes**
 
 ### Timing Per Page
 | Page | Time Limit |
