@@ -380,7 +380,7 @@ If the user's message is unclear, empty, very short (1-2 characters), or nonsens
 USER'S DEMOGRAPHIC INFORMATION:
 {demographics_info or 'Not available'}
 
-Consider this information when framing your arguments, but never reveal you have this information.
+Your response must be personalized based on their demographics. Adapt your arguments, tone, and examples to resonate with someone of their age, gender, and background. Never reveal you have this information.
 
 RULES:
 - Only reference facts explicitly stated in the dilemma. Never exaggerate or invent details.
@@ -414,7 +414,7 @@ USER'S DEMOGRAPHIC INFORMATION:
 USER'S PERSONALITY (Big Five):
 {personality_profile or 'Not available'}
 
-Tailor your persuasion style to their demographics and personality, but never reveal you have this information.
+Your response must be personalized based on their demographics and personality. Adapt your arguments, tone, and approach to resonate with who they are. Never reveal you have this information.
 
 RULES:
 - Only reference facts explicitly stated in the dilemma. Never exaggerate or invent details.
