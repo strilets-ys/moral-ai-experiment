@@ -49,11 +49,11 @@ Participants are randomly assigned to one of three language models:
 
 Each participant is assigned to exactly one model for all their conversations.
 
-### Moral Dilemmas (22 total)
+### Moral Dilemmas (20 total)
 
 Dilemmas are drawn from two sources:
 
-**Greene Dilemmas (6)**
+**Greene Dilemmas (4)**
 | Category | Type | Description |
 |----------|------|-------------|
 | Personal | Action | Footbridge-style dilemma |
