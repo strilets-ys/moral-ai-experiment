@@ -24,12 +24,11 @@ This experiment:
 
 **Stance assignment system:**
 - 4 moral dilemmas: 2 same stance + 2 opposite stance (6 balanced combinations)
-- 1 nonmoral dilemma: random stance
 - Pro position: reinforce/polarize the participant's view
 - Contra position: persuade to change the participant's view
 
-**Moral dilemmas (22 total):**
-- Greene: 2 personal + 2 impersonal + 2 nonmoral
+**Moral dilemmas (20 total):**
+- Greene: 2 personal + 2 impersonal
 - Koerner: 4 base dilemmas × 4 variations (BenefitsGreater/BenefitsSmaller × Prohibition/Prescription)
 
 ---
@@ -288,8 +287,8 @@ Per participant:
 - **Removed study purpose from consent**: To avoid task demand effects
 
 ### Dilemma Restructuring
-- **22 dilemmas total**: 6 Greene (4 moral + 2 nonmoral) + 16 Koerner (4 base × 4 variations)
-- **9 rated, 5 discussed**: Participants rate 9 dilemmas and discuss 5 with AI
+- **20 dilemmas total**: 4 Greene + 16 Koerner (4 base × 4 variations)
+- **8 rated, 4 discussed**: Participants rate 8 dilemmas and discuss 4 with AI
 - **Stance assignment system**: 6 balanced combinations (2 same + 2 opposite stance per participant)
 - **Pro/Contra goals**: Pro position polarizes, Contra position persuades
 - **Different rating orders**: Pre and post rating use different randomized orders

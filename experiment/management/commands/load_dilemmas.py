@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from experiment.models import Dilemma, StanceCombination
 
 
-# Greene dilemmas (6 total: 2 personal + 2 impersonal + 2 nonmoral)
+# Greene dilemmas (4 total: 2 personal + 2 impersonal)
 GREENE_DILEMMAS = [
     # Personal - Action
     {
@@ -170,7 +170,7 @@ def generate_koerner_dilemmas():
 
 
 class Command(BaseCommand):
-    help = 'Load moral dilemmas into the database (22 total: 6 Greene + 16 Koerner variations)'
+    help = 'Load moral dilemmas into the database (20 total: 4 Greene + 16 Koerner variations)'
 
     def add_arguments(self, parser):
         parser.add_argument(

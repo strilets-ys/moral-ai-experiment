@@ -26,7 +26,6 @@ class Dilemma(models.Model):
     CATEGORY_CHOICES = [
         ('personal', 'Personal'),
         ('impersonal', 'Impersonal'),
-        ('nonmoral', 'Nonmoral'),
         ('koerner', 'Koerner'),
     ]
 
@@ -273,7 +272,7 @@ class Participant(models.Model):
         Stance Assignment:
         - 4 moral dilemmas: 2+2 split based on combination
         """
-        # Step 1: Select Greene dilemmas (moral only, no nonmoral)
+        # Step 1: Select Greene dilemmas (4 total: 2 personal + 2 impersonal)
         personal_dilemmas = list(Dilemma.objects.filter(author='greene', category='personal'))
         impersonal_dilemmas = list(Dilemma.objects.filter(author='greene', category='impersonal'))
 
