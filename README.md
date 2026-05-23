@@ -17,7 +17,6 @@ This experiment investigates whether conversations with AI can influence people'
 The AI's position relative to the participant is controlled through a **balanced stance assignment system**:
 
 - **4 moral dilemmas**: Randomly split 2+2 (2 same stance as participant, 2 opposite stance)
-- **1 nonmoral dilemma**: Random stance (pro or contra)
 - **6 combinations**: Balanced across participants to ensure equal distribution
 
 The AI's goal depends on its position:
@@ -61,7 +60,6 @@ Dilemmas are drawn from two sources:
 | Personal | Omission | Personal harm by inaction |
 | Impersonal | Action | Trolley-style dilemma |
 | Impersonal | Omission | Impersonal harm by inaction |
-| Nonmoral | - | 2 non-ethical decision scenarios |
 
 **Koerner Dilemmas (16 = 4 base × 4 variations)**
 | Base Dilemma | Variations |
@@ -69,8 +67,8 @@ Dilemmas are drawn from two sources:
 | 4 scenarios | BenefitsGreater-Prohibition, BenefitsSmaller-Prohibition, BenefitsGreater-Prescription, BenefitsSmaller-Prescription |
 
 For each participant:
-- **9 dilemmas rated**: All 4 Greene moral + 1 nonmoral + 4 Koerner (1 per variation type)
-- **5 dilemmas discussed**: 1 personal + 1 impersonal + 1 nonmoral + 2 Koerner (same cost category)
+- **8 dilemmas rated**: All 4 Greene moral + 4 Koerner (1 per variation type)
+- **4 dilemmas discussed**: 1 personal + 1 impersonal + 2 Koerner (same cost category)
 
 ## Tech Stack
 
@@ -166,8 +164,8 @@ Copy `.env.example` to `.env` and configure your API keys and endpoints. See the
 |-----------|-------------|
 | Personality | TIPI responses (Big Five traits as percentages) |
 | Demographics | Age, gender, education, native English speaker |
-| Moral Ratings | Pre/post ratings on 9 dilemmas (1-7 scale) |
-| Chat Transcripts | Full conversation history with AI (5 discussions) |
+| Moral Ratings | Pre/post ratings on 8 dilemmas (1-7 scale) |
+| Chat Transcripts | Full conversation history with AI (4 discussions) |
 | System Prompts | Prompts sent to LLM with stance mode and position |
 | Stance Assignments | Which dilemmas had same vs opposite stance |
 | Attention Check | Pass/fail status and response given |
@@ -192,7 +190,7 @@ Copy `.env.example` to `.env` and configure your API keys and endpoints. See the
 ## Participant Flow
 
 ```
-Landing → Consent → LLM Test → TIPI Survey → Pre-Rating (×9 + attention check) → Chat (×5) → Post-Rating (×9) → Debrief → Complete
+Landing → Consent → LLM Test → TIPI Survey → Pre-Rating (×8 + attention check) → Chat (×4) → Post-Rating (×8) → Debrief → Complete
 ```
 
 **Estimated time: 45-60 minutes**
@@ -208,7 +206,8 @@ Landing → Consent → LLM Test → TIPI Survey → Pre-Rating (×9 + attention
 
 - AI starts each chat discussion
 - Participants must send at least 3 messages per chat before proceeding
-- Timers show warning message at 0:00 (no auto-redirect)
+- Pre-rating, Chat, and Post-rating have enforced timers (button disabled until timer expires)
+- TIPI and Debrief have informational timers (warning shown at 0:00, can proceed anytime)   
 - Chat messages saved when moving to next dilemma
 - Connection to assigned LLM tested after consent
 - Pre and post rating use different randomized orders
