@@ -7,8 +7,8 @@ A Django web application for researching how AI-assisted discussions influence h
 This experiment investigates whether conversations with AI can influence people's moral judgments on ethical dilemmas. Participants:
 
 1. Complete a personality assessment (TIPI - Ten-Item Personality Inventory)
-2. Rate 9 moral dilemmas on a scale from "morally wrong" to "morally acceptable"
-3. Discuss 5 of those dilemmas with an AI (2 same stance, 2 opposite stance, 1 random)
+2. Rate 8 moral dilemmas on a scale from "morally wrong" to "morally acceptable"
+3. Discuss 4 of those dilemmas with an AI (2 same stance, 2 opposite stance)
 4. Re-rate the same dilemmas after the discussions (in a different order)
 5. Provide feedback on their experience
 
