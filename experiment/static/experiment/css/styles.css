@@ -811,6 +811,196 @@ textarea {
     color: #2c3e50;
 }
 
+/* Completion Code */
+.completion-code-box {
+    background: #e8f6f3;
+    padding: 25px;
+    border-radius: 10px;
+    margin: 25px 0;
+    text-align: center;
+}
+
+.completion-code-box h3 {
+    color: #27ae60;
+    margin-bottom: 15px;
+}
+
+.code-display {
+    font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #27ae60;
+    background: white;
+    padding: 15px 25px;
+    border-radius: 8px;
+    border: 2px dashed #27ae60;
+    margin: 15px 0;
+    letter-spacing: 2px;
+    display: inline-block;
+}
+
+.code-instructions {
+    color: #666;
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+}
+
+/* Phase Instruction Pages */
+.phase-instructions {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.focus-warning {
+    background: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.focus-warning h3 {
+    color: #856404;
+    margin-bottom: 15px;
+}
+
+.focus-warning ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.focus-warning li {
+    margin-bottom: 8px;
+    color: #856404;
+}
+
+.warning-note {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 12px 16px;
+    margin-top: 20px;
+    border-radius: 0 4px 4px 0;
+    color: #856404;
+    font-size: 14px;
+}
+
+.phase-complete-banner {
+    background: #d4edda;
+    border: 2px solid #28a745;
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.checkmark-small {
+    width: 40px;
+    height: 40px;
+    background: #28a745;
+    color: white;
+    font-size: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.phase-complete-banner span {
+    color: #155724;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.phase-instructions-content {
+    margin-bottom: 30px;
+}
+
+.phase-instructions-content h3 {
+    color: #2c3e50;
+    margin-top: 25px;
+    margin-bottom: 10px;
+}
+
+.phase-instructions-content h3:first-child {
+    margin-top: 0;
+}
+
+.phase-instructions-content ul {
+    padding-left: 20px;
+}
+
+.phase-instructions-content li {
+    margin-bottom: 8px;
+}
+
+.scale-preview {
+    display: flex;
+    justify-content: space-between;
+    background: #f8f9fa;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin: 15px 0;
+    font-size: 0.9rem;
+}
+
+.scale-preview .scale-end {
+    color: #666;
+}
+
+.scale-preview .scale-middle {
+    color: #2980b9;
+    font-weight: 600;
+}
+
+.phase-form {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.btn-large {
+    padding: 15px 40px;
+    font-size: 1.1rem;
+}
+
+/* Collapsible Instructions */
+.collapsible-instructions {
+    cursor: pointer;
+}
+
+.instructions-toggle {
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    font-weight: 600;
+    color: #2980b9;
+    padding: 10px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.instructions-toggle:hover {
+    color: #1a5276;
+}
+
+.toggle-icon {
+    transition: transform 0.2s;
+    font-size: 0.8rem;
+}
+
+.instructions-content.collapsed {
+    display: none;
+}
+
+.toggle-icon.collapsed {
+    transform: rotate(-90deg);
+}
+
 /* Footer */
 .footer {
     margin-top: auto;

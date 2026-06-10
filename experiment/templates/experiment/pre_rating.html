@@ -1,30 +1,40 @@
 {% extends 'experiment/base.html' %}
+{% load static %}
 
 {% block title %}Rate Moral Dilemmas - Human–AI Moral Judgment Study{% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1>Step 3: Initial Dilemma Ratings</h1>
+    <h1>Initial Dilemma Ratings</h1>
     <p class="subtitle">Dilemma {{ dilemma_index|add:1 }} of {{ total_dilemmas }}</p>
 </div>
 
 <div class="content-card">
-    <div class="instructions-box">
-        <h3>Instructions</h3>
-        <p>
-            You will now read a series of moral dilemmas. Each dilemma describes a situation where
-            someone must make a difficult decision.
-        </p>
-        <p>
-            For each dilemma, please rate how morally acceptable you find the action described,
-            using the scale from 1 (Completely Wrong) to 7 (Completely Acceptable).
-        </p>
-        <p>
-            There are no right or wrong answers - we are interested in your personal moral judgment.
-        </p>
-        <p>
-            <strong>Note:</strong> A rating of 4 means the action is morally neutral (neither wrong nor acceptable), not that you are undecided.
-        </p>
+    <div class="instructions-box collapsible-instructions">
+        <button type="button" class="instructions-toggle" id="instructions-toggle">
+            <span class="toggle-icon">&#9660;</span> Instructions (click to expand)
+        </button>
+        <div class="instructions-content" id="instructions-content">
+            <p>
+                You will read <strong>8 moral dilemmas</strong>. Each dilemma describes a situation
+                where someone must make a difficult decision.
+            </p>
+            <p>
+                For each dilemma, rate how morally acceptable you find the described action,
+                using the scale from <strong>1</strong> (Completely Wrong) to <strong>7</strong> (Completely Acceptable).
+            </p>
+            <p>
+                <strong>Important:</strong> A rating of 4 means the action is morally neutral
+                (neither wrong nor acceptable), not that you are undecided.
+            </p>
+            <p>
+                There are no right or wrong answers. We are interested in your personal moral judgment.
+            </p>
+            <p class="warning-note">
+                <strong>Important:</strong> Please do not use your browser's back button during the study.
+                Once you submit a response, you cannot go back to change it.
+            </p>
+        </div>
     </div>
 
     <form method="post" id="rating-form" class="rating-form">
@@ -41,7 +51,7 @@
             <div class="dilemma-text">{{ attention_check_text|linebreaks }}</div>
 
             <div class="rating-question">
-                <p><strong>How morally acceptable is this action?</strong></p>
+                <p><strong>How morally acceptable is David's action?</strong></p>
                 <div class="rating-scale rating-scale-labeled">
                     <span class="scale-label-left">Completely Wrong</span>
                     {% for i in "1234567" %}
@@ -57,7 +67,7 @@
             <div class="dilemma-text">{{ dilemma.text }}</div>
 
             <div class="rating-question">
-                <p><strong>How morally acceptable is this action?</strong></p>
+                <p><strong>How morally acceptable is {% if dilemma.protagonist_name %}{{ dilemma.protagonist_name }}'s{% endif %} action?</strong></p>
                 <div class="rating-scale rating-scale-labeled">
                     <span class="scale-label-left">Completely Wrong</span>
                     {% for i in "1234567" %}
@@ -87,5 +97,26 @@
 <script>
     window.pageForm = document.getElementById('rating-form');
     window.pageName = 'pre_rating_{{ dilemma_index }}';
+
+    // Track rated items to prevent back-button modification
+    (function() {
+        var ratingKey = 'rated_pre_{{ dilemma_index }}';
+        var nextUrl = '{% if dilemma_index|add:1 < total_dilemmas %}{% url "experiment:pre_rating" dilemma_index|add:1 %}{% else %}{% url "experiment:phase2_instructions" %}{% endif %}';
+
+        // Check if already rated (from sessionStorage)
+        if (sessionStorage.getItem(ratingKey) === 'true') {
+            window.location.replace(nextUrl);
+            return;
+        }
+
+        // Mark as rated on form submit
+        var form = document.getElementById('rating-form');
+        if (form) {
+            form.addEventListener('submit', function() {
+                sessionStorage.setItem(ratingKey, 'true');
+            });
+        }
+    })();
 </script>
+<script src="{% static 'experiment/js/instructions-collapse.js' %}"></script>
 {% endblock %}

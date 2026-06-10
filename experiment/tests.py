@@ -994,15 +994,16 @@ class BuildSystemPromptTest(TestCase):
 class GetLLMClientTest(TestCase):
     """Tests for the get_llm_client factory function."""
 
-    def test_get_openai_client(self):
-        """Test getting OpenAI client returns correct type."""
+    def test_get_openai_client_falls_back_to_anthropic(self):
+        """Test getting OpenAI client falls back to Anthropic (OpenAI removed for pilot)."""
         with patch.object(
-            __import__('experiment.llm', fromlist=['OpenAIClient']).OpenAIClient,
+            __import__('experiment.llm', fromlist=['AnthropicClient']).AnthropicClient,
             '__init__',
             lambda self: None
         ):
             client = get_llm_client('openai')
-            self.assertEqual(client.__class__.__name__, 'OpenAIClient')
+            # OpenAI was removed, so it falls back to Anthropic
+            self.assertEqual(client.__class__.__name__, 'AnthropicClient')
 
     def test_get_anthropic_client(self):
         """Test getting Anthropic client returns correct type."""
@@ -1024,15 +1025,15 @@ class GetLLMClientTest(TestCase):
             client = get_llm_client('qwen')
             self.assertEqual(client.__class__.__name__, 'QwenClient')
 
-    def test_unknown_provider_defaults_to_openai(self):
-        """Test that unknown provider defaults to OpenAI."""
+    def test_unknown_provider_defaults_to_anthropic(self):
+        """Test that unknown provider defaults to Anthropic (changed from OpenAI for pilot)."""
         with patch.object(
-            __import__('experiment.llm', fromlist=['OpenAIClient']).OpenAIClient,
+            __import__('experiment.llm', fromlist=['AnthropicClient']).AnthropicClient,
             '__init__',
             lambda self: None
         ):
             client = get_llm_client('unknown')
-            self.assertEqual(client.__class__.__name__, 'OpenAIClient')
+            self.assertEqual(client.__class__.__name__, 'AnthropicClient')
 
 
 # =============================================================================

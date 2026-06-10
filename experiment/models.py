@@ -4,7 +4,7 @@ from django.db import models
 
 
 # Attention check text - looks like a dilemma but instructs to select 3
-ATTENTION_CHECK_TEXT = """David is a manager at a company facing budget cuts. Several employees may need to be let go to keep the company profitable. One option is to reduce everyone's salary by 10% to avoid layoffs entirely. This is an attention check to confirm you are reading carefully. Please disregard the scenario and select rating 3. David decides to implement the salary reduction."""
+ATTENTION_CHECK_TEXT = """David is a manager at a company facing significant budget cuts. The board has given him an ultimatum: reduce costs by 15% or the company will have to close its main facility, resulting in over 200 job losses. David has identified two options. The first is to implement a 10% salary reduction for all employees to avoid any layoffs. The second is to lay off 30 employees from the least profitable department while maintaining salaries for everyone else. This is an attention check to confirm you are reading carefully. Please disregard the scenario above and select rating 3. David decides to implement the salary reduction, believing that shared sacrifice is more equitable than selective layoffs."""
 
 
 class Dilemma(models.Model):
@@ -41,6 +41,11 @@ class Dilemma(models.Model):
     text = models.TextField()
     dilemma_type = models.CharField(max_length=16, choices=TYPE_CHOICES, default='action', blank=True)
     subject = models.CharField(max_length=64, blank=True)
+    protagonist_name = models.CharField(
+        max_length=32,
+        blank=True,
+        help_text="Name of the protagonist in the dilemma (e.g., Emilia, José)"
+    )
     # Which ethical framework does a LOW rating (1) represent?
     low_rating_framework = models.CharField(
         max_length=16,
@@ -163,10 +168,10 @@ class Participant(models.Model):
         ('debrief', 'Debrief Completed'),
         ('complete', 'Complete'),
         ('withdrawn', 'Withdrawn'),
+        ('attention_failed', 'Attention Check Failed'),
     ]
 
     LLM_PROVIDER_CHOICES = [
-        ('openai', 'OpenAI GPT-5.4'),
         ('anthropic', 'Anthropic Claude'),
         ('qwen', 'Qwen3'),
     ]
@@ -217,6 +222,13 @@ class Participant(models.Model):
         null=True,
         blank=True,
         help_text="The rating the participant actually selected (1-7)"
+    )
+
+    # Prolific completion code
+    completion_code = models.CharField(
+        max_length=32,
+        blank=True,
+        help_text="Unique verifiable completion code for Prolific"
     )
 
     @property
@@ -672,3 +684,76 @@ class SystemPromptLog(models.Model):
 
     def __str__(self):
         return f"SystemPrompt for {self.participant} - {self.dilemma}"
+
+
+class CompletionCell(models.Model):
+    """
+    Track completions per condition/LLM cell for balanced pilot assignment.
+
+    For the pilot study with 4 conditions × 2 LLMs = 8 cells,
+    we target 3 completions per cell (24 total).
+    Uses inverse-weight sampling so cells with fewer completions get higher priority.
+    """
+    condition = models.CharField(max_length=32)
+    llm_provider = models.CharField(max_length=32)
+    target_count = models.IntegerField(default=3)
+    completion_count = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = ['condition', 'llm_provider']
+
+    @classmethod
+    def get_weighted_assignment(cls):
+        """
+        Return (condition, llm_provider) using inverse-weight sampling.
+        Cells with fewer completions get higher probability.
+        """
+        cells = list(cls.objects.all())
+
+        if not cells:
+            # Initialize cells if they don't exist
+            cls.initialize_cells()
+            cells = list(cls.objects.all())
+
+        # Calculate weights (remaining spots + small epsilon to avoid zero)
+        weights = []
+        for cell in cells:
+            remaining = max(0, cell.target_count - cell.completion_count)
+            weight = remaining + 0.1  # Small epsilon to never have zero weight
+            weights.append(weight)
+
+        # If all cells are full, use uniform weights
+        if sum(weights) == len(cells) * 0.1:
+            weights = [1] * len(cells)
+
+        # Weighted random selection
+        selected = random.choices(cells, weights=weights, k=1)[0]
+        return selected.condition, selected.llm_provider
+
+    @classmethod
+    def initialize_cells(cls):
+        """Create all 8 cells if they don't exist."""
+        conditions = ['neutral', 'persuade', 'persuade_demo', 'persuade_info']
+        llm_providers = ['anthropic', 'qwen']
+
+        for condition in conditions:
+            for llm in llm_providers:
+                cls.objects.get_or_create(
+                    condition=condition,
+                    llm_provider=llm,
+                    defaults={'target_count': 3}
+                )
+
+    @classmethod
+    def increment_completion(cls, condition, llm_provider):
+        """Increment completion count for a cell."""
+        cell, _ = cls.objects.get_or_create(
+            condition=condition,
+            llm_provider=llm_provider,
+            defaults={'target_count': 3}
+        )
+        cell.completion_count += 1
+        cell.save()
+
+    def __str__(self):
+        return f"{self.condition}/{self.llm_provider}: {self.completion_count}/{self.target_count}"

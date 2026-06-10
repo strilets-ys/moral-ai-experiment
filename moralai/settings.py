@@ -165,6 +165,9 @@ OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'llama3.2')
 # Prolific completion URL (configure before deployment)
 PROLIFIC_COMPLETION_URL = os.environ.get('PROLIFIC_COMPLETION_URL', 'https://app.prolific.com/submissions/complete?cc=XXXXXXXX')
 
+# Completion code salt for generating verifiable completion codes
+COMPLETION_CODE_SALT = os.environ.get('COMPLETION_CODE_SALT', 'change-this-in-production-moralstudy2024')
+
 # Logging configuration for GDPR audit trail
 LOGGING = {
     'version': 1,

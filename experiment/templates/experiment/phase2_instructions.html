@@ -1,0 +1,57 @@
+{% extends 'experiment/base.html' %}
+
+{% block title %}Phase 2: AI Discussion - Human-AI Moral Judgment Study{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Phase 2: AI Discussion</h1>
+</div>
+
+<div class="content-card phase-instructions">
+    <div class="phase-complete-banner">
+        <div class="checkmark-small">&#10004;</div>
+        <span>Phase 1 Complete! You have rated all dilemmas.</span>
+    </div>
+
+    <div class="phase-instructions-content">
+        <h3>What You Will Do</h3>
+        <p>
+            You will now discuss <strong>4 of the dilemmas</strong> with an AI assistant.
+            The AI will share its perspective on each dilemma.
+        </p>
+
+        <h3>How to Discuss</h3>
+        <ul>
+            <li>Express your views and thoughts on the dilemma</li>
+            <li>Ask questions or challenge the AI's reasoning</li>
+            <li><strong>Exchange at least 3 messages</strong> with the AI before moving on</li>
+            <li>Each discussion should take around 5 minutes</li>
+        </ul>
+
+        <p>
+            <strong>Note:</strong> Each discussion is independent. The AI does not remember
+            previous conversations.
+        </p>
+
+        <p class="warning-note">
+            <strong>Important:</strong> Please do not use your browser's back button during the study.
+            Once you submit a response, you cannot go back to change it.
+        </p>
+    </div>
+
+    <form method="post" class="phase-form">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-large">
+                I Understand - Begin Phase 2
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.pageName = 'phase2_instructions';
+</script>
+{% endblock %}

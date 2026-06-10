@@ -1,0 +1,42 @@
+{% extends 'experiment/base.html' %}
+
+{% block title %}Study Ended - Human-AI Moral Judgment Study{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Study Ended</h1>
+</div>
+
+<div class="content-card">
+    <div class="attention-failed-message">
+        <h2>Attention Check Not Passed</h2>
+        <p>
+            Unfortunately, you did not pass the attention check, so the study has ended.
+            Attention checks help us ensure that participants are reading the questions carefully.
+        </p>
+    </div>
+
+    <div class="payment-info">
+        <h3>Regarding Your Payment</h3>
+        <p>
+            According to Prolific's policy, participants who fail 2 or more attention checks
+            in studies longer than 5 minutes will not receive payment for that submission.
+            Please return your submission on Prolific using the button below.
+        </p>
+    </div>
+
+    <div class="prolific-redirect" style="margin-top: 30px; text-align: center;">
+        <a href="https://app.prolific.com/submissions/complete?cc=CV3AMRZJ"
+           class="btn btn-primary btn-large">
+            Return to Prolific
+        </a>
+    </div>
+
+    <div class="contact-info" style="margin-top: 30px;">
+        <p>
+            If you have any questions, please contact the researcher at
+            <a href="mailto:aimoralstudy@gmail.com">aimoralstudy@gmail.com</a>.
+        </p>
+    </div>
+</div>
+{% endblock %}

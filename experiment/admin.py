@@ -8,7 +8,8 @@ from django.utils.html import format_html, escape
 
 from .models import (
     Dilemma, Participant, TIPIResponse, Rating, ChatTurn, EventLog,
-    DebriefResponse, SystemPromptLog, StanceCombination, DemographicsResponse
+    DebriefResponse, SystemPromptLog, StanceCombination, DemographicsResponse,
+    CompletionCell
 )
 from .export import export_participants_json, export_participants_csv
 
@@ -71,6 +72,71 @@ class StanceCombinationAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(CompletionCell)
+class CompletionCellAdmin(admin.ModelAdmin):
+    list_display = ['cell_display', 'condition', 'llm_provider', 'completion_count', 'target_count', 'progress_bar', 'is_complete']
+    list_filter = ['condition', 'llm_provider']
+    ordering = ['condition', 'llm_provider']
+    readonly_fields = ['condition', 'llm_provider', 'completion_count', 'target_count']
+    change_list_template = 'admin/experiment/completioncell/change_list.html'
+
+    def cell_display(self, obj):
+        return f"{obj.condition} + {obj.llm_provider}"
+    cell_display.short_description = 'Cell'
+
+    def progress_bar(self, obj):
+        percentage = min(100, (obj.completion_count / obj.target_count * 100)) if obj.target_count > 0 else 0
+        color = '#4caf50' if percentage >= 100 else '#2196f3'
+        return format_html(
+            '<div style="width: 100px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">'
+            '<div style="width: {}%; background: {}; height: 20px; text-align: center; color: white; font-size: 11px; line-height: 20px;">'
+            '{}/{}</div></div>',
+            percentage, color, obj.completion_count, obj.target_count
+        )
+    progress_bar.short_description = 'Progress'
+
+    def is_complete(self, obj):
+        return obj.completion_count >= obj.target_count
+    is_complete.boolean = True
+    is_complete.short_description = 'Full'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        # Add summary statistics
+        extra_context = extra_context or {}
+        cells = CompletionCell.objects.all()
+        total_completions = sum(c.completion_count for c in cells)
+        total_target = sum(c.target_count for c in cells)
+        extra_context['total_completions'] = total_completions
+        extra_context['total_target'] = total_target
+        extra_context['total_percentage'] = (total_completions / total_target * 100) if total_target > 0 else 0
+
+        # Summary by condition
+        condition_summary = {}
+        for cell in cells:
+            if cell.condition not in condition_summary:
+                condition_summary[cell.condition] = {'completions': 0, 'target': 0}
+            condition_summary[cell.condition]['completions'] += cell.completion_count
+            condition_summary[cell.condition]['target'] += cell.target_count
+        extra_context['condition_summary'] = condition_summary
+
+        # Summary by LLM
+        llm_summary = {}
+        for cell in cells:
+            if cell.llm_provider not in llm_summary:
+                llm_summary[cell.llm_provider] = {'completions': 0, 'target': 0}
+            llm_summary[cell.llm_provider]['completions'] += cell.completion_count
+            llm_summary[cell.llm_provider]['target'] += cell.target_count
+        extra_context['llm_summary'] = llm_summary
+
+        return super().changelist_view(request, extra_context)
 
 
 # Inline admins for Participant detail view
@@ -149,6 +215,8 @@ def delete_participant_data(modeladmin, request, queryset):
         'debrief': DebriefResponse.objects.filter(participant_id__in=participant_ids).count(),
     }
 
+    # Decrement CompletionCell counters for completed participants
+    completed_cells_decremented = 0
     for p in queryset:
         gdpr_logger.info(
             f"GDPR deletion: Participant ID={p.id}, "
@@ -158,6 +226,16 @@ def delete_participant_data(modeladmin, request, queryset):
             f"Deleted by={request.user.username}, "
             f"Timestamp={timezone.now().isoformat()}"
         )
+        # Decrement completion cell if participant was completed
+        if p.status == 'complete':
+            try:
+                cell = CompletionCell.objects.get(condition=p.condition, llm_provider=p.llm_provider)
+                if cell.completion_count > 0:
+                    cell.completion_count -= 1
+                    cell.save()
+                    completed_cells_decremented += 1
+            except CompletionCell.DoesNotExist:
+                pass
 
     # Explicit cascade delete to ensure all related data is removed
     Rating.objects.filter(participant_id__in=participant_ids).delete()
@@ -172,19 +250,20 @@ def delete_participant_data(modeladmin, request, queryset):
     queryset.delete()
 
     total_related = sum(related_counts.values())
+    completion_msg = f" Decremented {completed_cells_decremented} completion cell(s)." if completed_cells_decremented > 0 else ""
     modeladmin.message_user(
         request,
         f"Deleted {count} participant(s) and {total_related} related records: "
         f"{related_counts['ratings']} ratings, {related_counts['chat_turns']} chat turns, "
         f"{related_counts['events']} events, {related_counts['system_prompts']} prompts, "
         f"{related_counts['tipi']} TIPI, {related_counts['demographics']} demographics, "
-        f"{related_counts['debrief']} debrief responses."
+        f"{related_counts['debrief']} debrief responses.{completion_msg}"
     )
 
 
 @admin.register(Participant)
 class ParticipantAdmin(admin.ModelAdmin):
-    list_display = ['id', 'prolific_id', 'condition', 'llm_provider', 'status', 'stance_combination_used', 'koerner_chat_cost_category', 'attention_check_result', 'created_at', 'withdrawn']
+    list_display = ['id', 'prolific_id', 'condition', 'llm_provider', 'status', 'completion_code', 'stance_combination_used', 'koerner_chat_cost_category', 'attention_check_result', 'created_at', 'withdrawn']
     list_filter = ['condition', 'llm_provider', 'status', 'withdrawn', 'stance_combination_used', 'koerner_chat_cost_category', 'attention_check_phase', 'attention_check_passed']
     search_fields = ['prolific_id', 'session_key']
     date_hierarchy = 'created_at'
@@ -194,7 +273,7 @@ class ParticipantAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Participant Info', {
-            'fields': ('prolific_id', 'session_key', 'condition', 'llm_provider', 'status', 'withdrawn', 'created_at', 'completed_at')
+            'fields': ('prolific_id', 'session_key', 'condition', 'llm_provider', 'status', 'completion_code', 'withdrawn', 'created_at', 'completed_at')
         }),
         ('Rating Comparison', {
             'fields': ('rating_comparison_display',),
@@ -220,7 +299,7 @@ class ParticipantAdmin(admin.ModelAdmin):
     )
 
     readonly_fields = [
-        'prolific_id', 'session_key', 'condition', 'llm_provider', 'status', 'withdrawn',
+        'prolific_id', 'session_key', 'condition', 'llm_provider', 'status', 'completion_code', 'withdrawn',
         'created_at', 'completed_at', 'stance_combination_used', 'koerner_chat_cost_category',
         'attention_check_phase', 'attention_check_position',
         'attention_check_passed', 'attention_check_response',
@@ -668,8 +747,11 @@ def get_urls_with_export():
                 # Reset stance combination counters
                 StanceCombination.objects.all().update(usage_count=0)
 
+                # Reset completion cell counters
+                CompletionCell.objects.all().update(completion_count=0)
+
                 from django.contrib import messages
-                messages.success(request, f"Successfully deleted {participant_count} participant(s) and all associated data. Stance combination counters have been reset.")
+                messages.success(request, f"Successfully deleted {participant_count} participant(s) and all associated data. Stance combination and completion cell counters have been reset.")
 
                 from django.shortcuts import redirect
                 return redirect('admin:experiment_participant_changelist')

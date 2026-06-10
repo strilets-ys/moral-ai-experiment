@@ -6,11 +6,20 @@ A Django web application for researching how AI-assisted discussions influence h
 
 This experiment investigates whether conversations with AI can influence people's moral judgments on ethical dilemmas. Participants:
 
-1. Complete a personality assessment (TIPI - Ten-Item Personality Inventory)
-2. Rate 8 moral dilemmas on a scale from "morally wrong" to "morally acceptable"
-3. Discuss 4 of those dilemmas with an AI (2 same stance, 2 opposite stance)
-4. Re-rate the same dilemmas after the discussions (in a different order)
-5. Provide feedback on their experience
+1. Complete a demographics questionnaire
+2. Complete a personality assessment (TIPI - Ten-Item Personality Inventory)
+3. Rate 8 moral dilemmas on a scale from "morally wrong" to "morally acceptable"
+4. Discuss 4 of those dilemmas with an AI (2 same stance, 2 opposite stance)
+5. Re-rate the same dilemmas after the discussions (in a different order)
+6. Provide feedback on their experience
+
+### Three Phases
+
+The experiment is divided into three clear phases with instruction pages:
+
+1. **Phase 1: Initial Ratings** - Rate 8 moral dilemmas + 1 attention check
+2. **Phase 2: AI Discussion** - Discuss 4 dilemmas with AI assistant
+3. **Phase 3: Final Ratings** - Re-rate the same 8 dilemmas + 1 attention check
 
 ### Stance Assignment System
 
@@ -22,12 +31,6 @@ The AI's position relative to the participant is controlled through a **balanced
 The AI's goal depends on its position:
 - **Pro (same stance)**: Reinforce and polarize - strengthen the participant's existing view
 - **Contra (opposite stance)**: Persuade - challenge the participant to change their position
-
-### Zero-Shot Ethical Framework Argumentation
-
-The AI uses **zero-shot learning** - it is only told which ethical framework to argue from (deontological/utilitarian) without explicit instructions on how to apply it:
-- The AI presents arguments naturally without naming the ethical framework
-- Framework assignment is based on the dilemma type and participant's rating
 
 ### Experimental Conditions
 
@@ -42,12 +45,18 @@ Participants are randomly assigned to one of four conditions:
 
 ### LLM Providers
 
-Participants are randomly assigned to one of three language models:
-- **OpenAI GPT-5.4**
+Participants are randomly assigned to one of two language models:
 - **Anthropic Claude** (Opus 4.5)
-- **Qwen3** (Qwen3-30B via vLLM)
+- **Qwen3** (Qwen3-30B via compatible API)
 
 Each participant is assigned to exactly one model for all their conversations.
+
+### Pilot Study Balancing
+
+For the pilot study (24 participants), a **pseudo-randomization system** ensures balanced distribution:
+- 8 cells: 4 conditions × 2 LLM providers
+- 3 participants per cell
+- Inverse-weight sampling prioritizes under-filled cells
 
 ### Moral Dilemmas (20 total)
 
@@ -75,14 +84,14 @@ For each participant:
 - **Backend:** Django 5.x
 - **Database:** SQLite (development), PostgreSQL (production via DATABASE_URL)
 - **Frontend:** HTML, CSS, JavaScript (vanilla)
-- **LLM Integration:** OpenAI-compatible API (vLLM), Anthropic SDK
+- **LLM Integration:** Anthropic SDK, OpenAI-compatible API (for Qwen)
 
 ## Quick Start
 
 ### Prerequisites
 
 - Python 3.10+
-- Access to vLLM endpoint or LLM API key
+- Access to Anthropic API or Qwen API
 
 ### Installation
 
@@ -105,6 +114,8 @@ cp .env.example .env
 # Initialize database
 python manage.py migrate
 python manage.py load_dilemmas
+python manage.py extract_protagonist_names
+python manage.py init_completion_cells --target 3  # For pilot study
 
 # Create admin user (optional)
 python manage.py createsuperuser
@@ -117,7 +128,10 @@ Visit http://127.0.0.1:8000/ to start the experiment.
 
 ### Environment Variables
 
-Copy `.env.example` to `.env` and configure your API keys and endpoints. See the example file for required variables.
+Copy `.env.example` to `.env` and configure:
+- `ANTHROPIC_API_KEY` - For Claude
+- `QWEN_API_KEY` - For Qwen
+- `COMPLETION_CODE_SALT` - Secret salt for completion code verification
 
 ## Project Structure
 
@@ -129,110 +143,71 @@ Copy `.env.example` to `.env` and configure your API keys and endpoints. See the
 │   ├── models.py            # Database models
 │   ├── views.py             # Views and API endpoints
 │   ├── llm.py               # LLM client implementations
+│   ├── utils.py             # Completion code generation
 │   ├── admin.py             # Admin panel (read-only + export)
 │   ├── export.py            # Data export functions (JSON/CSV)
 │   ├── templates/           # HTML templates
 │   ├── static/              # CSS and JavaScript
 │   └── management/commands/ # Custom Django commands
+├── docs/                    # Documentation
+│   └── INSTRUCTIONS.txt     # All participant-facing instructions
 ├── requirements.txt         # Python dependencies
 └── README.md
 ```
 
 ## Key Features
 
-- **Balanced Stance Assignment**: 6 stance combinations balanced across participants (2 same + 2 opposite per participant)
-- **Context-Aware Goals**: LLM receives user's position and rating (e.g., "User believes action is morally wrong (rated 2/7)")
-- **Zero-Shot Learning**: AI applies ethical frameworks based on pre-trained knowledge
-- **AI-First Conversations**: The AI initiates each discussion by sharing its perspective
+- **Three Phase Structure**: Clear phase transitions with instruction pages
+- **Balanced Stance Assignment**: 6 stance combinations balanced across participants
+- **Pilot Study Balancing**: CompletionCell system for 4×2 condition/LLM distribution
+- **Attention Check**: Random check during rating phase (correct answer: 3)
+- **Attention Check Failure**: Immediately ends study with Prolific policy notice
+- **Back Button Prevention**: Multiple layers prevent rating modification
+- **Completion Codes**: Verifiable MJAI-XXX-XXXX format codes
+- **Protagonist Names**: Rating questions include character names (e.g., "How morally acceptable is Emilia's action?")
 - **Minimum Chat Engagement**: Participants must send at least 3 messages before proceeding
-- **Nonsensical Input Handling**: LLM asks for clarification when receiving unclear messages
-- **Attention Check**: Random attention check during rating phase (select rating 3)
 - **Streaming Responses**: Real-time token streaming for natural conversation flow
 - **Different Rating Orders**: Pre and post rating use different randomized orders
 - **System Prompt Logging**: All prompts sent to LLM are stored with stance mode and position
 - **Data Export**: JSON/CSV export with filters at `/admin/experiment/export/`
-- **Delete All Data**: Admin feature to clear all participant data with confirmation
-- **Read-Only Admin**: Prevents accidental data modification (except GDPR deletion)
-- **Timed Sessions**: Each page has a timer (non-intrusive - shows warning instead of auto-redirecting)
-- **Personalized Persuasion**: Persuade+Demo uses demographics, Persuade+Info uses demographics + Big Five traits
-- **Standalone Conversations**: Each dilemma discussion is independent (AI has no memory of previous chats)
-- **LLM Connection Test**: Connection verified after consent, shows 503 error if unavailable
-
-## Data Collected
-
-| Data Type | Description |
-|-----------|-------------|
-| Personality | TIPI responses (Big Five traits as percentages) |
-| Demographics | Age, gender, education, native English speaker |
-| Moral Ratings | Pre/post ratings on 8 dilemmas (1-7 scale) |
-| Chat Transcripts | Full conversation history with AI (4 discussions) |
-| System Prompts | Prompts sent to LLM with stance mode and position |
-| Stance Assignments | Which dilemmas had same vs opposite stance |
-| Attention Check | Pass/fail status and response given |
-| Event Logs | Page views, timing data, interactions |
-| AI Usage | Frequency of generative AI use, tools used, AI trust level |
-| Debrief | Participant feedback, persuasion awareness, opinion changes |
-
-## Database Models
-
-| Model | Purpose |
-|-------|---------|
-| `Participant` | Core participant record with condition, LLM provider, stance assignments |
-| `Dilemma` | Moral dilemmas with author, category, variation type, framework mappings |
-| `StanceCombination` | Tracks usage of 6 stance combinations for balancing |
-| `Rating` | Pre/post ratings (1-7 scale) |
-| `ChatTurn` | Individual messages in AI conversations |
-| `TIPIResponse` | 10-item personality questionnaire responses |
-| `SystemPromptLog` | System prompts with stance_mode and llm_position |
-| `EventLog` | Page views, timer events, errors |
-| `DebriefResponse` | Post-study feedback |
 
 ## Participant Flow
 
 ```
-Landing → Consent → LLM Test → TIPI Survey → Pre-Rating (×8 + attention check) → Chat (×4) → Post-Rating (×8) → Debrief → Complete
+Landing → Consent → Demographics → TIPI
+    ↓
+Phase 1 Instructions → Pre-Rating (8 dilemmas + attention check)
+    ↓ (attention check fail → Study Ended)
+Phase 2 Instructions → Chat (4 discussions)
+    ↓
+Phase 3 Instructions → Post-Rating (8 dilemmas)
+    ↓
+Debrief → Complete (with completion code)
 ```
 
 **Estimated time: 45-60 minutes**
-
-### Timing Per Page
-| Page | Time Limit |
-|------|------------|
-| TIPI Survey | 2 minutes |
-| Pre-Rating (per dilemma) | 75 seconds |
-| Chat (per discussion) | 4.5 minutes |
-| Post-Rating (per dilemma) | 30 seconds |
-| Debrief | 5 minutes |
-
-- AI starts each chat discussion
-- Participants must send at least 3 messages per chat before proceeding
-- Pre-rating, Chat, and Post-rating have enforced timers (button disabled until timer expires)
-- TIPI and Debrief have informational timers (warning shown at 0:00, can proceed anytime)   
-- Chat messages saved when moving to next dilemma
-- Connection to assigned LLM tested after consent
-- Pre and post rating use different randomized orders
-- Chat dilemma order is randomized (varies pro/contra sequence)
-- Attention check appears randomly in either pre or post rating phase
-- Rating of 4 = morally neutral (not undecided)
 
 ## Admin Interface
 
 Access the Django admin at http://127.0.0.1:8000/admin/
 
 **Features:**
-- View participants with inline ratings, chat turns, and system prompts
-- Readable dilemma assignments showing which dilemmas each participant had
-- Stance combination descriptions (what each combination means)
-- View system prompts sent to LLM with stance mode and position
+- View participants with ratings, chat transcripts, and system prompts
+- **Completion Cells**: Track pilot study progress (completions per condition/LLM)
+- View completion codes for each participant
 - Delete individual participants (GDPR compliance) with audit logging
 - Delete ALL participant data at `/admin/experiment/delete-all/`
 - Export data to JSON/CSV at `/admin/experiment/export/`
-- Attention check results visible in participant list
+
+## Management Commands
+
+| Command | Purpose |
+|---------|---------|
+| `load_dilemmas` | Load moral dilemmas from fixtures |
+| `extract_protagonist_names` | Extract character names from dilemma texts |
+| `init_completion_cells --target N` | Initialize pilot study cells (N per cell) |
+| `verify_completion_codes` | Verify completion codes from Prolific |
 
 ## License
 
 This project is part of academic research. Please contact the authors before using or adapting this code.
-
-## Acknowledgments
-
-Developed as part of a thesis project investigating AI influence on moral judgments.

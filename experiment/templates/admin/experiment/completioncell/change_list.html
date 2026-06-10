@@ -1,0 +1,57 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block content %}
+<div style="margin-bottom: 24px; padding: 20px; background: #f5f5f5; border-radius: 8px;">
+    <h2 style="margin: 0 0 16px 0; font-size: 18px;">Pilot Study Progress</h2>
+
+    <!-- Overall Progress -->
+    <div style="margin-bottom: 20px;">
+        <h3 style="margin: 0 0 8px 0; font-size: 14px; color: #666;">Overall</h3>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="flex: 1; max-width: 300px; background: #e0e0e0; border-radius: 4px; overflow: hidden; height: 24px;">
+                <div style="width: {{ total_percentage|floatformat:0 }}%; background: {% if total_percentage >= 100 %}#4caf50{% else %}#2196f3{% endif %}; height: 100%; transition: width 0.3s;"></div>
+            </div>
+            <span style="font-weight: bold; font-size: 16px;">{{ total_completions }} / {{ total_target }}</span>
+            <span style="color: #666;">({{ total_percentage|floatformat:1 }}%)</span>
+        </div>
+    </div>
+
+    <!-- Summary by Condition -->
+    <div style="display: flex; gap: 32px; flex-wrap: wrap;">
+        <div>
+            <h3 style="margin: 0 0 8px 0; font-size: 14px; color: #666;">By Condition</h3>
+            <table style="border-collapse: collapse;">
+                {% for condition, data in condition_summary.items %}
+                <tr>
+                    <td style="padding: 4px 12px 4px 0; font-weight: 500;">{{ condition }}</td>
+                    <td style="padding: 4px 0;">
+                        <span style="{% if data.completions >= data.target %}color: #4caf50; font-weight: bold;{% endif %}">
+                            {{ data.completions }} / {{ data.target }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div>
+            <h3 style="margin: 0 0 8px 0; font-size: 14px; color: #666;">By LLM Provider</h3>
+            <table style="border-collapse: collapse;">
+                {% for llm, data in llm_summary.items %}
+                <tr>
+                    <td style="padding: 4px 12px 4px 0; font-weight: 500;">{{ llm }}</td>
+                    <td style="padding: 4px 0;">
+                        <span style="{% if data.completions >= data.target %}color: #4caf50; font-weight: bold;{% endif %}">
+                            {{ data.completions }} / {{ data.target }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</div>
+
+{{ block.super }}
+{% endblock %}

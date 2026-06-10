@@ -1,0 +1,62 @@
+{% extends 'experiment/base.html' %}
+
+{% block title %}Phase 3: Final Ratings - Human-AI Moral Judgment Study{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Phase 3: Final Dilemma Ratings</h1>
+</div>
+
+<div class="content-card phase-instructions">
+    <div class="phase-complete-banner">
+        <div class="checkmark-small">&#10004;</div>
+        <span>Phase 2 Complete! You have finished all discussions.</span>
+    </div>
+
+    <div class="phase-instructions-content">
+        <h3>What You Will Do</h3>
+        <p>
+            You will now <strong>re-rate the same 8 dilemmas</strong> you saw in Phase 1.
+            The dilemmas will appear in a different order.
+        </p>
+
+        <h3>How to Rate</h3>
+        <p>
+            Rate each dilemma using the same scale as before:
+            <strong>1</strong> (Completely Wrong) to <strong>7</strong> (Completely Acceptable).
+        </p>
+
+        <div class="scale-preview">
+            <span class="scale-end">1 = Completely Wrong</span>
+            <span class="scale-middle">4 = Morally Neutral</span>
+            <span class="scale-end">7 = Completely Acceptable</span>
+        </div>
+
+        <p>
+            <strong>Important:</strong> Your rating can be the same as before or different.
+            We are interested in your current moral judgment, which may or may not have changed
+            after discussing the dilemmas.
+        </p>
+
+        <p class="warning-note">
+            <strong>Reminder:</strong> Please do not use your browser's back button.
+            Once you submit a response, you cannot go back to change it.
+        </p>
+    </div>
+
+    <form method="post" class="phase-form">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-large">
+                I Understand - Begin Phase 3
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.pageName = 'phase3_instructions';
+</script>
+{% endblock %}

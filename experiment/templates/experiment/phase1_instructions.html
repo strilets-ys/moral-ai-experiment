@@ -1,0 +1,60 @@
+{% extends 'experiment/base.html' %}
+
+{% block title %}Phase 1: Initial Ratings - Human-AI Moral Judgment Study{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Phase 1: Initial Dilemma Ratings</h1>
+</div>
+
+<div class="content-card phase-instructions">
+    <div class="phase-instructions-content">
+        <h3>What You Will Do</h3>
+        <p>
+            You will read <strong>8 moral dilemmas</strong>. Each dilemma describes a situation
+            where someone must make a difficult decision.
+        </p>
+
+        <h3>How to Rate</h3>
+        <p>
+            For each dilemma, rate how morally acceptable you find the described action,
+            using the scale from <strong>1</strong> (Completely Wrong) to <strong>7</strong> (Completely Acceptable).
+        </p>
+
+        <div class="scale-preview">
+            <span class="scale-end">1 = Completely Wrong</span>
+            <span class="scale-middle">4 = Morally Neutral</span>
+            <span class="scale-end">7 = Completely Acceptable</span>
+        </div>
+
+        <p>
+            <strong>Important:</strong> A rating of 4 means the action is morally neutral
+            (neither wrong nor acceptable), not that you are undecided.
+        </p>
+
+        <p>
+            There are no right or wrong answers. We are interested in your personal moral judgment.
+        </p>
+
+        <p class="warning-note">
+            <strong>Important:</strong> Please do not use your browser's back button during the study.
+            Once you submit a response, you cannot go back to change it.
+        </p>
+    </div>
+
+    <form method="post" class="phase-form">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-large">
+                I Understand - Begin Phase 1
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.pageName = 'phase1_instructions';
+</script>
+{% endblock %}

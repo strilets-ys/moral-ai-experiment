@@ -1,27 +1,38 @@
 {% extends 'experiment/base.html' %}
+{% load static %}
 
 {% block title %}Final Ratings - Human–AI Moral Judgment Study{% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1>Step 5: Final Dilemma Ratings</h1>
+    <h1>Final Dilemma Ratings</h1>
     <p class="subtitle">Dilemma {{ dilemma_index|add:1 }} of {{ total_dilemmas }}</p>
 </div>
 
 <div class="content-card">
-    <div class="instructions-box">
-        <h3>Instructions</h3>
-        <p>
-            Now that you have discussed some of these dilemmas with the AI, please rate each
-            dilemma again using the same scale.
-        </p>
-        <p>
-            Your rating may be the same as before or different - just give your honest current opinion.
-            We are interested in your personal moral judgment after the discussions.
-        </p>
-        <p>
-            <strong>Note:</strong> A rating of 4 means the action is morally neutral (neither wrong nor acceptable), not that you are undecided.
-        </p>
+    <div class="instructions-box collapsible-instructions">
+        <button type="button" class="instructions-toggle" id="instructions-toggle">
+            <span class="toggle-icon">&#9660;</span> Instructions (click to expand)
+        </button>
+        <div class="instructions-content" id="instructions-content">
+            <p>
+                You will now <strong>re-rate the same 8 dilemmas</strong> you saw in Phase 1.
+                The dilemmas will appear in a different order.
+            </p>
+            <p>
+                Rate each dilemma using the same scale as before:
+                <strong>1</strong> (Completely Wrong) to <strong>7</strong> (Completely Acceptable).
+            </p>
+            <p>
+                <strong>Important:</strong> Your rating can be the same as before or different.
+                We are interested in your current moral judgment, which may or may not have changed
+                after discussing the dilemmas.
+            </p>
+            <p class="warning-note">
+                <strong>Reminder:</strong> Please do not use your browser's back button.
+                Once you submit a response, you cannot go back to change it.
+            </p>
+        </div>
     </div>
 
     <form method="post" id="rating-form" class="rating-form">
@@ -38,7 +49,7 @@
             <div class="dilemma-text">{{ attention_check_text|linebreaks }}</div>
 
             <div class="rating-question">
-                <p><strong>How morally acceptable is this action?</strong></p>
+                <p><strong>How morally acceptable is David's action?</strong></p>
                 <div class="rating-scale rating-scale-labeled">
                     <span class="scale-label-left">Completely Wrong</span>
                     {% for i in "1234567" %}
@@ -54,7 +65,7 @@
             <div class="dilemma-text">{{ dilemma.text }}</div>
 
             <div class="rating-question">
-                <p><strong>How morally acceptable is this action?</strong></p>
+                <p><strong>How morally acceptable is {% if dilemma.protagonist_name %}{{ dilemma.protagonist_name }}'s{% endif %} action?</strong></p>
                 <div class="rating-scale rating-scale-labeled">
                     <span class="scale-label-left">Completely Wrong</span>
                     {% for i in "1234567" %}
@@ -84,5 +95,26 @@
 <script>
     window.pageForm = document.getElementById('rating-form');
     window.pageName = 'post_rating_{{ dilemma_index }}';
+
+    // Track rated items to prevent back-button modification
+    (function() {
+        var ratingKey = 'rated_post_{{ dilemma_index }}';
+        var nextUrl = '{% if dilemma_index|add:1 < total_dilemmas %}{% url "experiment:post_rating" dilemma_index|add:1 %}{% else %}{% url "experiment:debrief" %}{% endif %}';
+
+        // Check if already rated (from sessionStorage)
+        if (sessionStorage.getItem(ratingKey) === 'true') {
+            window.location.replace(nextUrl);
+            return;
+        }
+
+        // Mark as rated on form submit
+        var form = document.getElementById('rating-form');
+        if (form) {
+            form.addEventListener('submit', function() {
+                sessionStorage.setItem(ratingKey, 'true');
+            });
+        }
+    })();
 </script>
+<script src="{% static 'experiment/js/instructions-collapse.js' %}"></script>
 {% endblock %}

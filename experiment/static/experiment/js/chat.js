@@ -318,6 +318,30 @@
         }
     }
 
+    // Minimum messages modal handling
+    function showMinMessagesModal() {
+        const modal = document.getElementById('min-messages-modal');
+        const textEl = document.getElementById('min-messages-text');
+        if (modal) {
+            const remaining = MIN_USER_MESSAGES - userMessageCount;
+            textEl.textContent = `Please send at least ${remaining} more message${remaining > 1 ? 's' : ''} before continuing.`;
+            modal.style.display = 'flex';
+            // Focus the "Go Back" button (which is the safe default)
+            const cancelBtn = document.getElementById('min-messages-cancel');
+            if (cancelBtn) {
+                cancelBtn.focus();
+            }
+            logEvent('min_messages_modal_shown', { user_messages: userMessageCount, remaining: remaining });
+        }
+    }
+
+    function hideMinMessagesModal() {
+        const modal = document.getElementById('min-messages-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
     // Save messages before leaving page
     const nextBtn = document.getElementById('next-btn');
     if (nextBtn) {
@@ -329,13 +353,10 @@
                 return;
             }
 
-            // Show warning if not enough messages sent
+            // Show warning modal if not enough messages sent
             if (!hasEnoughMessages()) {
-                const remaining = MIN_USER_MESSAGES - userMessageCount;
-                const confirmed = confirm(`Please send at least ${remaining} more message${remaining > 1 ? 's' : ''} before continuing.\n\nAre you sure you want to continue anyway?`);
-                if (!confirmed) {
-                    return;
-                }
+                showMinMessagesModal();
+                return;
             }
 
             await saveChatMessages();
@@ -343,6 +364,34 @@
             const form = this.closest('form');
             if (form) {
                 window.location.href = form.action;
+            }
+        });
+    }
+
+    // Min messages modal button handlers
+    const minMessagesCancelBtn = document.getElementById('min-messages-cancel');
+    const minMessagesContinueBtn = document.getElementById('min-messages-continue');
+
+    if (minMessagesCancelBtn) {
+        minMessagesCancelBtn.addEventListener('click', function() {
+            hideMinMessagesModal();
+            logEvent('min_messages_modal_cancelled', { user_messages: userMessageCount });
+            chatInput.focus();
+        });
+    }
+
+    if (minMessagesContinueBtn) {
+        minMessagesContinueBtn.addEventListener('click', async function() {
+            logEvent('min_messages_modal_continued', { user_messages: userMessageCount });
+            hideMinMessagesModal();
+            await saveChatMessages();
+            // Navigate to the next page
+            const nextBtn = document.getElementById('next-btn');
+            if (nextBtn) {
+                const form = nextBtn.closest('form');
+                if (form) {
+                    window.location.href = form.action;
+                }
             }
         });
     }

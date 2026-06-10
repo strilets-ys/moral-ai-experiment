@@ -145,12 +145,11 @@ class QwenClient(BaseLLMClient):
 def get_llm_client(provider: str) -> BaseLLMClient:
     """Factory function to get appropriate LLM client."""
     clients = {
-        'openai': OpenAIClient,
         'anthropic': AnthropicClient,
         'qwen': QwenClient,
     }
 
-    client_class = clients.get(provider, OpenAIClient)
+    client_class = clients.get(provider, AnthropicClient)
     return client_class()
 
 
