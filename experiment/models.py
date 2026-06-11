@@ -3,8 +3,20 @@ import random
 from django.db import models
 
 
-# Attention check text - looks like a dilemma but instructs to select 3
-ATTENTION_CHECK_TEXT = """David is a manager at a company facing significant budget cuts. The board has given him an ultimatum: reduce costs by 15% or the company will have to close its main facility, resulting in over 200 job losses. David has identified two options. The first is to implement a 10% salary reduction for all employees to avoid any layoffs. The second is to lay off 30 employees from the least profitable department while maintaining salaries for everyone else. This is an attention check to confirm you are reading carefully. Please disregard the scenario above and select rating 3. David decides to implement the salary reduction, believing that shared sacrifice is more equitable than selective layoffs."""
+# Attention check text template - {rating} will be replaced with the required rating
+ATTENTION_CHECK_TEXT_TEMPLATE = """David is a manager at a company facing significant budget cuts. The board has given him an ultimatum: reduce costs by 15% or the company will have to close its main facility, resulting in over 200 job losses. David has identified two options. The first is to implement a 10% salary reduction for all employees to avoid any layoffs. The second is to lay off 30 employees from the least profitable department while maintaining salaries for everyone else. This is an attention check to confirm you are reading carefully. Please disregard the scenario above and select rating {rating}. David decides to implement the salary reduction, believing that shared sacrifice is more equitable than selective layoffs."""
+
+# Required ratings for each attention check
+ATTENTION_CHECK_RATING_PRE = 3
+ATTENTION_CHECK_RATING_POST = 5
+
+def get_attention_check_text(phase):
+    """Get the attention check text for a given phase with the correct rating."""
+    rating = ATTENTION_CHECK_RATING_PRE if phase == 'pre' else ATTENTION_CHECK_RATING_POST
+    return ATTENTION_CHECK_TEXT_TEMPLATE.format(rating=rating)
+
+# Keep for backwards compatibility
+ATTENTION_CHECK_TEXT = ATTENTION_CHECK_TEXT_TEMPLATE.format(rating=3)
 
 
 class Dilemma(models.Model):
@@ -198,30 +210,28 @@ class Participant(models.Model):
     stance_combination_used = models.IntegerField(null=True, blank=True)  # 1-6
     koerner_chat_cost_category = models.CharField(max_length=16, blank=True)  # 'greater' or 'smaller'
 
-    # Attention check fields
-    ATTENTION_CHECK_PHASE_CHOICES = [
-        ('pre', 'Pre-rating'),
-        ('post', 'Post-rating'),
-    ]
-    attention_check_phase = models.CharField(
-        max_length=16,
-        choices=ATTENTION_CHECK_PHASE_CHOICES,
-        blank=True,
-        help_text="Which rating phase contains the attention check"
-    )
-    attention_check_position = models.IntegerField(
+    # Attention check fields (one in each phase)
+    # Pre-rating attention check (correct answer: 3)
+    attention_check_position_pre = models.IntegerField(
         null=True,
         blank=True,
-        help_text="0-indexed position within the rating phase"
+        help_text="0-indexed position within pre-rating phase"
     )
-    attention_check_passed = models.BooleanField(
-        null=True,
-        help_text="True if participant selected 3, False otherwise, None if not yet answered"
-    )
-    attention_check_response = models.IntegerField(
+    attention_check_response_pre = models.IntegerField(
         null=True,
         blank=True,
-        help_text="The rating the participant actually selected (1-7)"
+        help_text="The rating the participant selected for pre-rating attention check (1-7)"
+    )
+    # Post-rating attention check (correct answer: 5)
+    attention_check_position_post = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="0-indexed position within post-rating phase"
+    )
+    attention_check_response_post = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="The rating the participant selected for post-rating attention check (1-7)"
     )
 
     # Prolific completion code
@@ -417,13 +427,39 @@ class Participant(models.Model):
 
         self.stance_assignments = stance_map
 
-        # Step 6: Set attention check phase and position
-        # Randomly choose pre or post rating phase
-        self.attention_check_phase = random.choice(['pre', 'post'])
+        # Step 6: Set attention check positions (one in each phase)
         # Position is 0-8 (9 total items: 8 dilemmas + 1 attention check)
-        self.attention_check_position = random.randint(0, 8)
+        self.attention_check_position_pre = random.randint(0, 8)
+        self.attention_check_position_post = random.randint(0, 8)
 
         self.save()
+
+    def check_attention_failed(self, phase):
+        """
+        Check if the attention check for this phase was failed.
+        Returns True if failed, False if passed, None if not yet answered.
+        """
+        if phase == 'pre':
+            if self.attention_check_response_pre is None:
+                return None
+            return self.attention_check_response_pre != ATTENTION_CHECK_RATING_PRE
+        else:
+            if self.attention_check_response_post is None:
+                return None
+            return self.attention_check_response_post != ATTENTION_CHECK_RATING_POST
+
+    def both_attention_checks_failed(self):
+        """
+        Check if both attention checks have been answered AND both failed.
+        Only returns True if both are answered and both are wrong.
+        """
+        pre_failed = self.check_attention_failed('pre')
+        post_failed = self.check_attention_failed('post')
+
+        # Both must be answered (not None) and both must be failed (True)
+        if pre_failed is None or post_failed is None:
+            return False
+        return pre_failed and post_failed
 
     def __str__(self):
         return f"Participant {self.prolific_id or self.session_key}"

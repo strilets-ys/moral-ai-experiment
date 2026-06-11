@@ -264,7 +264,7 @@ def delete_participant_data(modeladmin, request, queryset):
 @admin.register(Participant)
 class ParticipantAdmin(admin.ModelAdmin):
     list_display = ['id', 'prolific_id', 'condition', 'llm_provider', 'status', 'completion_code', 'stance_combination_used', 'koerner_chat_cost_category', 'attention_check_result', 'created_at', 'withdrawn']
-    list_filter = ['condition', 'llm_provider', 'status', 'withdrawn', 'stance_combination_used', 'koerner_chat_cost_category', 'attention_check_phase', 'attention_check_passed']
+    list_filter = ['condition', 'llm_provider', 'status', 'withdrawn', 'stance_combination_used', 'koerner_chat_cost_category']
     search_fields = ['prolific_id', 'session_key']
     date_hierarchy = 'created_at'
     actions = [delete_participant_data]
@@ -292,8 +292,9 @@ class ParticipantAdmin(admin.ModelAdmin):
             'fields': ('stance_combination_used', 'stance_combination_description', 'koerner_chat_cost_category'),
             'classes': ('collapse',)
         }),
-        ('Attention Check', {
-            'fields': ('attention_check_phase', 'attention_check_position', 'attention_check_passed', 'attention_check_response'),
+        ('Attention Checks', {
+            'fields': ('attention_check_position_pre', 'attention_check_response_pre',
+                       'attention_check_position_post', 'attention_check_response_post'),
             'classes': ('collapse',)
         }),
     )
@@ -301,20 +302,36 @@ class ParticipantAdmin(admin.ModelAdmin):
     readonly_fields = [
         'prolific_id', 'session_key', 'condition', 'llm_provider', 'status', 'completion_code', 'withdrawn',
         'created_at', 'completed_at', 'stance_combination_used', 'koerner_chat_cost_category',
-        'attention_check_phase', 'attention_check_position',
-        'attention_check_passed', 'attention_check_response',
+        'attention_check_position_pre', 'attention_check_response_pre',
+        'attention_check_position_post', 'attention_check_response_post',
         'rating_dilemmas_display', 'chat_dilemmas_display', 'stance_assignments_display',
         'stance_combination_description', 'rating_comparison_display', 'chat_transcripts_display'
     ]
 
     def attention_check_result(self, obj):
-        if obj.attention_check_passed is None:
+        """Show results for both attention checks."""
+        from .models import ATTENTION_CHECK_RATING_PRE, ATTENTION_CHECK_RATING_POST
+
+        pre = obj.attention_check_response_pre
+        post = obj.attention_check_response_post
+
+        if pre is None and post is None:
             return '-'
-        elif obj.attention_check_passed:
-            return f'✓ ({obj.attention_check_phase})'
-        else:
-            return f'✗ {obj.attention_check_response} ({obj.attention_check_phase})'
-    attention_check_result.short_description = 'Attention Check'
+
+        results = []
+        if pre is not None:
+            if pre == ATTENTION_CHECK_RATING_PRE:
+                results.append(f'Pre:✓')
+            else:
+                results.append(f'Pre:✗({pre})')
+        if post is not None:
+            if post == ATTENTION_CHECK_RATING_POST:
+                results.append(f'Post:✓')
+            else:
+                results.append(f'Post:✗({post})')
+
+        return ' '.join(results)
+    attention_check_result.short_description = 'Attention Checks'
 
     def rating_dilemmas_display(self, obj):
         """Show all dilemmas assigned for rating in order."""

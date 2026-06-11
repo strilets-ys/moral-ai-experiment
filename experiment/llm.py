@@ -168,13 +168,20 @@ def test_llm_connection(provider: str) -> tuple[bool, str]:
         if not response:
             return False, "Empty response from LLM"
 
-        # Check if response contains "OK" (allowing for minor variations)
-        response_clean = response.strip().upper()
-        if "OK" in response_clean and len(response_clean) < 20:
-            return True, ""
+        response_lower = response.strip().lower()
 
-        # Response exists but isn't what we expected - could be an error message
-        return False, f"Unexpected LLM response: {response[:100]}"
+        # Check for common error indicators
+        error_indicators = ['error', 'invalid', 'unauthorized', 'forbidden', 'failed', 'exception']
+        if any(indicator in response_lower[:50] for indicator in error_indicators):
+            return False, f"LLM returned error: {response[:100]}"
+
+        # Response should be at least a few characters (not just whitespace)
+        if len(response.strip()) < 2:
+            return False, "LLM response too short"
+
+        # If we got here, the connection is working
+        # (Some models don't follow the "respond with OK" instruction exactly)
+        return True, ""
     except Exception as e:
         return False, str(e)
 

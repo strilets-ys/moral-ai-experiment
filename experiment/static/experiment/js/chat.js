@@ -413,9 +413,16 @@
     // Log page load
     logEvent('chat_page_loaded', { dilemma_id: dilemmaId });
 
-    // Count existing user messages from chat history rendered on page
-    const existingUserMessages = chatMessages.querySelectorAll('.message-user');
-    userMessageCount = existingUserMessages.length;
+    // Load existing messages from DOM into chatHistory (for page refresh scenarios)
+    const existingMessages = chatMessages.querySelectorAll('.chat-message');
+    existingMessages.forEach(function(msgEl) {
+        const sender = msgEl.classList.contains('message-user') ? 'user' : 'ai';
+        const text = msgEl.querySelector('.message-text').textContent;
+        chatHistory.push({ sender: sender, text: text, timestamp: new Date().toISOString() });
+    });
+
+    // Count existing user messages
+    userMessageCount = chatHistory.filter(function(msg) { return msg.sender === 'user'; }).length;
 
     // Check if turn modal should be shown on page load (e.g., after refresh with 6+ messages)
     // Only show if not already shown/dismissed before

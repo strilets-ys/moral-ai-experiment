@@ -13,8 +13,8 @@ import logging
 
 from .models import (
     Participant, Dilemma, TIPIResponse, Rating, ChatTurn, EventLog, DebriefResponse,
-    SystemPromptLog, StanceCombination, DemographicsResponse, ATTENTION_CHECK_TEXT,
-    CompletionCell
+    SystemPromptLog, StanceCombination, DemographicsResponse, CompletionCell,
+    get_attention_check_text, ATTENTION_CHECK_RATING_PRE, ATTENTION_CHECK_RATING_POST
 )
 from .utils import generate_completion_code
 
@@ -55,7 +55,28 @@ def landing(request):
     prolific_id = request.GET.get('PROLIFIC_PID', '')
 
     if request.method == 'POST':
-        prolific_id = request.POST.get('prolific_id', prolific_id)
+        prolific_id = request.POST.get('prolific_id', prolific_id).strip()
+
+        # Validate Prolific ID is provided
+        if not prolific_id:
+            return render(request, 'experiment/landing.html', {
+                'prolific_id': '',
+                'entered_prolific_id': '',
+                'error': 'Please enter your Prolific ID to continue.',
+            })
+
+        # Handle INTERNAL test ID - generate unique suffix
+        if prolific_id.upper() == 'INTERNAL':
+            import secrets
+            prolific_id = f"INTERNAL_{secrets.token_hex(4)}"
+
+        # Check if Prolific ID already exists (for real participants)
+        if Participant.objects.filter(prolific_id=prolific_id).exists():
+            return render(request, 'experiment/landing.html', {
+                'prolific_id': '',
+                'entered_prolific_id': prolific_id,
+                'error': 'This Prolific ID has already been used. If you started the study before, please clear your browser cookies and try again.',
+            })
 
         # Ensure session exists
         if not request.session.session_key:
@@ -66,7 +87,7 @@ def landing(request):
 
         # Create participant
         participant = Participant.objects.create(
-            prolific_id=prolific_id if prolific_id else None,
+            prolific_id=prolific_id,
             session_key=request.session.session_key,
             condition=condition,
             llm_provider=llm_provider,
@@ -329,55 +350,53 @@ def pre_rating(request, index):
     if not participant:
         return redirect('experiment:landing')
 
+    # Check if already disqualified
+    if participant.status == 'attention_failed':
+        return redirect('experiment:attention_failed')
+
     # Get dilemmas in assigned order for pre-rating
     dilemma_ids = participant.pre_dilemma_order
     num_dilemmas = len(dilemma_ids)
 
-    # Check if attention check is in this phase
-    has_attention_check = participant.attention_check_phase == 'pre'
-    attention_check_pos = participant.attention_check_position if has_attention_check else None
+    # Attention check position for pre-rating
+    attention_check_pos = participant.attention_check_position_pre
 
-    # Total items: 9 dilemmas + 1 attention check if in this phase
-    total_items = num_dilemmas + 1 if has_attention_check else num_dilemmas
+    # Total items: 8 dilemmas + 1 attention check = 9
+    total_items = num_dilemmas + 1
 
     # Validate index
     if index < 0 or index >= total_items:
-        return redirect('experiment:chat', index=0)
+        return redirect('experiment:phase2_instructions')
 
     # Determine if this index is the attention check
-    is_attention_check = has_attention_check and index == attention_check_pos
+    is_attention_check = (index == attention_check_pos)
 
     # Calculate dilemma index (adjusted for attention check position)
     if is_attention_check:
         dilemma = None
         dilemma_index = None
-    elif has_attention_check and index > attention_check_pos:
+    elif index > attention_check_pos:
         dilemma_index = index - 1
         try:
             dilemma = Dilemma.objects.get(id=dilemma_ids[dilemma_index])
         except Dilemma.DoesNotExist:
-            return redirect('experiment:chat', index=0)
+            return redirect('experiment:phase2_instructions')
     else:
         dilemma_index = index
         try:
             dilemma = Dilemma.objects.get(id=dilemma_ids[dilemma_index])
         except Dilemma.DoesNotExist:
-            return redirect('experiment:chat', index=0)
+            return redirect('experiment:phase2_instructions')
 
     # Server-side protection: check if already answered (prevent back-button modification)
     if is_attention_check:
-        # Check if attention check was already answered
-        if participant.attention_check_response is not None:
+        if participant.attention_check_response_pre is not None:
             EventLog.objects.create(
                 participant=participant,
                 event_type='attempted_attention_check_modification',
                 page='pre_rating',
-                data={'index': index, 'existing_response': participant.attention_check_response}
+                data={'index': index, 'existing_response': participant.attention_check_response_pre}
             )
-            # If they failed, send them back to failed page
-            if participant.status == 'attention_failed':
-                return redirect('experiment:attention_failed')
-            # Otherwise skip to next item
             if index + 1 < total_items:
                 return redirect('experiment:pre_rating', index=index + 1)
             else:
@@ -389,14 +408,12 @@ def pre_rating(request, index):
             phase='pre'
         ).exists()
         if existing_rating:
-            # Log the attempt and skip to next item
             EventLog.objects.create(
                 participant=participant,
                 event_type='attempted_rating_modification',
                 page='pre_rating',
                 data={'dilemma_id': dilemma.id, 'index': index}
             )
-            # Move to next item or phase
             if index + 1 < total_items:
                 return redirect('experiment:pre_rating', index=index + 1)
             else:
@@ -405,36 +422,31 @@ def pre_rating(request, index):
     if request.method == 'POST':
         if is_attention_check:
             # Handle attention check response (only if not already answered)
-            if participant.attention_check_response is None:
+            if participant.attention_check_response_pre is None:
                 rating_value = request.POST.get('rating_attention_check')
                 if rating_value:
                     rating_int = int(rating_value)
-                    participant.attention_check_response = rating_int
-                    participant.attention_check_passed = (rating_int == 3)
+                    participant.attention_check_response_pre = rating_int
+                    passed = (rating_int == ATTENTION_CHECK_RATING_PRE)
 
                     EventLog.objects.create(
                         participant=participant,
                         event_type='attention_check_completed',
                         page='pre_rating',
                         data={
+                            'phase': 'pre',
                             'response': rating_int,
-                            'passed': rating_int == 3,
+                            'required': ATTENTION_CHECK_RATING_PRE,
+                            'passed': passed,
                             'position': index
                         }
                     )
-
-                    # If attention check failed, end the survey immediately
-                    if rating_int != 3:
-                        participant.status = 'attention_failed'
-                        participant.save()
-                        return redirect('experiment:attention_failed')
 
                     participant.save()
         else:
             # Save rating for this dilemma
             rating_value = request.POST.get(f'rating_{dilemma.id}')
             if rating_value:
-                # Use get_or_create to prevent rating modification
                 Rating.objects.get_or_create(
                     participant=participant,
                     dilemma=dilemma,
@@ -442,7 +454,7 @@ def pre_rating(request, index):
                     defaults={'rating': int(rating_value)}
                 )
 
-        # Move to next item or to chat
+        # Move to next item or to phase 2
         if index + 1 < total_items:
             return redirect('experiment:pre_rating', index=index + 1)
         else:
@@ -463,7 +475,7 @@ def pre_rating(request, index):
         'dilemma_index': index,
         'total_dilemmas': total_items,
         'is_attention_check': is_attention_check,
-        'attention_check_text': ATTENTION_CHECK_TEXT if is_attention_check else None,
+        'attention_check_text': get_attention_check_text('pre') if is_attention_check else None,
         'timer_seconds': get_timer_seconds(75),
         'page_name': f'pre_rating_{index}',
     })
@@ -533,29 +545,32 @@ def post_rating(request, index):
     if not participant:
         return redirect('experiment:landing')
 
+    # Check if already disqualified
+    if participant.status == 'attention_failed':
+        return redirect('experiment:attention_failed')
+
     # Get dilemmas in assigned order for post-rating (different from pre-rating)
     dilemma_ids = participant.post_dilemma_order
     num_dilemmas = len(dilemma_ids)
 
-    # Check if attention check is in this phase
-    has_attention_check = participant.attention_check_phase == 'post'
-    attention_check_pos = participant.attention_check_position if has_attention_check else None
+    # Attention check position for post-rating
+    attention_check_pos = participant.attention_check_position_post
 
-    # Total items: 9 dilemmas + 1 attention check if in this phase
-    total_items = num_dilemmas + 1 if has_attention_check else num_dilemmas
+    # Total items: 8 dilemmas + 1 attention check = 9
+    total_items = num_dilemmas + 1
 
     # Validate index
     if index < 0 or index >= total_items:
         return redirect('experiment:debrief')
 
     # Determine if this index is the attention check
-    is_attention_check = has_attention_check and index == attention_check_pos
+    is_attention_check = (index == attention_check_pos)
 
     # Calculate dilemma index (adjusted for attention check position)
     if is_attention_check:
         dilemma = None
         dilemma_index = None
-    elif has_attention_check and index > attention_check_pos:
+    elif index > attention_check_pos:
         dilemma_index = index - 1
         try:
             dilemma = Dilemma.objects.get(id=dilemma_ids[dilemma_index])
@@ -570,21 +585,21 @@ def post_rating(request, index):
 
     # Server-side protection: check if already answered (prevent back-button modification)
     if is_attention_check:
-        # Check if attention check was already answered
-        if participant.attention_check_response is not None:
+        if participant.attention_check_response_post is not None:
             EventLog.objects.create(
                 participant=participant,
                 event_type='attempted_attention_check_modification',
                 page='post_rating',
-                data={'index': index, 'existing_response': participant.attention_check_response}
+                data={'index': index, 'existing_response': participant.attention_check_response_post}
             )
-            # If they failed, send them back to failed page
-            if participant.status == 'attention_failed':
-                return redirect('experiment:attention_failed')
-            # Otherwise skip to next item
             if index + 1 < total_items:
                 return redirect('experiment:post_rating', index=index + 1)
             else:
+                # Check if both attention checks failed before going to debrief
+                if participant.both_attention_checks_failed():
+                    participant.status = 'attention_failed'
+                    participant.save()
+                    return redirect('experiment:attention_failed')
                 return redirect('experiment:debrief')
     elif dilemma:
         existing_rating = Rating.objects.filter(
@@ -593,14 +608,12 @@ def post_rating(request, index):
             phase='post'
         ).exists()
         if existing_rating:
-            # Log the attempt and skip to next item
             EventLog.objects.create(
                 participant=participant,
                 event_type='attempted_rating_modification',
                 page='post_rating',
                 data={'dilemma_id': dilemma.id, 'index': index}
             )
-            # Move to next item or phase
             if index + 1 < total_items:
                 return redirect('experiment:post_rating', index=index + 1)
             else:
@@ -609,36 +622,50 @@ def post_rating(request, index):
     if request.method == 'POST':
         if is_attention_check:
             # Handle attention check response (only if not already answered)
-            if participant.attention_check_response is None:
+            if participant.attention_check_response_post is None:
                 rating_value = request.POST.get('rating_attention_check')
                 if rating_value:
                     rating_int = int(rating_value)
-                    participant.attention_check_response = rating_int
-                    participant.attention_check_passed = (rating_int == 3)
+                    participant.attention_check_response_post = rating_int
+                    passed = (rating_int == ATTENTION_CHECK_RATING_POST)
 
                     EventLog.objects.create(
                         participant=participant,
                         event_type='attention_check_completed',
                         page='post_rating',
                         data={
+                            'phase': 'post',
                             'response': rating_int,
-                            'passed': rating_int == 3,
+                            'required': ATTENTION_CHECK_RATING_POST,
+                            'passed': passed,
                             'position': index
                         }
                     )
 
-                    # If attention check failed, end the survey immediately
-                    if rating_int != 3:
+                    participant.save()
+
+                    # Check if BOTH attention checks failed
+                    if participant.both_attention_checks_failed():
                         participant.status = 'attention_failed'
                         participant.save()
-                        return redirect('experiment:attention_failed')
 
-                    participant.save()
+                        EventLog.objects.create(
+                            participant=participant,
+                            event_type='both_attention_checks_failed',
+                            page='post_rating',
+                            data={
+                                'pre_response': participant.attention_check_response_pre,
+                                'pre_required': ATTENTION_CHECK_RATING_PRE,
+                                'post_response': participant.attention_check_response_post,
+                                'post_required': ATTENTION_CHECK_RATING_POST,
+                            }
+                        )
+
+                        return redirect('experiment:attention_failed')
         else:
             # Save rating for this dilemma
             rating_value = request.POST.get(f'rating_{dilemma.id}')
             if rating_value:
-                # Use get_or_create to prevent rating modification
                 Rating.objects.get_or_create(
                     participant=participant,
                     dilemma=dilemma,
@@ -667,7 +694,7 @@ def post_rating(request, index):
         'dilemma_index': index,
         'total_dilemmas': total_items,
         'is_attention_check': is_attention_check,
-        'attention_check_text': ATTENTION_CHECK_TEXT if is_attention_check else None,
+        'attention_check_text': get_attention_check_text('post') if is_attention_check else None,
         'timer_seconds': get_timer_seconds(30),
         'page_name': f'post_rating_{index}',
     })
