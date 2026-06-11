@@ -8,7 +8,7 @@ This experiment investigates whether conversations with AI can influence people'
 
 1. Complete a demographics questionnaire
 2. Complete a personality assessment (TIPI - Ten-Item Personality Inventory)
-3. Rate 8 moral dilemmas on a scale from "morally wrong" to "morally acceptable"
+3. Rate 9 moral dilemmas on a scale from "morally wrong" to "morally acceptable"
 4. Discuss 4 of those dilemmas with an AI (2 same stance, 2 opposite stance)
 5. Re-rate the same dilemmas after the discussions (in a different order)
 6. Provide feedback on their experience
@@ -17,9 +17,9 @@ This experiment investigates whether conversations with AI can influence people'
 
 The experiment is divided into three clear phases with instruction pages:
 
-1. **Phase 1: Initial Ratings** - Rate 8 moral dilemmas + 1 attention check
+1. **Phase 1: Initial Ratings** - Rate 9 dilemmas (8 moral + 1 attention check)
 2. **Phase 2: AI Discussion** - Discuss 4 dilemmas with AI assistant
-3. **Phase 3: Final Ratings** - Re-rate the same 8 dilemmas + 1 attention check
+3. **Phase 3: Final Ratings** - Re-rate 9 dilemmas (8 moral + 1 attention check)
 
 ### Stance Assignment System
 
@@ -76,7 +76,7 @@ Dilemmas are drawn from two sources:
 | 4 scenarios | BenefitsGreater-Prohibition, BenefitsSmaller-Prohibition, BenefitsGreater-Prescription, BenefitsSmaller-Prescription |
 
 For each participant:
-- **8 dilemmas rated**: All 4 Greene moral + 4 Koerner (1 per variation type)
+- **9 dilemmas rated**: All 4 Greene moral + 4 Koerner (1 per variation type) + 1 attention check
 - **4 dilemmas discussed**: 1 personal + 1 impersonal + 2 Koerner (same cost category)
 
 ## Tech Stack
@@ -160,8 +160,8 @@ Copy `.env.example` to `.env` and configure:
 - **Three Phase Structure**: Clear phase transitions with instruction pages
 - **Balanced Stance Assignment**: 6 stance combinations balanced across participants
 - **Pilot Study Balancing**: CompletionCell system for 4×2 condition/LLM distribution
-- **Attention Check**: Random check during rating phase (correct answer: 3)
-- **Attention Check Failure**: Immediately ends study with Prolific policy notice
+- **Dual Attention Checks**: One in pre-rating (correct: 3), one in post-rating (correct: 5)
+- **Attention Check Failure**: Only if both checks fail; immediately ends study with Prolific policy notice
 - **Back Button Prevention**: Multiple layers prevent rating modification
 - **Completion Codes**: Verifiable MJAI-XXX-XXXX format codes
 - **Protagonist Names**: Rating questions include character names (e.g., "How morally acceptable is Emilia's action?")
@@ -176,11 +176,12 @@ Copy `.env.example` to `.env` and configure:
 ```
 Landing → Consent → Demographics → TIPI
     ↓
-Phase 1 Instructions → Pre-Rating (8 dilemmas + attention check)
-    ↓ (attention check fail → Study Ended)
+Phase 1 Instructions → Pre-Rating (9 dilemmas incl. attention check)
+    ↓
 Phase 2 Instructions → Chat (4 discussions)
     ↓
-Phase 3 Instructions → Post-Rating (8 dilemmas)
+Phase 3 Instructions → Post-Rating (9 dilemmas incl. attention check)
+    ↓ (both attention checks failed → Study Ended)
     ↓
 Debrief → Complete (with completion code)
 ```
