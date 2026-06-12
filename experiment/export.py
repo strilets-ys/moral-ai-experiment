@@ -9,7 +9,8 @@ from datetime import datetime
 
 from .models import (
     Participant, Dilemma, TIPIResponse, Rating, ChatTurn,
-    EventLog, DebriefResponse, SystemPromptLog, DemographicsResponse
+    EventLog, DebriefResponse, SystemPromptLog, DemographicsResponse,
+    get_attention_check_text, ATTENTION_CHECK_RATING_PRE, ATTENTION_CHECK_RATING_POST
 )
 
 
@@ -43,8 +44,12 @@ def get_participant_data(participant_id):
             'koerner_chat_cost_category': participant.koerner_chat_cost_category,
             'attention_check_position_pre': participant.attention_check_position_pre,
             'attention_check_response_pre': participant.attention_check_response_pre,
+            'attention_check_correct_pre': ATTENTION_CHECK_RATING_PRE,
+            'attention_check_text_pre': get_attention_check_text('pre'),
             'attention_check_position_post': participant.attention_check_position_post,
             'attention_check_response_post': participant.attention_check_response_post,
+            'attention_check_correct_post': ATTENTION_CHECK_RATING_POST,
+            'attention_check_text_post': get_attention_check_text('post'),
         }
     }
 
@@ -219,7 +224,9 @@ def export_participants_csv(participant_ids):
 
         # Attention check info
         'attention_check_position_pre', 'attention_check_response_pre',
+        'attention_check_correct_pre', 'attention_check_text_pre',
         'attention_check_position_post', 'attention_check_response_post',
+        'attention_check_correct_post', 'attention_check_text_post',
 
         # Demographics (collected early in flow)
         'demographics_age', 'demographics_gender', 'demographics_gender_other',
@@ -283,8 +290,12 @@ def export_participants_csv(participant_ids):
             'stance_assignments_json': json.dumps(p.get('stance_assignments', {}), ensure_ascii=False),
             'attention_check_position_pre': p.get('attention_check_position_pre'),
             'attention_check_response_pre': p.get('attention_check_response_pre'),
+            'attention_check_correct_pre': p.get('attention_check_correct_pre'),
+            'attention_check_text_pre': p.get('attention_check_text_pre', ''),
             'attention_check_position_post': p.get('attention_check_position_post'),
             'attention_check_response_post': p.get('attention_check_response_post'),
+            'attention_check_correct_post': p.get('attention_check_correct_post'),
+            'attention_check_text_post': p.get('attention_check_text_post', ''),
         }
 
         # Demographics data (collected early in flow)
