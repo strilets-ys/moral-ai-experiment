@@ -27,7 +27,6 @@ def get_participant_data(participant_id):
     data = {
         'participant': {
             'id': participant.id,
-            'prolific_id': participant.prolific_id,
             'session_key': participant.session_key,
             'condition': participant.condition,
             'llm_provider': participant.llm_provider,
@@ -215,7 +214,7 @@ def export_participants_csv(participant_ids):
     # Define all columns
     fieldnames = [
         # Participant info
-        'participant_id', 'prolific_id', 'condition', 'llm_provider',
+        'participant_id', 'condition', 'llm_provider',
         'status', 'withdrawn', 'created_at', 'completed_at',
 
         # Stance assignment info
@@ -278,7 +277,6 @@ def export_participants_csv(participant_ids):
         p = pdata['participant']
         row = {
             'participant_id': p['id'],
-            'prolific_id': p['prolific_id'],
             'condition': p['condition'],
             'llm_provider': p['llm_provider'],
             'status': p['status'],
