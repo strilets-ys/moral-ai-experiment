@@ -263,7 +263,7 @@ def delete_participant_data(modeladmin, request, queryset):
 
 @admin.register(Participant)
 class ParticipantAdmin(admin.ModelAdmin):
-    list_display = ['id', 'prolific_id', 'condition', 'llm_provider', 'status', 'completion_code', 'stance_combination_used', 'koerner_chat_cost_category', 'attention_check_result', 'created_at', 'withdrawn']
+    list_display = ['id', 'prolific_id', 'condition', 'llm_provider', 'status', 'stance_combination_used', 'koerner_chat_cost_category', 'attention_check_result', 'created_at', 'withdrawn']
     list_filter = ['condition', 'llm_provider', 'status', 'withdrawn', 'stance_combination_used', 'koerner_chat_cost_category']
     search_fields = ['prolific_id', 'session_key']
     date_hierarchy = 'created_at'
@@ -273,7 +273,7 @@ class ParticipantAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Participant Info', {
-            'fields': ('prolific_id', 'session_key', 'condition', 'llm_provider', 'status', 'completion_code', 'withdrawn', 'created_at', 'completed_at')
+            'fields': ('prolific_id', 'session_key', 'condition', 'llm_provider', 'status', 'withdrawn', 'created_at', 'completed_at')
         }),
         ('Rating Comparison', {
             'fields': ('rating_comparison_display',),
@@ -300,7 +300,7 @@ class ParticipantAdmin(admin.ModelAdmin):
     )
 
     readonly_fields = [
-        'prolific_id', 'session_key', 'condition', 'llm_provider', 'status', 'completion_code', 'withdrawn',
+        'prolific_id', 'session_key', 'condition', 'llm_provider', 'status', 'withdrawn',
         'created_at', 'completed_at', 'stance_combination_used', 'koerner_chat_cost_category',
         'attention_check_position_pre', 'attention_check_response_pre',
         'attention_check_position_post', 'attention_check_response_post',

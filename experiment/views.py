@@ -16,7 +16,6 @@ from .models import (
     SystemPromptLog, StanceCombination, DemographicsResponse, CompletionCell,
     get_attention_check_text, ATTENTION_CHECK_RATING_PRE, ATTENTION_CHECK_RATING_POST
 )
-from .utils import generate_completion_code
 
 logger = logging.getLogger(__name__)
 from .llm import get_llm_client, build_system_prompt, test_llm_connection, get_llm_framework, get_llm_position
@@ -873,8 +872,6 @@ def complete(request):
             participant.llm_provider
         )
 
-        # Generate completion code
-        participant.completion_code = generate_completion_code(participant.id)
         participant.status = 'complete'
         participant.completed_at = timezone.now()
         participant.save()
@@ -887,8 +884,6 @@ def complete(request):
 
     return render(request, 'experiment/complete.html', {
         'participant': participant,
-        'completion_code': participant.completion_code,
-        'prolific_url': settings.PROLIFIC_COMPLETION_URL,
     })
 
 

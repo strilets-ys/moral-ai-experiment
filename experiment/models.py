@@ -234,13 +234,6 @@ class Participant(models.Model):
         help_text="The rating the participant selected for post-rating attention check (1-7)"
     )
 
-    # Prolific completion code
-    completion_code = models.CharField(
-        max_length=32,
-        blank=True,
-        help_text="Unique verifiable completion code for Prolific"
-    )
-
     @property
     def chat_dilemma_ids(self):
         return json.loads(self._chat_dilemma_ids)

@@ -17,46 +17,15 @@
     <div class="completion-info">
         <p>Your responses have been recorded and will contribute to research investigating whether brief interactions with AI chatbots can shift people's moral judgments, and how personalization and persuasive goals affect this process.</p>
 
-        {% if completion_code %}
-        <div class="completion-code-box">
-            <h3>Your Completion Code</h3>
-            <div class="code-display" id="completion-code">{{ completion_code }}</div>
-            <p class="code-instructions">
-                Copy this code and paste it into Prolific when prompted.
+        <div class="prolific-redirect" style="margin-top: 30px; padding: 20px; background-color: #e8f5e9; border-radius: 8px;">
+            <p style="font-size: 1.1rem; margin-bottom: 15px;">
+                <strong>Important: You must click the button below to complete your submission and receive payment.</strong>
             </p>
-            <button type="button" class="btn btn-secondary" onclick="copyCode()">
-                Copy Code
-            </button>
+            <a href="https://app.prolific.com/submissions/complete?cc=C12U4L2Y" class="btn btn-primary btn-large">
+                Return to Prolific to Get Paid
+            </a>
         </div>
-        {% endif %}
-
-        {% if participant.prolific_id %}
-        <div class="prolific-redirect">
-            <p><strong>Click the button below to return to Prolific and receive your payment:</strong></p>
-            <a href="https://app.prolific.com/submissions/complete?cc=C12U4L2Y" class="btn btn-primary btn-large">Return to Prolific</a>
-        </div>
-        {% else %}
-        <p>Thank you for your participation in this research study.</p>
-        {% endif %}
     </div>
-
-    <script>
-    function copyCode() {
-        const code = document.getElementById('completion-code').textContent;
-        navigator.clipboard.writeText(code).then(function() {
-            alert('Code copied to clipboard!');
-        }).catch(function(err) {
-            // Fallback for older browsers
-            const textArea = document.createElement('textarea');
-            textArea.value = code;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            alert('Code copied to clipboard!');
-        });
-    }
-    </script>
 
     <div class="contact-info">
         <h3>Questions?</h3>

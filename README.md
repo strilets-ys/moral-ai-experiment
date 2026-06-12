@@ -131,7 +131,6 @@ Visit http://127.0.0.1:8000/ to start the experiment.
 Copy `.env.example` to `.env` and configure:
 - `ANTHROPIC_API_KEY` - For Claude
 - `QWEN_API_KEY` - For Qwen
-- `COMPLETION_CODE_SALT` - Secret salt for completion code verification
 
 ## Project Structure
 
@@ -143,7 +142,6 @@ Copy `.env.example` to `.env` and configure:
 │   ├── models.py            # Database models
 │   ├── views.py             # Views and API endpoints
 │   ├── llm.py               # LLM client implementations
-│   ├── utils.py             # Completion code generation
 │   ├── admin.py             # Admin panel (read-only + export)
 │   ├── export.py            # Data export functions (JSON/CSV)
 │   ├── templates/           # HTML templates
@@ -163,7 +161,6 @@ Copy `.env.example` to `.env` and configure:
 - **Dual Attention Checks**: One in pre-rating (correct: 3), one in post-rating (correct: 5)
 - **Attention Check Failure**: Only if both checks fail; immediately ends study with Prolific policy notice
 - **Back Button Prevention**: Multiple layers prevent rating modification
-- **Completion Codes**: Verifiable MJAI-XXX-XXXX format codes
 - **Protagonist Names**: Rating questions include character names (e.g., "How morally acceptable is Emilia's action?")
 - **Minimum Chat Engagement**: Participants must send at least 3 messages before proceeding
 - **Streaming Responses**: Real-time token streaming for natural conversation flow
@@ -182,8 +179,7 @@ Phase 2 Instructions → Chat (4 discussions)
     ↓
 Phase 3 Instructions → Post-Rating (9 dilemmas incl. attention check)
     ↓ (both attention checks failed → Study Ended)
-    ↓
-Debrief → Complete (with completion code)
+Debrief → Complete (redirect to Prolific)
 ```
 
 **Estimated time: 45-60 minutes**
@@ -195,7 +191,6 @@ Access the Django admin at http://127.0.0.1:8000/admin/
 **Features:**
 - View participants with ratings, chat transcripts, and system prompts
 - **Completion Cells**: Track pilot study progress (completions per condition/LLM)
-- View completion codes for each participant
 - Delete individual participants (GDPR compliance) with audit logging
 - Delete ALL participant data at `/admin/experiment/delete-all/`
 - Export data to JSON/CSV at `/admin/experiment/export/`
@@ -207,7 +202,6 @@ Access the Django admin at http://127.0.0.1:8000/admin/
 | `load_dilemmas` | Load moral dilemmas from fixtures |
 | `extract_protagonist_names` | Extract character names from dilemma texts |
 | `init_completion_cells --target N` | Initialize pilot study cells (N per cell) |
-| `verify_completion_codes` | Verify completion codes from Prolific |
 
 ## License
 
