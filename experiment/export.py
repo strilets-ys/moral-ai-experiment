@@ -41,10 +41,10 @@ def get_participant_data(participant_id):
             'stance_assignments': participant.stance_assignments,
             'stance_combination_used': participant.stance_combination_used,
             'koerner_chat_cost_category': participant.koerner_chat_cost_category,
-            'attention_check_phase': participant.attention_check_phase,
-            'attention_check_position': participant.attention_check_position,
-            'attention_check_passed': participant.attention_check_passed,
-            'attention_check_response': participant.attention_check_response,
+            'attention_check_position_pre': participant.attention_check_position_pre,
+            'attention_check_response_pre': participant.attention_check_response_pre,
+            'attention_check_position_post': participant.attention_check_position_post,
+            'attention_check_response_post': participant.attention_check_response_post,
         }
     }
 
@@ -218,8 +218,8 @@ def export_participants_csv(participant_ids):
         'stance_assignments_json',
 
         # Attention check info
-        'attention_check_phase', 'attention_check_position',
-        'attention_check_passed', 'attention_check_response',
+        'attention_check_position_pre', 'attention_check_response_pre',
+        'attention_check_position_post', 'attention_check_response_post',
 
         # Demographics (collected early in flow)
         'demographics_age', 'demographics_gender', 'demographics_gender_other',
@@ -281,10 +281,10 @@ def export_participants_csv(participant_ids):
             'stance_combination_used': p.get('stance_combination_used'),
             'koerner_chat_cost_category': p.get('koerner_chat_cost_category', ''),
             'stance_assignments_json': json.dumps(p.get('stance_assignments', {}), ensure_ascii=False),
-            'attention_check_phase': p.get('attention_check_phase', ''),
-            'attention_check_position': p.get('attention_check_position'),
-            'attention_check_passed': p.get('attention_check_passed'),
-            'attention_check_response': p.get('attention_check_response'),
+            'attention_check_position_pre': p.get('attention_check_position_pre'),
+            'attention_check_response_pre': p.get('attention_check_response_pre'),
+            'attention_check_position_post': p.get('attention_check_position_post'),
+            'attention_check_response_post': p.get('attention_check_response_post'),
         }
 
         # Demographics data (collected early in flow)
