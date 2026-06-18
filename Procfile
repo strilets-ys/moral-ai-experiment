@@ -1,1 +1,1 @@
-web: python manage.py wait_for_db --timeout=60 && python manage.py migrate && python manage.py load_dilemmas && python manage.py extract_protagonist_names && python manage.py collectstatic --noinput && python -m gunicorn moralai.wsgi --log-file -
+web: python manage.py wait_for_db --timeout=60 && python manage.py migrate && python manage.py load_dilemmas && python manage.py extract_protagonist_names && python manage.py reset_counters --yes --once && python manage.py collectstatic --noinput && python -m gunicorn moralai.wsgi --log-file -

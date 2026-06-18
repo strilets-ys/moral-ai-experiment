@@ -786,3 +786,24 @@ class CompletionCell(models.Model):
 
     def __str__(self):
         return f"{self.condition}/{self.llm_provider}: {self.completion_count}/{self.target_count}"
+
+
+class AppSetting(models.Model):
+    """Simple key-value store for app-wide settings and flags."""
+    key = models.CharField(max_length=100, unique=True)
+    value = models.TextField(default='')
+
+    @classmethod
+    def get(cls, key, default=None):
+        try:
+            return cls.objects.get(key=key).value
+        except cls.DoesNotExist:
+            return default
+
+    @classmethod
+    def set(cls, key, value):
+        obj, _ = cls.objects.update_or_create(key=key, defaults={'value': value})
+        return obj
+
+    def __str__(self):
+        return f"{self.key}={self.value}"
