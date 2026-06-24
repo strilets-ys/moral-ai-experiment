@@ -64,10 +64,13 @@ def landing(request):
                 'error': 'Please enter your Prolific ID to continue.',
             })
 
-        # Handle INTERNAL test ID - generate unique suffix
+        # Handle INTERNAL test ID - generate unique suffix and fresh session
         if prolific_id.upper() == 'INTERNAL':
             import secrets
             prolific_id = f"INTERNAL_{secrets.token_hex(4)}"
+            # Flush session to get a fresh session_key for testing
+            request.session.flush()
+            request.session.create()
 
         # Check if Prolific ID already exists (for real participants)
         if Participant.objects.filter(prolific_id=prolific_id).exists():
