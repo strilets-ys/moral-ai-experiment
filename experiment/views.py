@@ -64,13 +64,10 @@ def landing(request):
                 'error': 'Please enter your Prolific ID to continue.',
             })
 
-        # Handle INTERNAL test ID - generate unique suffix and fresh session
+        # Handle INTERNAL test ID - generate unique suffix
         if prolific_id.upper() == 'INTERNAL':
             import secrets
             prolific_id = f"INTERNAL_{secrets.token_hex(4)}"
-            # Flush session to get a fresh session_key for testing
-            request.session.flush()
-            request.session.create()
 
         # Check if Prolific ID already exists (for real participants)
         if Participant.objects.filter(prolific_id=prolific_id).exists():
@@ -84,13 +81,21 @@ def landing(request):
         if not request.session.session_key:
             request.session.create()
 
+        # For INTERNAL testing, use a fake session_key to avoid conflicts
+        # (e.g., when logged into admin and testing experiment simultaneously)
+        if prolific_id.upper().startswith('INTERNAL'):
+            import secrets
+            session_key = f"internal_{secrets.token_hex(16)}"
+        else:
+            session_key = request.session.session_key
+
         # Weighted assignment for pilot study (inverse weights based on completion counts)
         condition, llm_provider = CompletionCell.get_weighted_assignment()
 
         # Create participant
         participant = Participant.objects.create(
             prolific_id=prolific_id,
-            session_key=request.session.session_key,
+            session_key=session_key,
             condition=condition,
             llm_provider=llm_provider,
             status='started',
