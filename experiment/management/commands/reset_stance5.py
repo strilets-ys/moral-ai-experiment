@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand
 from experiment.models import StanceCombination, AppSetting
 
 
-RESET_FLAG_KEY = 'stance5_reset_done'
+RESET_FLAG_KEY = 'stance5_reset_done_v2'
 
 
 class Command(BaseCommand):
