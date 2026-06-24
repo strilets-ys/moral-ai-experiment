@@ -867,10 +867,13 @@ def complete(request):
     # Only process completion once (avoid double counting on page refresh)
     if participant.status != 'complete':
         # Increment completion counter for pilot balancing
-        CompletionCell.increment_completion(
-            participant.condition,
-            participant.llm_provider
-        )
+        # Don't count internal test participants
+        is_internal = participant.prolific_id and participant.prolific_id.upper().startswith('INTERNAL')
+        if not is_internal:
+            CompletionCell.increment_completion(
+                participant.condition,
+                participant.llm_provider
+            )
 
         participant.status = 'complete'
         participant.completed_at = timezone.now()

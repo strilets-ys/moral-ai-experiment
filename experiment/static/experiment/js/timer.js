@@ -58,8 +58,13 @@
     // Initialize or restore timer state
     let timerState = getTimerState();
     if (!timerState) {
-        timerState = { startTime: Date.now() };
+        timerState = { startTime: Date.now(), expired: false };
         saveTimerState(timerState);
+    }
+
+    // Restore window.timerExpired from sessionStorage (survives page refresh)
+    if (timerState.expired) {
+        window.timerExpired = true;
     }
 
     // Calculate remaining seconds based on elapsed time
@@ -114,10 +119,17 @@
         buttons.forEach(btn => {
             btn.disabled = false;
             btn.classList.remove('btn-waiting');
+            // Remove the wait attribute so clicks work even after page refresh
+            // (when window.timerExpired resets to undefined)
+            delete btn.dataset.waitForTimer;
             if (btn.dataset.originalText) {
                 btn.textContent = btn.dataset.originalText;
+                delete btn.dataset.originalText;
             }
         });
+
+        // Also persist timer expired state in sessionStorage for reliability
+        saveTimerState({ startTime: timerState.startTime, expired: true });
     }
 
     function tick() {

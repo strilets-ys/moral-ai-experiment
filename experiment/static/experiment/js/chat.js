@@ -37,6 +37,7 @@
     let chatHistory = [];  // Track all messages locally
     let userMessageCount = 0;  // Track number of user messages sent
     const MIN_USER_MESSAGES = 3;  // Minimum required user messages before proceeding
+    const STREAM_TIMEOUT_MS = 90000;  // 90 second timeout for streaming responses
 
     // Soft limits for encouraging users to wrap up
     const SOFT_TIME_LIMIT_MS = 5 * 60 * 1000;  // 5 minutes
@@ -197,6 +198,13 @@
 
         logEvent('message_sent', { message_length: message.length });
 
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(function() {
+            controller.abort();
+            logEvent('stream_timeout', { timeout_ms: STREAM_TIMEOUT_MS });
+        }, STREAM_TIMEOUT_MS);
+
         try {
             const response = await fetch('/api/chat/send/', {
                 method: 'POST',
@@ -204,6 +212,7 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrfToken,
                 },
+                signal: controller.signal,
                 body: JSON.stringify({
                     message: message,
                     dilemma_id: dilemmaId,
@@ -262,8 +271,15 @@
             }
         } catch (error) {
             console.error('Error sending message:', error);
-            aiTextDiv.textContent = 'An error occurred. Please try again.';
-            logEvent('send_error', { error: error.message });
+            if (error.name === 'AbortError') {
+                aiTextDiv.textContent = 'Response timed out. Please try again.';
+                logEvent('send_error', { error: 'timeout' });
+            } else {
+                aiTextDiv.textContent = 'An error occurred. Please try again.';
+                logEvent('send_error', { error: error.message });
+            }
+        } finally {
+            clearTimeout(timeoutId);
         }
 
         setLoading(false);
@@ -362,8 +378,12 @@
             await saveChatMessages();
             // Navigate to the form's action URL
             const form = this.closest('form');
-            if (form) {
+            if (form && form.action) {
                 window.location.href = form.action;
+            } else {
+                // Fallback: log error and alert user
+                logEvent('navigation_error', { error: 'form_not_found' });
+                alert('Navigation error. Please refresh the page and try again.');
             }
         });
     }
@@ -389,8 +409,11 @@
             const nextBtn = document.getElementById('next-btn');
             if (nextBtn) {
                 const form = nextBtn.closest('form');
-                if (form) {
+                if (form && form.action) {
                     window.location.href = form.action;
+                } else {
+                    logEvent('navigation_error', { error: 'form_not_found', source: 'min_messages_modal' });
+                    alert('Navigation error. Please refresh the page and try again.');
                 }
             }
         });
@@ -446,6 +469,13 @@
         const aiTextDiv = aiMessage.querySelector('.message-text');
         chatMessages.appendChild(aiMessage);
 
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(function() {
+            controller.abort();
+            logEvent('init_stream_timeout', { timeout_ms: STREAM_TIMEOUT_MS });
+        }, STREAM_TIMEOUT_MS);
+
         try {
             const response = await fetch('/api/chat/init/', {
                 method: 'POST',
@@ -453,6 +483,7 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrfToken,
                 },
+                signal: controller.signal,
                 body: JSON.stringify({
                     dilemma_id: dilemmaId
                 })
@@ -516,7 +547,15 @@
 
         } catch (error) {
             console.error('Error getting initial message:', error);
-            aiTextDiv.textContent = 'An error occurred. Please refresh the page.';
+            if (error.name === 'AbortError') {
+                aiTextDiv.textContent = 'Response timed out. Please refresh the page.';
+                logEvent('init_error', { error: 'timeout' });
+            } else {
+                aiTextDiv.textContent = 'An error occurred. Please refresh the page.';
+                logEvent('init_error', { error: error.message });
+            }
+        } finally {
+            clearTimeout(timeoutId);
         }
 
         setLoading(false);
@@ -564,8 +603,11 @@
             const nextBtn = document.getElementById('next-btn');
             if (nextBtn) {
                 const form = nextBtn.closest('form');
-                if (form) {
+                if (form && form.action) {
                     window.location.href = form.action;
+                } else {
+                    logEvent('navigation_error', { error: 'form_not_found', source: 'turn_modal' });
+                    alert('Navigation error. Please refresh the page and try again.');
                 }
             }
         });

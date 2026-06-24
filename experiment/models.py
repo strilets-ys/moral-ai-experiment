@@ -388,8 +388,11 @@ class Participant(models.Model):
         else:
             selected_combination = combinations[0]
             combination_index = selected_combination.combination_index
-            selected_combination.usage_count += 1
-            selected_combination.save(update_fields=['usage_count'])
+            # Don't count internal test participants
+            is_internal = self.prolific_id and self.prolific_id.upper().startswith('INTERNAL')
+            if not is_internal:
+                selected_combination.usage_count += 1
+                selected_combination.save(update_fields=['usage_count'])
 
         self.stance_combination_used = combination_index
 
