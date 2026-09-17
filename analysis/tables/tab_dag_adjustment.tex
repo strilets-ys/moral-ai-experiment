@@ -1,0 +1,25 @@
+\begin{table}[!h]
+\centering
+\caption{\label{tab:dag_adjustment}Covariate decisions for the confirmatory models, derived from the design DAG.}
+\centering
+\fontsize{9}{11}\selectfont
+\begin{threeparttable}
+\begin{tabular}[t]{l>{\raggedright\arraybackslash}p{4.3cm}c>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{3.0cm}}
+\toprule
+ & Contrast & Level & Required for identification & Recommended for precision\\
+\midrule
+H1 & Persuasive arms vs.\ control & Between & -- & Age\\
+H2 & Persuade+Demo vs.\ Persuade & Between & -- & Age\\
+H3 & +Info vs.\ Persuade+Demo & Between & -- & Age\\
+H4 & Baseline extremity $|R_0-4|$ & Within & Demographics, personality, dilemma features & --\\
+H5 & Discussed vs.\ undiscussed & Within & -- & Dilemma features\\
+\addlinespace
+H6 & Opposing vs.\ reinforcing & Within & -- & Baseline rating, dilemma features\\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item \textit{Note.} 
+\item Condition, language model, stance and dilemma selection were assigned by the experimenter, so the empty set identifies their effects; H4 is the only observational contrast. Age is recommended for the between-participant contrasts because it is badly imbalanced across arms (Table~\ref{tab:balance}). Within-participant exposures need no participant-level covariate at all: the participant random intercept absorbs that confounding entirely. Never adjust for the AI framework, what the AI said, participant message count, noticed persuasion, or S-TIAS trust.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}

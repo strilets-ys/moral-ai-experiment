@@ -1,0 +1,42 @@
+\begin{table}[!h]
+\centering
+\caption{\label{tab:models}Mixed-model coefficients for the three primary models.}
+\centering
+\fontsize{9}{11}\selectfont
+\begin{threeparttable}
+\begin{tabular}[t]{lccc}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{1}{c}{H1--H3, H6} & \multicolumn{1}{c}{H4} & \multicolumn{1}{c}{H5} \\
+\cmidrule(l{3pt}r{3pt}){2-2} \cmidrule(l{3pt}r{3pt}){3-3} \cmidrule(l{3pt}r{3pt}){4-4}
+ & M1: Movement & M2: Movement & M3: $|$Change$|$\\
+\midrule
+Intercept & -0.62* (0.30) & -0.63* (0.30) & 1.17*** (0.23)\\
+\addlinespace[0.3em]
+\multicolumn{4}{l}{\textbf{Condition (nested orthogonal contrasts)}}\\
+\hspace{1em}\quad Any persuasion vs.\ control (H1) & 0.42 (0.42) & 0.42 (0.43) & -0.04 (0.32)\\
+\hspace{1em}\quad Personalised vs.\ generic (H2) & -0.20 (0.51) & -0.16 (0.54) & 0.55 (0.38)\\
+\hspace{1em}\quad + Personality vs.\ demographics (H3) & -0.05 (0.48) & -0.04 (0.49) & 0.26 (0.36)\\
+Opposing AI (H6) & 1.23*** (0.33) & 1.24*** (0.34) & \\
+Provider: Claude & 0.79* (0.37) & 0.83* (0.38) & \\
+Discussed (H5) &  &  & 0.36* (0.16)\\
+Extremity &  &  & -0.26** (0.08)\\
+Extremity, within participant &  & -0.06 (0.26) & \\
+Extremity, between participants &  & -0.27 (0.56) & \\
+\quad Within $\times$ opposing (H4) &  & 0.23 (0.37) & \\
+\quad Between $\times$ opposing &  & 0.02 (0.73) & \\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{4}{l}{\textbf{Random effects and sample}}\\
+\hspace{1em}Participant variance & 0.134 & 0.141 & 0.306\\
+\hspace{1em}Dilemma variance & -- & -- & 0.084\\
+\hspace{1em}Residual variance & 2.605 & 2.701 & 1.181\\
+\hspace{1em}Observations & 96 & 96 & 192\\
+\hspace{1em}Participants & 24 & 24 & 24\\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item \textit{Note.} 
+\item Cells are $b$ (SE). M1 and M2 use the 96 conversations; M3 uses all 192 ratings, so movement toward the AI is replaced by the magnitude of rating change. Condition is coded with three nested orthogonal contrasts, so H1--H3 are answered from one model without discarding participants. The crossed dilemma intercept is estimable only in M3: over 96 conversations its variance is exactly zero (singular), so it is dropped from M1 and M2 and reported here as a dash. Covariates were selected from the design DAG following Cinelli, Forney and Pearl (2022); because every exposure is randomised or blocked, they reduce residual variance rather than remove confounding. $^{*}p<.05$; $^{**}p<.01$; $^{***}p<.001$.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}

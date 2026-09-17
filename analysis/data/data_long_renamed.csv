@@ -1,0 +1,193 @@
+participant_id,condition,llm_provider,demographics_age,demographics_gender,demographics_education,debrief_stias_average,debrief_noticed_persuasion,debrief_changed_mind,dilemma,rating_pre,rating_post,chat_turns,rating_change,had_chat,stance_mode,llm_framework,low_rating_framework,ai_argues_for,moved_toward_ai,outcome,stance_label
+21,persuade,qwen,33,male,high_school,3.6666666666666665,FALSE,FALSE,G_PO_Submarine_Oxygen,4,4,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+21,persuade,qwen,33,male,high_school,3.6666666666666665,FALSE,FALSE,G_IA_Data_Breach,2,2,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+21,persuade,qwen,33,male,high_school,3.6666666666666665,FALSE,FALSE,K_bgO_Abduction,3,2,NA,-1,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+21,persuade,qwen,33,male,high_school,3.6666666666666665,FALSE,FALSE,K_bgA_Vaccine,2,2,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+21,persuade,qwen,33,male,high_school,3.6666666666666665,FALSE,FALSE,K_bsA_Construction_Site,2,1,7,-1,TRUE,same,deontological,deontological,low,TRUE,Moved toward AI,Reinforcing
+21,persuade,qwen,33,male,high_school,3.6666666666666665,FALSE,FALSE,G_PA_Terrorist_Negotiation,4,4,7,0,TRUE,opposite,utilitarian,deontological,high,NA,No Change,Opposing
+21,persuade,qwen,33,male,high_school,3.6666666666666665,FALSE,FALSE,G_IO_Hospital_Fumes,3,3,7,0,TRUE,same,utilitarian,utilitarian,low,NA,No Change,Reinforcing
+21,persuade,qwen,33,male,high_school,3.6666666666666665,FALSE,FALSE,K_bsO_Rawanda,7,6,9,-1,TRUE,opposite,utilitarian,utilitarian,low,TRUE,Moved toward AI,Opposing
+25,neutral,anthropic,36,male,bachelor,4.666666666666667,TRUE,TRUE,K_bsA_Vaccine,1,1,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+25,neutral,anthropic,36,male,bachelor,4.666666666666667,TRUE,TRUE,G_PO_Submarine_Oxygen,1,1,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+25,neutral,anthropic,36,male,bachelor,4.666666666666667,TRUE,TRUE,G_IA_Data_Breach,3,3,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+25,neutral,anthropic,36,male,bachelor,4.666666666666667,TRUE,TRUE,K_bsO_Abduction,4,3,NA,-1,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+25,neutral,anthropic,36,male,bachelor,4.666666666666667,TRUE,TRUE,K_bgA_Rawanda,6,7,7,1,TRUE,opposite,deontological,deontological,low,FALSE,Backfired,Opposing
+25,neutral,anthropic,36,male,bachelor,4.666666666666667,TRUE,TRUE,K_bgO_Construction_Site,7,7,7,0,TRUE,same,deontological,utilitarian,high,NA,No Change,Reinforcing
+25,neutral,anthropic,36,male,bachelor,4.666666666666667,TRUE,TRUE,G_PA_Terrorist_Negotiation,7,7,19,0,TRUE,opposite,deontological,deontological,low,NA,No Change,Opposing
+25,neutral,anthropic,36,male,bachelor,4.666666666666667,TRUE,TRUE,G_IO_Hospital_Fumes,2,1,7,-1,TRUE,same,utilitarian,utilitarian,low,TRUE,Moved toward AI,Reinforcing
+24,persuade_info,qwen,34,male,high_school,1.3333333333333333,TRUE,FALSE,G_PO_Submarine_Oxygen,3,3,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+24,persuade_info,qwen,34,male,high_school,1.3333333333333333,TRUE,FALSE,G_IA_Data_Breach,3,3,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+24,persuade_info,qwen,34,male,high_school,1.3333333333333333,TRUE,FALSE,K_bsO_Abduction,4,4,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+24,persuade_info,qwen,34,male,high_school,1.3333333333333333,TRUE,FALSE,K_bgA_Construction_Site,1,1,7,0,TRUE,same,deontological,deontological,low,NA,No Change,Reinforcing
+24,persuade_info,qwen,34,male,high_school,1.3333333333333333,TRUE,FALSE,K_bsA_Rawanda,1,1,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+24,persuade_info,qwen,34,male,high_school,1.3333333333333333,TRUE,FALSE,G_PA_Terrorist_Negotiation,5,7,7,2,TRUE,opposite,deontological,deontological,low,FALSE,Backfired,Opposing
+24,persuade_info,qwen,34,male,high_school,1.3333333333333333,TRUE,FALSE,G_IO_Hospital_Fumes,5,5,11,0,TRUE,opposite,utilitarian,utilitarian,low,NA,No Change,Opposing
+24,persuade_info,qwen,34,male,high_school,1.3333333333333333,TRUE,FALSE,K_bgO_Vaccine,7,7,7,0,TRUE,same,deontological,utilitarian,high,NA,No Change,Reinforcing
+22,neutral,anthropic,79,female,doctorate,2.6666666666666665,TRUE,TRUE,K_bsA_Vaccine,1,4,7,3,TRUE,opposite,utilitarian,deontological,high,TRUE,Moved toward AI,Opposing
+22,neutral,anthropic,79,female,doctorate,2.6666666666666665,TRUE,TRUE,G_PO_Submarine_Oxygen,5,4,7,-1,TRUE,same,deontological,utilitarian,high,FALSE,Backfired,Reinforcing
+22,neutral,anthropic,79,female,doctorate,2.6666666666666665,TRUE,TRUE,G_IA_Data_Breach,1,1,7,0,TRUE,same,deontological,deontological,low,NA,No Change,Reinforcing
+22,neutral,anthropic,79,female,doctorate,2.6666666666666665,TRUE,TRUE,K_bgO_Abduction,6,5,NA,-1,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+22,neutral,anthropic,79,female,doctorate,2.6666666666666665,TRUE,TRUE,K_bgA_Construction_Site,1,1,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+22,neutral,anthropic,79,female,doctorate,2.6666666666666665,TRUE,TRUE,G_PA_Terrorist_Negotiation,2,4,NA,2,FALSE,NA,NA,deontological,NA,NA,NA,NA
+22,neutral,anthropic,79,female,doctorate,2.6666666666666665,TRUE,TRUE,G_IO_Hospital_Fumes,2,4,NA,2,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+22,neutral,anthropic,79,female,doctorate,2.6666666666666665,TRUE,TRUE,K_bsO_Rawanda,4,4,5,0,TRUE,opposite,deontological,utilitarian,high,NA,No Change,Opposing
+23,persuade_demo,qwen,39,male,bachelor,5,TRUE,FALSE,G_PO_Submarine_Oxygen,4,7,7,3,TRUE,same,deontological,utilitarian,high,TRUE,Moved toward AI,Reinforcing
+23,persuade_demo,qwen,39,male,bachelor,5,TRUE,FALSE,G_IA_Data_Breach,1,1,11,0,TRUE,opposite,utilitarian,deontological,high,NA,No Change,Opposing
+23,persuade_demo,qwen,39,male,bachelor,5,TRUE,FALSE,K_bsA_Abduction,1,1,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+23,persuade_demo,qwen,39,male,bachelor,5,TRUE,FALSE,K_bgA_Rawanda,5,1,9,-4,TRUE,opposite,deontological,deontological,low,TRUE,Moved toward AI,Opposing
+23,persuade_demo,qwen,39,male,bachelor,5,TRUE,FALSE,K_bsO_Vaccine,4,7,NA,3,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+23,persuade_demo,qwen,39,male,bachelor,5,TRUE,FALSE,K_bgO_Construction_Site,7,7,9,0,TRUE,same,deontological,utilitarian,high,NA,No Change,Reinforcing
+23,persuade_demo,qwen,39,male,bachelor,5,TRUE,FALSE,G_PA_Terrorist_Negotiation,5,4,NA,-1,FALSE,NA,NA,deontological,NA,NA,NA,NA
+23,persuade_demo,qwen,39,male,bachelor,5,TRUE,FALSE,G_IO_Hospital_Fumes,5,4,NA,-1,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+26,persuade_demo,anthropic,33,male,bachelor,4.666666666666667,TRUE,FALSE,G_PO_Submarine_Oxygen,3,2,NA,-1,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+26,persuade_demo,anthropic,33,male,bachelor,4.666666666666667,TRUE,FALSE,G_IA_Data_Breach,3,2,NA,-1,FALSE,NA,NA,deontological,NA,NA,NA,NA
+26,persuade_demo,anthropic,33,male,bachelor,4.666666666666667,TRUE,FALSE,K_bsA_Abduction,2,5,11,3,TRUE,opposite,utilitarian,deontological,high,TRUE,Moved toward AI,Opposing
+26,persuade_demo,anthropic,33,male,bachelor,4.666666666666667,TRUE,FALSE,K_bgA_Rawanda,3,5,NA,2,FALSE,NA,NA,deontological,NA,NA,NA,NA
+26,persuade_demo,anthropic,33,male,bachelor,4.666666666666667,TRUE,FALSE,K_bsO_Vaccine,2,2,9,0,TRUE,opposite,deontological,utilitarian,high,NA,No Change,Opposing
+26,persuade_demo,anthropic,33,male,bachelor,4.666666666666667,TRUE,FALSE,K_bgO_Construction_Site,4,3,NA,-1,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+26,persuade_demo,anthropic,33,male,bachelor,4.666666666666667,TRUE,FALSE,G_PA_Terrorist_Negotiation,5,6,9,1,TRUE,same,utilitarian,deontological,high,TRUE,Moved toward AI,Reinforcing
+26,persuade_demo,anthropic,33,male,bachelor,4.666666666666667,TRUE,FALSE,G_IO_Hospital_Fumes,2,2,11,0,TRUE,same,utilitarian,utilitarian,low,NA,No Change,Reinforcing
+45,persuade_demo,anthropic,36,female,high_school,4.666666666666667,TRUE,TRUE,K_bsA_Vaccine,2,2,7,0,TRUE,same,deontological,deontological,low,NA,No Change,Reinforcing
+45,persuade_demo,anthropic,36,female,high_school,4.666666666666667,TRUE,TRUE,G_PO_Submarine_Oxygen,3,4,7,1,TRUE,opposite,deontological,utilitarian,high,TRUE,Moved toward AI,Opposing
+45,persuade_demo,anthropic,36,female,high_school,4.666666666666667,TRUE,TRUE,G_IA_Data_Breach,2,2,7,0,TRUE,same,deontological,deontological,low,NA,No Change,Reinforcing
+45,persuade_demo,anthropic,36,female,high_school,4.666666666666667,TRUE,TRUE,K_bsO_Abduction,3,5,7,2,TRUE,opposite,deontological,utilitarian,high,TRUE,Moved toward AI,Opposing
+45,persuade_demo,anthropic,36,female,high_school,4.666666666666667,TRUE,TRUE,K_bgA_Construction_Site,1,1,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+45,persuade_demo,anthropic,36,female,high_school,4.666666666666667,TRUE,TRUE,K_bgO_Rawanda,7,7,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+45,persuade_demo,anthropic,36,female,high_school,4.666666666666667,TRUE,TRUE,G_PA_Terrorist_Negotiation,5,5,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+45,persuade_demo,anthropic,36,female,high_school,4.666666666666667,TRUE,TRUE,G_IO_Hospital_Fumes,2,2,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+44,neutral,qwen,21,male,bachelor,5,TRUE,FALSE,G_PO_Submarine_Oxygen,3,3,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+44,neutral,qwen,21,male,bachelor,5,TRUE,FALSE,G_IA_Data_Breach,3,3,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+44,neutral,qwen,21,male,bachelor,5,TRUE,FALSE,K_bsA_Abduction,4,2,NA,-2,FALSE,NA,NA,deontological,NA,NA,NA,NA
+44,neutral,qwen,21,male,bachelor,5,TRUE,FALSE,K_bgA_Rawanda,3,3,7,0,TRUE,opposite,utilitarian,deontological,high,NA,No Change,Opposing
+44,neutral,qwen,21,male,bachelor,5,TRUE,FALSE,G_PA_Terrorist_Negotiation,2,4,7,2,TRUE,same,deontological,deontological,low,FALSE,Backfired,Reinforcing
+44,neutral,qwen,21,male,bachelor,5,TRUE,FALSE,G_IO_Hospital_Fumes,3,2,7,-1,TRUE,opposite,deontological,utilitarian,high,FALSE,Backfired,Opposing
+44,neutral,qwen,21,male,bachelor,5,TRUE,FALSE,K_bgO_Vaccine,5,2,7,-3,TRUE,same,deontological,utilitarian,high,FALSE,Backfired,Reinforcing
+44,neutral,qwen,21,male,bachelor,5,TRUE,FALSE,K_bsO_Construction_Site,6,4,NA,-2,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+47,persuade,anthropic,30,female,master,7,TRUE,TRUE,G_PO_Submarine_Oxygen,4,4,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+47,persuade,anthropic,30,female,master,7,TRUE,TRUE,G_IA_Data_Breach,1,1,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+47,persuade,anthropic,30,female,master,7,TRUE,TRUE,K_bgA_Abduction,7,6,NA,-1,FALSE,NA,NA,deontological,NA,NA,NA,NA
+47,persuade,anthropic,30,female,master,7,TRUE,TRUE,K_bsO_Vaccine,3,1,7,-2,TRUE,same,utilitarian,utilitarian,low,TRUE,Moved toward AI,Reinforcing
+47,persuade,anthropic,30,female,master,7,TRUE,TRUE,K_bsA_Construction_Site,1,1,7,0,TRUE,same,deontological,deontological,low,NA,No Change,Reinforcing
+47,persuade,anthropic,30,female,master,7,TRUE,TRUE,K_bgO_Rawanda,6,7,NA,1,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+47,persuade,anthropic,30,female,master,7,TRUE,TRUE,G_PA_Terrorist_Negotiation,3,7,7,4,TRUE,opposite,utilitarian,deontological,high,TRUE,Moved toward AI,Opposing
+47,persuade,anthropic,30,female,master,7,TRUE,TRUE,G_IO_Hospital_Fumes,4,4,3,0,TRUE,opposite,deontological,utilitarian,high,NA,No Change,Opposing
+46,neutral,anthropic,65,male,master,6.666666666666667,FALSE,FALSE,G_PO_Submarine_Oxygen,6,6,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+46,neutral,anthropic,65,male,master,6.666666666666667,FALSE,FALSE,G_IA_Data_Breach,1,1,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+46,neutral,anthropic,65,male,master,6.666666666666667,FALSE,FALSE,K_bgO_Abduction,5,3,11,-2,TRUE,opposite,utilitarian,utilitarian,low,TRUE,Moved toward AI,Opposing
+46,neutral,anthropic,65,male,master,6.666666666666667,FALSE,FALSE,K_bgA_Vaccine,7,6,9,-1,TRUE,same,utilitarian,deontological,high,FALSE,Backfired,Reinforcing
+46,neutral,anthropic,65,male,master,6.666666666666667,FALSE,FALSE,K_bsA_Rawanda,1,1,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+46,neutral,anthropic,65,male,master,6.666666666666667,FALSE,FALSE,G_PA_Terrorist_Negotiation,3,3,7,0,TRUE,same,deontological,deontological,low,NA,No Change,Reinforcing
+46,neutral,anthropic,65,male,master,6.666666666666667,FALSE,FALSE,G_IO_Hospital_Fumes,2,2,9,0,TRUE,opposite,deontological,utilitarian,high,NA,No Change,Opposing
+46,neutral,anthropic,65,male,master,6.666666666666667,FALSE,FALSE,K_bsO_Construction_Site,5,7,NA,2,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+49,persuade_info,qwen,27,male,master,6,TRUE,TRUE,G_PO_Submarine_Oxygen,5,5,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+49,persuade_info,qwen,27,male,master,6,TRUE,TRUE,G_IA_Data_Breach,3,4,NA,1,FALSE,NA,NA,deontological,NA,NA,NA,NA
+49,persuade_info,qwen,27,male,master,6,TRUE,TRUE,K_bsA_Abduction,4,5,NA,1,FALSE,NA,NA,deontological,NA,NA,NA,NA
+49,persuade_info,qwen,27,male,master,6,TRUE,TRUE,K_bgA_Rawanda,5,4,13,-1,TRUE,opposite,deontological,deontological,low,TRUE,Moved toward AI,Opposing
+49,persuade_info,qwen,27,male,master,6,TRUE,TRUE,K_bsO_Vaccine,4,4,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+49,persuade_info,qwen,27,male,master,6,TRUE,TRUE,K_bgO_Construction_Site,6,4,13,-2,TRUE,same,deontological,utilitarian,high,FALSE,Backfired,Reinforcing
+49,persuade_info,qwen,27,male,master,6,TRUE,TRUE,G_PA_Terrorist_Negotiation,4,3,13,-1,TRUE,opposite,deontological,deontological,low,TRUE,Moved toward AI,Opposing
+49,persuade_info,qwen,27,male,master,6,TRUE,TRUE,G_IO_Hospital_Fumes,4,4,11,0,TRUE,same,deontological,utilitarian,high,NA,No Change,Reinforcing
+48,persuade_info,qwen,38,female,master,7,TRUE,TRUE,K_bsA_Vaccine,7,4,NA,-3,FALSE,NA,NA,deontological,NA,NA,NA,NA
+48,persuade_info,qwen,38,female,master,7,TRUE,TRUE,G_PO_Submarine_Oxygen,3,4,9,1,TRUE,same,utilitarian,utilitarian,low,FALSE,Backfired,Reinforcing
+48,persuade_info,qwen,38,female,master,7,TRUE,TRUE,G_IA_Data_Breach,1,1,7,0,TRUE,opposite,utilitarian,deontological,high,NA,No Change,Opposing
+48,persuade_info,qwen,38,female,master,7,TRUE,TRUE,K_bgA_Abduction,1,6,9,5,TRUE,opposite,utilitarian,deontological,high,TRUE,Moved toward AI,Opposing
+48,persuade_info,qwen,38,female,master,7,TRUE,TRUE,K_bgO_Rawanda,2,7,7,5,TRUE,same,utilitarian,utilitarian,low,FALSE,Backfired,Reinforcing
+48,persuade_info,qwen,38,female,master,7,TRUE,TRUE,G_PA_Terrorist_Negotiation,1,6,NA,5,FALSE,NA,NA,deontological,NA,NA,NA,NA
+48,persuade_info,qwen,38,female,master,7,TRUE,TRUE,G_IO_Hospital_Fumes,1,4,NA,3,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+48,persuade_info,qwen,38,female,master,7,TRUE,TRUE,K_bsO_Construction_Site,5,1,NA,-4,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+56,persuade_demo,anthropic,21,female,bachelor,5.666666666666667,FALSE,FALSE,K_bsA_Vaccine,2,2,11,0,TRUE,same,deontological,deontological,low,NA,No Change,Reinforcing
+56,persuade_demo,anthropic,21,female,bachelor,5.666666666666667,FALSE,FALSE,G_PO_Submarine_Oxygen,5,5,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+56,persuade_demo,anthropic,21,female,bachelor,5.666666666666667,FALSE,FALSE,G_IA_Data_Breach,1,1,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+56,persuade_demo,anthropic,21,female,bachelor,5.666666666666667,FALSE,FALSE,K_bgO_Abduction,5,5,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+56,persuade_demo,anthropic,21,female,bachelor,5.666666666666667,FALSE,FALSE,K_bgA_Construction_Site,1,1,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+56,persuade_demo,anthropic,21,female,bachelor,5.666666666666667,FALSE,FALSE,G_PA_Terrorist_Negotiation,3,3,13,0,TRUE,same,deontological,deontological,low,NA,No Change,Reinforcing
+56,persuade_demo,anthropic,21,female,bachelor,5.666666666666667,FALSE,FALSE,G_IO_Hospital_Fumes,1,2,11,1,TRUE,opposite,deontological,utilitarian,high,TRUE,Moved toward AI,Opposing
+56,persuade_demo,anthropic,21,female,bachelor,5.666666666666667,FALSE,FALSE,K_bsO_Rawanda,7,7,9,0,TRUE,opposite,utilitarian,utilitarian,low,NA,No Change,Opposing
+52,neutral,qwen,39,female,master,3.3333333333333335,TRUE,FALSE,K_bsA_Vaccine,2,1,NA,-1,FALSE,NA,NA,deontological,NA,NA,NA,NA
+52,neutral,qwen,39,female,master,3.3333333333333335,TRUE,FALSE,G_PO_Submarine_Oxygen,6,7,9,1,TRUE,opposite,utilitarian,utilitarian,low,FALSE,Backfired,Opposing
+52,neutral,qwen,39,female,master,3.3333333333333335,TRUE,FALSE,G_IA_Data_Breach,2,2,9,0,TRUE,same,deontological,deontological,low,NA,No Change,Reinforcing
+52,neutral,qwen,39,female,master,3.3333333333333335,TRUE,FALSE,K_bgA_Abduction,7,7,9,0,TRUE,same,utilitarian,deontological,high,NA,No Change,Reinforcing
+52,neutral,qwen,39,female,master,3.3333333333333335,TRUE,FALSE,K_bgO_Construction_Site,7,7,11,0,TRUE,opposite,utilitarian,utilitarian,low,NA,No Change,Opposing
+52,neutral,qwen,39,female,master,3.3333333333333335,TRUE,FALSE,G_PA_Terrorist_Negotiation,3,2,NA,-1,FALSE,NA,NA,deontological,NA,NA,NA,NA
+52,neutral,qwen,39,female,master,3.3333333333333335,TRUE,FALSE,G_IO_Hospital_Fumes,5,4,NA,-1,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+52,neutral,qwen,39,female,master,3.3333333333333335,TRUE,FALSE,K_bsO_Rawanda,6,7,NA,1,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+51,persuade_info,anthropic,35,female,some_college,6,TRUE,TRUE,K_bsA_Vaccine,1,1,13,0,TRUE,same,deontological,deontological,low,NA,No Change,Reinforcing
+51,persuade_info,anthropic,35,female,some_college,6,TRUE,TRUE,G_PO_Submarine_Oxygen,6,2,9,-4,TRUE,same,deontological,utilitarian,high,FALSE,Backfired,Reinforcing
+51,persuade_info,anthropic,35,female,some_college,6,TRUE,TRUE,G_IA_Data_Breach,2,2,11,0,TRUE,opposite,utilitarian,deontological,high,NA,No Change,Opposing
+51,persuade_info,anthropic,35,female,some_college,6,TRUE,TRUE,K_bgO_Abduction,6,6,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+51,persuade_info,anthropic,35,female,some_college,6,TRUE,TRUE,K_bgA_Construction_Site,1,1,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+51,persuade_info,anthropic,35,female,some_college,6,TRUE,TRUE,G_PA_Terrorist_Negotiation,5,6,NA,1,FALSE,NA,NA,deontological,NA,NA,NA,NA
+51,persuade_info,anthropic,35,female,some_college,6,TRUE,TRUE,G_IO_Hospital_Fumes,4,2,NA,-2,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+51,persuade_info,anthropic,35,female,some_college,6,TRUE,TRUE,K_bsO_Rawanda,7,2,13,-5,TRUE,opposite,utilitarian,utilitarian,low,TRUE,Moved toward AI,Opposing
+63,persuade,qwen,37,female,some_college,4,FALSE,FALSE,G_PO_Submarine_Oxygen,4,4,9,0,TRUE,opposite,utilitarian,utilitarian,low,NA,No Change,Opposing
+63,persuade,qwen,37,female,some_college,4,FALSE,FALSE,G_IA_Data_Breach,2,2,7,0,TRUE,same,deontological,deontological,low,NA,No Change,Reinforcing
+63,persuade,qwen,37,female,some_college,4,FALSE,FALSE,K_bsA_Abduction,5,5,11,0,TRUE,same,utilitarian,deontological,high,NA,No Change,Reinforcing
+63,persuade,qwen,37,female,some_college,4,FALSE,FALSE,K_bgA_Construction_Site,1,1,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+63,persuade,qwen,37,female,some_college,4,FALSE,FALSE,G_PA_Terrorist_Negotiation,5,5,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+63,persuade,qwen,37,female,some_college,4,FALSE,FALSE,G_IO_Hospital_Fumes,3,5,NA,2,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+63,persuade,qwen,37,female,some_college,4,FALSE,FALSE,K_bgO_Vaccine,3,2,NA,-1,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+63,persuade,qwen,37,female,some_college,4,FALSE,FALSE,K_bsO_Rawanda,6,7,7,1,TRUE,opposite,utilitarian,utilitarian,low,FALSE,Backfired,Opposing
+57,neutral,qwen,45,female,bachelor,5.333333333333333,TRUE,TRUE,G_PO_Submarine_Oxygen,3,6,NA,3,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+57,neutral,qwen,45,female,bachelor,5.333333333333333,TRUE,TRUE,G_IA_Data_Breach,2,2,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+57,neutral,qwen,45,female,bachelor,5.333333333333333,TRUE,TRUE,K_bgO_Abduction,6,3,11,-3,TRUE,opposite,utilitarian,utilitarian,low,TRUE,Moved toward AI,Opposing
+57,neutral,qwen,45,female,bachelor,5.333333333333333,TRUE,TRUE,K_bsO_Vaccine,6,6,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+57,neutral,qwen,45,female,bachelor,5.333333333333333,TRUE,TRUE,K_bgA_Construction_Site,5,5,9,0,TRUE,same,utilitarian,deontological,high,NA,No Change,Reinforcing
+57,neutral,qwen,45,female,bachelor,5.333333333333333,TRUE,TRUE,K_bsA_Rawanda,1,1,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+57,neutral,qwen,45,female,bachelor,5.333333333333333,TRUE,TRUE,G_PA_Terrorist_Negotiation,6,5,11,-1,TRUE,opposite,deontological,deontological,low,TRUE,Moved toward AI,Opposing
+57,neutral,qwen,45,female,bachelor,5.333333333333333,TRUE,TRUE,G_IO_Hospital_Fumes,4,6,9,2,TRUE,same,deontological,utilitarian,high,TRUE,Moved toward AI,Reinforcing
+60,persuade_info,anthropic,36,female,bachelor,6.333333333333333,TRUE,TRUE,K_bsA_Vaccine,6,7,NA,1,FALSE,NA,NA,deontological,NA,NA,NA,NA
+60,persuade_info,anthropic,36,female,bachelor,6.333333333333333,TRUE,TRUE,G_PO_Submarine_Oxygen,5,5,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+60,persuade_info,anthropic,36,female,bachelor,6.333333333333333,TRUE,TRUE,G_IA_Data_Breach,3,3,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+60,persuade_info,anthropic,36,female,bachelor,6.333333333333333,TRUE,TRUE,K_bsO_Abduction,6,5,NA,-1,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+60,persuade_info,anthropic,36,female,bachelor,6.333333333333333,TRUE,TRUE,K_bgA_Construction_Site,5,5,7,0,TRUE,opposite,deontological,deontological,low,NA,No Change,Opposing
+60,persuade_info,anthropic,36,female,bachelor,6.333333333333333,TRUE,TRUE,K_bgO_Rawanda,7,7,13,0,TRUE,same,deontological,utilitarian,high,NA,No Change,Reinforcing
+60,persuade_info,anthropic,36,female,bachelor,6.333333333333333,TRUE,TRUE,G_PA_Terrorist_Negotiation,6,7,13,1,TRUE,same,utilitarian,deontological,high,TRUE,Moved toward AI,Reinforcing
+60,persuade_info,anthropic,36,female,bachelor,6.333333333333333,TRUE,TRUE,G_IO_Hospital_Fumes,3,7,11,4,TRUE,opposite,deontological,utilitarian,high,TRUE,Moved toward AI,Opposing
+54,persuade_info,anthropic,20,female,bachelor,5.666666666666667,TRUE,TRUE,G_PO_Submarine_Oxygen,3,6,7,3,TRUE,opposite,deontological,utilitarian,high,TRUE,Moved toward AI,Opposing
+54,persuade_info,anthropic,20,female,bachelor,5.666666666666667,TRUE,TRUE,G_IA_Data_Breach,1,1,9,0,TRUE,same,deontological,deontological,low,NA,No Change,Reinforcing
+54,persuade_info,anthropic,20,female,bachelor,5.666666666666667,TRUE,TRUE,K_bgO_Abduction,6,2,9,-4,TRUE,opposite,utilitarian,utilitarian,low,TRUE,Moved toward AI,Opposing
+54,persuade_info,anthropic,20,female,bachelor,5.666666666666667,TRUE,TRUE,K_bgA_Rawanda,2,1,9,-1,TRUE,same,deontological,deontological,low,TRUE,Moved toward AI,Reinforcing
+54,persuade_info,anthropic,20,female,bachelor,5.666666666666667,TRUE,TRUE,K_bsO_Vaccine,5,6,NA,1,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+54,persuade_info,anthropic,20,female,bachelor,5.666666666666667,TRUE,TRUE,K_bsA_Construction_Site,1,1,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+54,persuade_info,anthropic,20,female,bachelor,5.666666666666667,TRUE,TRUE,G_PA_Terrorist_Negotiation,3,2,NA,-1,FALSE,NA,NA,deontological,NA,NA,NA,NA
+54,persuade_info,anthropic,20,female,bachelor,5.666666666666667,TRUE,TRUE,G_IO_Hospital_Fumes,5,6,NA,1,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+55,persuade,qwen,38,female,some_college,5.666666666666667,TRUE,FALSE,G_PO_Submarine_Oxygen,2,2,13,0,TRUE,same,utilitarian,utilitarian,low,NA,No Change,Reinforcing
+55,persuade,qwen,38,female,some_college,5.666666666666667,TRUE,FALSE,G_IA_Data_Breach,1,1,9,0,TRUE,same,deontological,deontological,low,NA,No Change,Reinforcing
+55,persuade,qwen,38,female,some_college,5.666666666666667,TRUE,FALSE,K_bsO_Abduction,5,5,11,0,TRUE,opposite,utilitarian,utilitarian,low,NA,No Change,Opposing
+55,persuade,qwen,38,female,some_college,5.666666666666667,TRUE,FALSE,K_bgA_Rawanda,2,2,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+55,persuade,qwen,38,female,some_college,5.666666666666667,TRUE,FALSE,K_bsA_Construction_Site,1,1,13,0,TRUE,opposite,utilitarian,deontological,high,NA,No Change,Opposing
+55,persuade,qwen,38,female,some_college,5.666666666666667,TRUE,FALSE,G_PA_Terrorist_Negotiation,5,5,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+55,persuade,qwen,38,female,some_college,5.666666666666667,TRUE,FALSE,G_IO_Hospital_Fumes,6,5,NA,-1,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+55,persuade,qwen,38,female,some_college,5.666666666666667,TRUE,FALSE,K_bgO_Vaccine,2,2,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+58,persuade_demo,qwen,53,male,some_college,6.333333333333333,TRUE,FALSE,G_PO_Submarine_Oxygen,1,1,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+58,persuade_demo,qwen,53,male,some_college,6.333333333333333,TRUE,FALSE,G_IA_Data_Breach,1,1,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+58,persuade_demo,qwen,53,male,some_college,6.333333333333333,TRUE,FALSE,K_bsO_Abduction,1,1,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+58,persuade_demo,qwen,53,male,some_college,6.333333333333333,TRUE,FALSE,K_bgA_Construction_Site,7,7,11,0,TRUE,opposite,deontological,deontological,low,NA,No Change,Opposing
+58,persuade_demo,qwen,53,male,some_college,6.333333333333333,TRUE,FALSE,K_bsA_Rawanda,2,1,NA,-1,FALSE,NA,NA,deontological,NA,NA,NA,NA
+58,persuade_demo,qwen,53,male,some_college,6.333333333333333,TRUE,FALSE,G_PA_Terrorist_Negotiation,7,7,9,0,TRUE,same,utilitarian,deontological,high,NA,No Change,Reinforcing
+58,persuade_demo,qwen,53,male,some_college,6.333333333333333,TRUE,FALSE,G_IO_Hospital_Fumes,5,1,11,-4,TRUE,same,deontological,utilitarian,high,FALSE,Backfired,Reinforcing
+58,persuade_demo,qwen,53,male,some_college,6.333333333333333,TRUE,FALSE,K_bgO_Vaccine,4,1,13,-3,TRUE,opposite,deontological,utilitarian,high,FALSE,Backfired,Opposing
+64,persuade_info,qwen,32,female,bachelor,4.666666666666667,TRUE,FALSE,G_PO_Submarine_Oxygen,4,4,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+64,persuade_info,qwen,32,female,bachelor,4.666666666666667,TRUE,FALSE,G_IA_Data_Breach,1,1,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+64,persuade_info,qwen,32,female,bachelor,4.666666666666667,TRUE,FALSE,K_bgO_Abduction,7,7,9,0,TRUE,opposite,utilitarian,utilitarian,low,NA,No Change,Opposing
+64,persuade_info,qwen,32,female,bachelor,4.666666666666667,TRUE,FALSE,K_bgA_Vaccine,1,1,9,0,TRUE,opposite,utilitarian,deontological,high,NA,No Change,Opposing
+64,persuade_info,qwen,32,female,bachelor,4.666666666666667,TRUE,FALSE,K_bsA_Rawanda,1,1,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+64,persuade_info,qwen,32,female,bachelor,4.666666666666667,TRUE,FALSE,G_PA_Terrorist_Negotiation,7,7,7,0,TRUE,same,utilitarian,deontological,high,NA,No Change,Reinforcing
+64,persuade_info,qwen,32,female,bachelor,4.666666666666667,TRUE,FALSE,G_IO_Hospital_Fumes,4,4,7,0,TRUE,same,utilitarian,utilitarian,low,NA,No Change,Reinforcing
+64,persuade_info,qwen,32,female,bachelor,4.666666666666667,TRUE,FALSE,K_bsO_Construction_Site,1,4,NA,3,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+62,persuade_demo,qwen,40,male,some_college,6,FALSE,FALSE,G_PO_Submarine_Oxygen,1,1,11,0,TRUE,same,utilitarian,utilitarian,low,NA,No Change,Reinforcing
+62,persuade_demo,qwen,40,male,some_college,6,FALSE,FALSE,G_IA_Data_Breach,4,1,9,-3,TRUE,opposite,deontological,deontological,low,TRUE,Moved toward AI,Opposing
+62,persuade_demo,qwen,40,male,some_college,6,FALSE,FALSE,K_bsA_Abduction,1,1,11,0,TRUE,same,deontological,deontological,low,NA,No Change,Reinforcing
+62,persuade_demo,qwen,40,male,some_college,6,FALSE,FALSE,K_bgA_Rawanda,4,6,NA,2,FALSE,NA,NA,deontological,NA,NA,NA,NA
+62,persuade_demo,qwen,40,male,some_college,6,FALSE,FALSE,K_bsO_Vaccine,1,1,7,0,TRUE,opposite,deontological,utilitarian,high,NA,No Change,Opposing
+62,persuade_demo,qwen,40,male,some_college,6,FALSE,FALSE,K_bgO_Construction_Site,7,7,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+62,persuade_demo,qwen,40,male,some_college,6,FALSE,FALSE,G_PA_Terrorist_Negotiation,7,7,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+62,persuade_demo,qwen,40,male,some_college,6,FALSE,FALSE,G_IO_Hospital_Fumes,3,5,NA,2,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+59,persuade_info,anthropic,32,female,bachelor,6,TRUE,TRUE,G_PO_Submarine_Oxygen,1,1,7,0,TRUE,opposite,deontological,utilitarian,high,NA,No Change,Opposing
+59,persuade_info,anthropic,32,female,bachelor,6,TRUE,TRUE,G_IA_Data_Breach,7,7,7,0,TRUE,same,utilitarian,deontological,high,NA,No Change,Reinforcing
+59,persuade_info,anthropic,32,female,bachelor,6,TRUE,TRUE,K_bsO_Abduction,3,7,9,4,TRUE,opposite,deontological,utilitarian,high,TRUE,Moved toward AI,Opposing
+59,persuade_info,anthropic,32,female,bachelor,6,TRUE,TRUE,K_bgA_Vaccine,2,2,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+59,persuade_info,anthropic,32,female,bachelor,6,TRUE,TRUE,K_bsA_Rawanda,4,2,7,-2,TRUE,same,utilitarian,deontological,high,FALSE,Backfired,Reinforcing
+59,persuade_info,anthropic,32,female,bachelor,6,TRUE,TRUE,K_bgO_Construction_Site,6,6,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA
+59,persuade_info,anthropic,32,female,bachelor,6,TRUE,TRUE,G_PA_Terrorist_Negotiation,5,5,NA,0,FALSE,NA,NA,deontological,NA,NA,NA,NA
+59,persuade_info,anthropic,32,female,bachelor,6,TRUE,TRUE,G_IO_Hospital_Fumes,4,4,NA,0,FALSE,NA,NA,utilitarian,NA,NA,NA,NA

@@ -94,3 +94,14 @@ wrong_answers.txt
 
 # Database backups (local only)
 backups/
+
+# R analysis
+.Rhistory
+.RData
+.Rproj.user/
+Rplots.pdf
+*.rds
+*.bak
+
+# Claude Code
+.claude/

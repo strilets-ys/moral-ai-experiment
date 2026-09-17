@@ -1,0 +1,23 @@
+# System files
+.DS_Store
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+Rplots.pdf
+*.rds
+
+# Python/Jupyter
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+
+# Backup files
+*.bak
+
+# Claude Code
+.claude/
+
+# Cleanup plan (temporary)
+CLEANUP_PLAN.md

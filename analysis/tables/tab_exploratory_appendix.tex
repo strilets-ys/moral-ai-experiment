@@ -1,0 +1,34 @@
+\begin{table}[h]
+\centering
+\caption{\label{tab:exploratory_appendix}Exploratory analyses: secondary predictors of movement toward AI.}
+\fontsize{9}{11}\selectfont
+\begin{threeparttable}
+\begin{tabular}[t]{lrrrr}
+\toprule
+Effect & $b$ & SE & 95\% CI & $p$\\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{5}{l}{\textbf{Model A: Provider}}\\
+\hspace{1em}Provider (Claude) & 0.79 & 0.37 & {}[0.07, 1.52] & .045\\
+\addlinespace[0.3em]
+\multicolumn{5}{l}{\textbf{Model B: Provider $\times$ Framework}}\\
+\hspace{1em}Provider (Claude) & 0.25 & 0.47 & {}[-0.67, 1.17] & .602\\
+\hspace{1em}Framework (Utilitarian) & -0.19 & 0.46 & {}[-1.09, 0.71] & .679\\
+\hspace{1em}Provider $\times$ Framework & 1.31 & 0.68 & {}[-0.02, 2.64] & .057\\
+\addlinespace[0.3em]
+\multicolumn{5}{l}{\textbf{Model C: Engagement}}\\
+\hspace{1em}Chat turns & 0.04 & 0.08 & {}[-0.11, 0.19] & .570\\
+\addlinespace[0.3em]
+\multicolumn{5}{l}{\textbf{Model D: Dilemma characteristics}}\\
+\hspace{1em}Dilemma source (Koerner) & 0.12 & 0.33 & {}[-0.53, 0.77] & .723\\
+\hspace{1em}Contact level (Personal)\textsuperscript{a} & -0.12 & 0.41 & {}[-0.92, 0.68] & .778\\
+\hspace{1em}Harm type (Action) & 0.35 & 0.33 & {}[-0.30, 1.00] & .300\\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item \textit{Note.}
+\item Separate linear mixed models with participant random intercepts, controlling for AI stance and condition. Reference categories: Qwen, deontological, Greene, impersonal, omission.
+\item[a] Greene dilemmas only ($n$ = 48).
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
