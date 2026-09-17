@@ -740,7 +740,8 @@ class CompletionCell(models.Model):
         Return (condition, llm_provider) using inverse-weight sampling.
         Cells with fewer completions get higher probability.
         """
-        cells = list(cls.objects.all())
+        # TEMPORARY: Only use qwen provider for now
+        cells = list(cls.objects.filter(llm_provider='qwen'))
 
         if not cells:
             # Initialize cells if they don't exist

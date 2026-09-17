@@ -77,10 +77,20 @@ WORKFLOW_DOCUMENTATION.md
 dilemma_test_results.*
 retest_results.*
 problematic_dilemmas_report.md
-llm_test_prompts.txt
+llm_test_prompts*.txt
 experiment_export_*.csv
 experiment_export_*.json
 results/model_comparison/
+
+# Analysis artifacts (development only)
+*_analysis.md
+*_report.md
+transcripts.txt
+*_rankings.txt
+*_results.txt
+token_calculation*.py
+token_calculations.txt
+wrong_answers.txt
 
 # Database backups (local only)
 backups/

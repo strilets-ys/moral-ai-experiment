@@ -1,0 +1,255 @@
+HUMAN-AI MORAL JUDGMENT STUDY - ALL INSTRUCTIONS
+=================================================
+
+This document contains all text shown to participants during the study.
+
+
+1. LANDING PAGE
+---------------
+
+Title: Welcome to the Human-AI Moral Judgment Study
+
+Welcome to this research study investigating how people make moral judgments and how AI discussions might influence these judgments.
+
+What you will do:
+1. Complete a brief demographics questionnaire
+2. Complete a personality survey (TIPI)
+3. Rate 9 moral dilemmas
+4. Discuss 4 dilemmas with an AI assistant
+5. Re-rate the dilemmas
+6. Complete a debrief questionnaire
+
+Estimated time: 45-60 minutes
+
+
+2. CONSENT PAGE
+---------------
+
+Title: Informed Consent
+
+[Focus Warning Box at Top]
+Before You Continue
+- Close all other browser tabs
+- Turn off any music or videos
+- Find a quiet place where you will not be interrupted
+- This study requires your full attention for about 45-60 minutes
+
+What You Will Do:
+You will read moral dilemmas, rate how acceptable you find certain actions, discuss some of these dilemmas with an AI assistant, and then rate them again.
+
+Risks and Benefits:
+This study involves discussing morally challenging scenarios. Some people may find these topics uncomfortable. You can withdraw at any time. There is no direct benefit to you, but your participation will contribute to scientific understanding of AI influence on moral reasoning.
+
+Data Privacy:
+Your responses will be anonymized and stored securely. Only researchers will have access to the data. Your Prolific ID is stored separately from your responses.
+
+Voluntary Participation:
+Your participation is voluntary. You may withdraw at any time by closing the browser window or using the withdrawal option at the end of the study.
+
+Contact Information:
+If you have questions, contact: aimoralstudy@gmail.com
+
+
+3. DEMOGRAPHICS PAGE
+--------------------
+
+Title: About You
+
+[Collects: Age, Gender, Education level, Native English speaker status]
+
+
+4. PERSONALITY SURVEY (TIPI)
+----------------------------
+
+Title: Personality Survey
+
+Please indicate how much you agree or disagree with each statement.
+"I see myself as..."
+
+[10-item TIPI scale]
+
+
+5. PHASE 1 INSTRUCTIONS
+-----------------------
+
+Title: Phase 1: Initial Dilemma Ratings
+
+What You Will Do:
+You will read 9 moral dilemmas. Each dilemma describes a situation where someone must make a difficult decision.
+
+How to Rate:
+For each dilemma, rate how morally acceptable you find the described action, using the scale from 1 (Completely Wrong) to 7 (Completely Acceptable).
+
+Scale:
+1 = Completely Wrong
+4 = Morally Neutral
+7 = Completely Acceptable
+
+Important: A rating of 4 means the action is morally neutral (neither wrong nor acceptable), not that you are undecided.
+
+There are no right or wrong answers. We are interested in your personal moral judgment.
+
+Important: Please do not use your browser's back button during the study. Once you submit a response, you cannot go back to change it.
+
+[Button: I Understand - Begin Phase 1]
+
+
+6. PRE-RATING PAGE (repeated for each dilemma)
+----------------------------------------------
+
+Title: Initial Dilemma Ratings
+Subtitle: Dilemma X of 9
+
+[Collapsible Instructions - same content as Phase 1 instructions above]
+
+[Dilemma text displayed here]
+
+Question: How morally acceptable is [Protagonist Name]'s action?
+
+Scale: 1-7 (Completely Wrong to Completely Acceptable)
+
+
+7. ATTENTION CHECK (appears at random position)
+-----------------------------------------------
+
+David is a manager at a company facing significant budget cuts. The board has given him an ultimatum: reduce costs by 15% or the company will have to close its main facility, resulting in over 200 job losses. David has identified two options. The first is to implement a 10% salary reduction for all employees to avoid any layoffs. The second is to lay off 30 employees from the least profitable department while maintaining salaries for everyone else. This is an attention check to confirm you are reading carefully. Please disregard the scenario above and select rating 3. David decides to implement the salary reduction, believing that shared sacrifice is more equitable than selective layoffs.
+
+Question: How morally acceptable is David's action?
+
+Correct answer: 3
+
+
+8. PHASE 2 INSTRUCTIONS
+-----------------------
+
+Title: Phase 2: AI Discussion
+
+[Banner: Phase 1 Complete! You have rated all dilemmas.]
+
+What You Will Do:
+You will now discuss 4 of the dilemmas with an AI assistant. The AI will share its perspective on each dilemma.
+
+How to Discuss:
+- Express your views and thoughts on the dilemma
+- Ask questions or challenge the AI's reasoning
+- Exchange at least 3 messages with the AI before moving on
+- Each discussion should take around 5 minutes
+
+Note: Each discussion is independent. The AI does not remember previous conversations.
+
+Important: Please do not use your browser's back button during the study. Once you submit a response, you cannot go back to change it.
+
+[Button: I Understand - Begin Phase 2]
+
+
+9. CHAT PAGE (repeated for each discussion)
+-------------------------------------------
+
+Title: AI Discussion
+Subtitle: Discussion X of 4
+
+[Collapsible Instructions - same content as Phase 2 instructions above]
+
+The Dilemma:
+[Dilemma text displayed here]
+
+[Chat interface with AI messages and user input]
+
+[Buttons: Send (gray), Next Discussion (blue)]
+
+[If user tries to proceed before 3 messages, modal appears:]
+"Not enough messages"
+"Please send at least X more message(s) before continuing."
+"Are you sure you want to continue anyway?"
+[Buttons: Continue Anyway, Go Back]
+
+
+10. PHASE 3 INSTRUCTIONS
+------------------------
+
+Title: Phase 3: Final Dilemma Ratings
+
+[Banner: Phase 2 Complete! You have finished all discussions.]
+
+What You Will Do:
+You will now re-rate the same 9 dilemmas you saw in Phase 1. The dilemmas will appear in a different order.
+
+How to Rate:
+Rate each dilemma using the same scale as before: 1 (Completely Wrong) to 7 (Completely Acceptable).
+
+Scale:
+1 = Completely Wrong
+4 = Morally Neutral
+7 = Completely Acceptable
+
+Important: Your rating can be the same as before or different. We are interested in your current moral judgment, which may or may not have changed after discussing the dilemmas.
+
+Reminder: Please do not use your browser's back button. Once you submit a response, you cannot go back to change it.
+
+[Button: I Understand - Begin Phase 3]
+
+
+11. POST-RATING PAGE (repeated for each dilemma)
+------------------------------------------------
+
+Title: Final Dilemma Ratings
+Subtitle: Dilemma X of 9
+
+[Collapsible Instructions - same content as Phase 3 instructions above]
+
+[Same format as pre-rating page]
+
+
+12. DEBRIEF PAGE
+----------------
+
+Title: Study Debrief
+
+Thank you for completing the study. Before you finish, we would like to ask a few more questions and share some information about the study.
+
+[S-TIAS Trust Scale - 3 questions about trust in AI]
+[AI Usage Questions - frequency, tools used, tasks]
+[Feedback Questions - noticed persuasion, changed mind, general feedback]
+
+Study Information:
+This study investigates whether brief interactions with AI chatbots can shift people's moral judgments, and how personalization and persuasive goals affect this process.
+
+Your condition: [Condition description]
+
+[Sample system prompt shown]
+
+Withdrawal Option:
+If you wish to withdraw from the study and have your data deleted, you may do so here.
+
+
+13. COMPLETION PAGE
+-------------------
+
+Title: Study Complete
+
+Thank You!
+
+You have successfully completed the Human-AI Moral Judgment Study.
+
+Your responses have been recorded and will contribute to research investigating whether brief interactions with AI chatbots can shift people's moral judgments, and how personalization and persuasive goals affect this process.
+
+Your Completion Code: MJAI-XXX-XXXX
+
+Copy this code and paste it into Prolific when prompted.
+
+
+14. ATTENTION CHECK FAILED PAGE
+-------------------------------
+
+Title: Study Ended
+
+Attention Check Not Passed
+
+Unfortunately, you did not pass the attention check, so the study has ended. Attention checks help us ensure that participants are reading the questions carefully.
+
+Regarding Your Payment:
+According to Prolific's policy, participants who fail 2 or more attention checks in studies longer than 5 minutes will not receive payment for that submission. Please return your submission on Prolific using the button below.
+
+[Button: Return to Prolific]
+
+If you have any questions, please contact the researcher at aimoralstudy@gmail.com.

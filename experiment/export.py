@@ -184,6 +184,26 @@ def get_participant_data(participant_id):
     return data
 
 
+def get_dilemma_metadata():
+    """
+    Get metadata for all dilemmas (for interpreting ratings).
+    """
+    dilemmas = Dilemma.objects.all()
+    return {
+        d.code: {
+            'id': d.id,
+            'code': d.code,
+            'author': d.author,
+            'category': d.category,
+            'dilemma_type': d.dilemma_type,
+            'variation_type': d.variation_type,
+            'low_rating_framework': d.low_rating_framework,
+            'protagonist_name': d.protagonist_name,
+        }
+        for d in dilemmas
+    }
+
+
 def export_participants_json(participant_ids):
     """
     Export participant data as JSON.
@@ -192,6 +212,7 @@ def export_participants_json(participant_ids):
     export_data = {
         'export_timestamp': datetime.now().isoformat(),
         'participant_count': len(participant_ids),
+        'dilemmas': get_dilemma_metadata(),
         'participants': []
     }
 

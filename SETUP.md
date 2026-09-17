@@ -9,7 +9,7 @@ This experiment:
 2. Gets baseline moral ratings on 8 ethical dilemmas (Phase 1)
 3. Has participants discuss 4 dilemmas with an AI (Phase 2)
 4. Collects post-discussion ratings to measure opinion change (Phase 3)
-5. Debriefs participants and provides completion code
+5. Debriefs participants and redirects to Prolific
 
 **Four experimental conditions:**
 - `neutral` - AI presents thoughtful arguments
@@ -60,9 +60,6 @@ QWEN_API_KEY=your-qwen-key
 # Optional - Qwen uses this base URL by default:
 # QWEN_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 
-# For completion code verification:
-COMPLETION_CODE_SALT=your-secret-salt-here
-
 # For Prolific integration:
 # PROLIFIC_COMPLETION_URL=https://app.prolific.com/submissions/complete?cc=YOURCODE
 
@@ -109,7 +106,7 @@ Visit: http://127.0.0.1:8000/
 9. **Phase 3 Instructions** - "Phase 2 Complete!" banner, re-rating instructions
 10. **Post-rating** (`/post-rating/0/` through `/post-rating/7/`) - Re-rate 8 dilemmas
 11. **Debrief** (`/debrief/`) - Feedback form, study info
-12. **Complete** (`/complete/`) - Completion code (MJAI-XXX-XXXX format)
+12. **Complete** (`/complete/`) - Redirect to Prolific
 
 ### Attention Check
 
@@ -131,7 +128,6 @@ Access at: http://127.0.0.1:8000/admin/
 **Features:**
 - View participants with ratings, chat transcripts, and system prompts
 - **Completion Cells**: Track pilot study progress with visual progress bars
-- View completion codes for each participant
 - Delete individual participants (GDPR compliance) with audit logging
 - Delete ALL participant data at `/admin/experiment/delete-all/`
 - Export data to JSON/CSV at `/admin/experiment/export/`
@@ -145,7 +141,7 @@ Access at: http://127.0.0.1:8000/admin/
 | `load_dilemmas` | Load moral dilemmas from fixtures |
 | `extract_protagonist_names` | Extract character names from dilemma texts |
 | `init_completion_cells --target N` | Initialize pilot study cells (N participants per cell) |
-| `verify_completion_codes` | Verify completion codes from Prolific submissions |
+| `calculate_tokens` | Estimate token usage for LLM conversations |
 
 ---
 
@@ -178,7 +174,6 @@ website_for_experiment/
 │   ├── models.py            # Database models
 │   ├── views.py             # Page and API views
 │   ├── llm.py               # LLM client implementations
-│   ├── utils.py             # Completion code functions
 │   ├── admin.py             # Admin panel configuration
 │   ├── export.py            # Data export functions (JSON/CSV)
 │   ├── templates/           # HTML templates
@@ -223,7 +218,7 @@ website_for_experiment/
 
 | Model | Purpose |
 |-------|---------|
-| `Participant` | Core record with condition, LLM provider, stance assignments, completion code |
+| `Participant` | Core record with condition, LLM provider, stance assignments |
 | `Dilemma` | Moral dilemmas with author, category, protagonist name |
 | `CompletionCell` | Pilot study balancing (condition × LLM provider cells) |
 | `StanceCombination` | Tracks usage of 6 stance combinations |
