@@ -6,15 +6,16 @@ This repository contains the analysis code and data for a study examining whethe
 
 ```
 analysis/
-├── data/                          # Data files (anonymized)
+├── data/
 │   ├── data_long_renamed.csv      # Long format (one row per dilemma)
 │   └── dilemma_metadata.json      # Dilemma characteristics
 │
 ├── figures/
-│   ├── thesis/                    # Final PDF figures for thesis (17 files)
+│   ├── thesis/                    # Final PDF figures for thesis
 │   └── system_prompts_example.pdf
 │
-├── tables/                        # LaTeX tables for thesis (19 files)
+├── tables/
+│   └── tables.md                  # All analysis tables in markdown format
 │
 ├── 00_setup.R                     # Data loading and preprocessing
 ├── 00_theme.R                     # ggplot2 theme for figures
@@ -78,26 +79,18 @@ statsmodels
 
 ## Tables
 
-### Main Text
-| File | Description |
-|------|-------------|
-| `tab_hypotheses.tex` | H1-H6 continuous outcomes |
-| `tab_hypotheses_binary.tex` | H1-H6 binary outcomes |
-| `tab_exploratory_main.tex` | Provider × Framework interaction |
-| `tab_self_reports.tex` | Self-reports and actual vs. reported change |
-| `tab_reasons_change.tex` | Reasons for judgment change |
-| `tab_direction_change.tex` | Direction of opinion change |
+All analysis tables are available in `tables/tables.md`, including:
 
-### Appendix
-| File | Description |
-|------|-------------|
-| `tab_exploratory_appendix.tex` | All exploratory models |
-| `tab_persuasion_tactics_appendix.tex` | Persuasion tactics |
-| `tab_demographics.tex` | Sample demographics |
-| `tab_models.tex` / `tab_models_binary.tex` | Full model output |
-| `tab_rtm.tex` | Regression to mean analysis |
-| `tab_h6_robust.tex` | H6 robustness checks |
-| + others (balance, controls, DAG adjustments, etc.) |
+| Table | Description |
+|-------|-------------|
+| 1–5 | Sample demographics, study design, balance checks, TIPI scores |
+| 6–7 | Preregistered hypothesis tests (continuous and binary outcomes) |
+| 8–9 | Full model coefficients |
+| 10 | Direction of opinion change |
+| 11–12 | Provider × Framework effects, exploratory analyses |
+| 13–14 | Regression to mean analysis, H6 robustness checks |
+| 15–17 | Self-reports, reasons for change, persuasion tactics |
+| 18–19 | DAG-based control classification |
 
 ## Data
 
