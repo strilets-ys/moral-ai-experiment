@@ -1,14 +1,14 @@
 # =============================================================================
-# 10_results_tables.R - Results-chapter tables (LaTeX / booktabs)
+# 09_results_tables.R - Results-chapter tables (LaTeX / booktabs)
 # -----------------------------------------------------------------------------
-# Reads the DAG-specified models from 08_models.R, so the tables, the forest
-# plot (09_results_figures.R) and the notebook cannot drift apart.
+# Reads the models from 07_models.R, so the tables, the forest plot
+# (08_results_figures.R) and the notebook cannot drift apart.
 #
 #   tables/tab_hypotheses.tex  one row per hypothesis  (companion to Figure 7)
 #   tables/tab_models.tex      full coefficients for the three primary models
 # =============================================================================
 
-source("08_models.R")
+source("07_models.R")
 suppressMessages(library(kableExtra))
 
 stars <- function(p) ifelse(p < .001, "***", ifelse(p < .01, "**",

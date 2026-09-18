@@ -1,8 +1,8 @@
 # =============================================================================
-# 09_results_figures.R - Figures for the Results chapter
+# 08_results_figures.R - Figures for the Results chapter
 # -----------------------------------------------------------------------------
-# Estimates come from the DAG-specified models in 08_models.R; nothing is
-# re-fitted here, so the figures and the results tables cannot drift apart.
+# Estimates come from the models in 07_models.R; nothing is re-fitted here,
+# so the figures and the results tables cannot drift apart.
 #
 #   fig_07_forest_hypotheses.pdf   H1-H6 in one forest plot
 #   fig_08_movement_by_stance.pdf  distribution of movement, by AI stance (H6)
@@ -12,7 +12,7 @@
 # Descriptive figures 01-06 are produced by run_thesis_figures.R.
 # =============================================================================
 
-source("08_models.R")
+source("07_models.R")
 source("00_theme.R")
 suppressMessages(library(patchwork))
 

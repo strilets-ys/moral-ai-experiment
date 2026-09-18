@@ -1,5 +1,5 @@
 # =============================================================================
-# 12_exploratory_tables.R - Tables for Exploratory Analyses
+# 11_exploratory_tables.R - Tables for Exploratory Analyses
 # -----------------------------------------------------------------------------
 # Produces LaTeX tables for the exploratory analysis section.
 #
@@ -9,7 +9,7 @@
 #   tables/tab_effect_sizes.tex    Effect sizes summary
 # =============================================================================
 
-source("08_models.R")
+source("07_models.R")
 suppressMessages(library(kableExtra))
 
 stars <- function(p) ifelse(p < .001, "***", ifelse(p < .01, "**",

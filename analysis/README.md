@@ -19,11 +19,11 @@ analysis/
 │
 ├── 00_setup.R                     # Data loading and preprocessing
 ├── 00_theme.R                     # ggplot2 theme for figures
-├── 08_models.R                    # Main statistical models
-├── 09_results_figures.R           # Generate results figures
-├── 10_results_tables.R            # Generate results tables
-├── 11_exploratory_figures.R       # Exploratory figures
-├── 12_exploratory_tables.R        # Exploratory tables
+├── 07_models.R                    # Main statistical models
+├── 08_results_figures.R           # Generate results figures
+├── 09_results_tables.R            # Generate results tables
+├── 10_exploratory_figures.R       # Exploratory figures
+├── 11_exploratory_tables.R        # Exploratory tables
 ├── run_thesis_figures.R           # Run all figure generation
 ├── run_thesis_tables.R            # Run all table generation
 │
@@ -65,7 +65,7 @@ statsmodels
 
 1. Open `analysis.Rproj` in RStudio
 2. Run `00_setup.R` to load and preprocess data
-3. Run `08_models.R` to fit statistical models
+3. Run `07_models.R` to fit statistical models
 4. Run `run_thesis_figures.R` to generate all figures
 5. Run `run_thesis_tables.R` to generate all tables
 

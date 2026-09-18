@@ -1,12 +1,11 @@
 # =============================================================================
-# 08_models.R - Hypothesis tests specified from the design DAG (07_dags.R)
+# 07_models.R - Main hypothesis tests
 # -----------------------------------------------------------------------------
 # Control selection follows Cinelli, Forney & Pearl (2022),
 # "A Crash Course in Good and Bad Controls".
 #
 #   All exposures (condition, provider, stance, discussed) are randomised or
-#   blocked by design, so they have no parents in the DAG and no backdoor path
-#   needs blocking.  No covariate is therefore *required* for identification
+#   blocked by design, so no covariate is *required* for identification
 #   (H4 is the sole exception).  Every remaining candidate is a NEUTRAL control
 #   -- included only if it is a cause of the outcome (variance reduction) and
 #   excluded if it is a mediator, a collider, or a descendant of the outcome.

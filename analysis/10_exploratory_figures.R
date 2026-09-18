@@ -1,5 +1,5 @@
 # =============================================================================
-# 11_exploratory_figures.R - Figures for Exploratory Analyses
+# 10_exploratory_figures.R - Figures for Exploratory Analyses
 # -----------------------------------------------------------------------------
 # Produces publication-quality figures for the exploratory analysis section.
 #
@@ -10,7 +10,7 @@
 #   fig_15_within_participant.pdf  Within-participant patterns
 # =============================================================================
 
-source("08_models.R")
+source("07_models.R")
 source("00_theme.R")
 suppressMessages(library(patchwork))
 
