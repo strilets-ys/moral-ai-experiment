@@ -48,8 +48,7 @@ install.packages(c(
   "lme4",
   "lmerTest",
   "broom",
-  "kableExtra",
-  "dagitty"
+  "kableExtra"
 ))
 ```
 
