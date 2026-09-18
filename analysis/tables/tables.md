@@ -305,38 +305,3 @@ All participants were native English speakers.
 | Respectful persuasion | 2 (11%) | "It was done in a way which was considered and not pressurising." (P59) |
 
 *Note.* Descriptive categories from open-ended debrief responses. Each response assigned to one primary category.
-
----
-
-## Table 18: Classification of Candidate Controls
-
-| Variable | Role in the DAG | Classification | Decision |
-|----------|-----------------|----------------|----------|
-| **Pre-exposure** | | | |
-|   Dilemma features (type, action/omission) | Cause of Y only | Neutral, good for precision | Include |
-|   Baseline rating R₀ | Cause of Y only | Neutral, good for precision | Include |
-|   Age, gender, education | Cause of Y only | Neutral, good for precision | Include (H4: required) |
-|   Personality (TIPI) | Cause of Y only | Neutral, good for precision | Include (H4: required) |
-| **Post-exposure** | | | |
-|   What the AI actually said | Mediator of X → Y | **Bad control** | Exclude |
-|   Participant message count | Mediator of X → Y | **Bad control** | Exclude |
-|   AI framework (is_utilitarian) | Collider on stance and R₀ | **Bad control** | Exclude |
-|   Noticed persuasion | Descendant of Y | **Bad control** | Exclude |
-|   Trust in AI (S-TIAS) | Descendant of Y | **Bad control** | Exclude |
-
-*Note.* Following Cinelli, Forney and Pearl (2022). Bad controls are harmful: mediators remove part of the effect being estimated, and colliders and descendants of the outcome create spurious associations.
-
----
-
-## Table 19: Covariate Decisions for Confirmatory Models
-
-| Hypothesis | Contrast | Level | Required for identification | Recommended for precision |
-|------------|----------|-------|----------------------------|---------------------------|
-| H1 | Persuasive arms vs. control | Between | -- | Age |
-| H2 | Persuade+Demo vs. Persuade | Between | -- | Age |
-| H3 | +Info vs. Persuade+Demo | Between | -- | Age |
-| H4 | Baseline extremity \|R₀-4\| | Within | Demographics, personality, dilemma features | -- |
-| H5 | Discussed vs. undiscussed | Within | -- | Dilemma features |
-| H6 | Opposing vs. reinforcing | Within | -- | Baseline rating, dilemma features |
-
-*Note.* Condition, language model, stance and dilemma selection were assigned by the experimenter, so the empty set identifies their effects; H4 is the only observational contrast.

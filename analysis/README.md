@@ -90,7 +90,6 @@ All analysis tables are available in `tables/tables.md`, including:
 | 11–12 | Provider × Framework effects, exploratory analyses |
 | 13–14 | Regression to mean analysis, H6 robustness checks |
 | 15–17 | Self-reports, reasons for change, persuasion tactics |
-| 18–19 | DAG-based control classification |
 
 ## Data
 
