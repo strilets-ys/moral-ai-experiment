@@ -19,7 +19,6 @@ analysis/
 │
 ├── 00_setup.R                     # Data loading and preprocessing
 ├── 00_theme.R                     # ggplot2 theme for figures
-├── 07_dags.R                      # DAG analysis
 ├── 08_models.R                    # Main statistical models
 ├── 09_results_figures.R           # Generate results figures
 ├── 10_results_tables.R            # Generate results tables
