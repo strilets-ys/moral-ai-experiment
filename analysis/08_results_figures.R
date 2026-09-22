@@ -76,8 +76,7 @@ fig07 <- ggplot(forest, aes(x = b, y = label, colour = sig)) +
        subtitle = "Estimated effects with 95% confidence intervals",
        x = "Effect on movement toward the AI position (rating points)",
        y = NULL,
-       caption = paste0("† H5 outcome is magnitude of rating change. ",
-                        "See Table for full statistics.")) +
+       caption = "† H5 outcome is magnitude of rating change.") +
   theme_thesis() +
   theme(panel.grid.major.y = element_blank(),
         legend.position = "bottom")
