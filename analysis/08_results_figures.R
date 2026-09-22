@@ -81,7 +81,7 @@ fig07 <- ggplot(forest, aes(x = b, y = label, colour = sig)) +
   theme(panel.grid.major.y = element_blank(),
         legend.position = "bottom")
 
-save_thesis_fig("fig_07_forest_hypotheses.pdf", fig07, width = 6, height = 3.5)
+save_thesis_fig("fig_07_forest_hypotheses.pdf", fig07, width = 7, height = 3.5)
 
 # =============================================================================
 # Figure 8: Distribution of movement by AI stance (H6)
