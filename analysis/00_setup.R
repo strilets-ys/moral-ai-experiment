@@ -28,11 +28,15 @@ if (USE_PREPROCESSED && file.exists("data/data_long_renamed.csv")) {
 
   message("Loading pre-processed data...")
 
-  # Load participant-level data
-  data <- read_csv("data/data_renamed.csv", show_col_types = FALSE)
-
   # Load dilemma-level data (already reshaped)
   data_long <- read_csv("data/data_long_renamed.csv", show_col_types = FALSE)
+
+  # Create participant-level summary from long format
+  data <- data_long %>%
+    group_by(participant_id, condition, llm_provider, demographics_age,
+             demographics_gender, demographics_education,
+             debrief_stias_average, debrief_noticed_persuasion, debrief_changed_mind) %>%
+    summarise(.groups = "drop")
 
   # Create chat analysis subset
   data_chat_analysis <- data_long %>%
