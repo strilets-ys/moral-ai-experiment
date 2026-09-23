@@ -9,7 +9,6 @@
 # participants actually did (as opposed to what they were instructed to do).
 # =============================================================================
 
-setwd("/Users/wolfrieder/Desktop/analysis")
 source("00_setup.R")
 source("00_theme.R")
 library(kableExtra)

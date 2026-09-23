@@ -14,15 +14,6 @@ source("07_models.R")
 source("00_theme.R")
 suppressMessages(library(patchwork))
 
-# Override save function to use standard PDF instead of cairo
-save_thesis_fig <- function(filename, plot = last_plot(),
-                            width = 6.5, height = 4.5) {
-  filepath <- file.path("figures", "thesis", filename)
-  ggsave(filepath, plot = plot, width = width, height = height,
-         device = pdf)
-  message(sprintf("Saved: %s", filepath))
-}
-
 pfmt <- function(p) ifelse(p < .001, "p < .001",
                            paste0("p = ", sub("^0", "", sprintf("%.3f", p))))
 
